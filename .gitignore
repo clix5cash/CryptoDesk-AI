@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build and tool output
+dist/
+build/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local operating-system and editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Local agent and Ritual session state
+.codex/
+.ritual-build/
