@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/ai" },
+    { "path": "./packages/market-intelligence" },
+    { "path": "./packages/news-intelligence" },
+    { "path": "./packages/portfolio" },
+    { "path": "./packages/morning-meeting" },
+    { "path": "./packages/data" },
+    { "path": "./packages/integrations" }
+  ]
+}

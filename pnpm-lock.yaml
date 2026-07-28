@@ -26,6 +26,20 @@ importers:
         specifier: ^8.46.0
         version: 8.65.0(eslint@9.39.5(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
 
+  packages/ai: {}
+
+  packages/data: {}
+
+  packages/integrations: {}
+
+  packages/market-intelligence: {}
+
+  packages/morning-meeting: {}
+
+  packages/news-intelligence: {}
+
+  packages/portfolio: {}
+
 packages:
   '@eslint-community/eslint-utils@4.10.1':
     resolution:
