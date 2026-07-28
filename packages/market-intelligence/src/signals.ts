@@ -18,6 +18,8 @@ export enum MarketSignalType {
   VolumeAnomaly = 'volume_anomaly',
   VolatilityChange = 'volatility_change',
   LiquidityChange = 'liquidity_change',
+  BullishCross = 'bullish_cross',
+  BearishCross = 'bearish_cross',
 }
 
 export interface MarketSignal {

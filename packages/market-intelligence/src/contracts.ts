@@ -8,3 +8,4 @@ export * from './signals.js';
 export * from './providers.js';
 export * from './service.js';
 export * from './indicators/index.js';
+export * from './signals/index.js';

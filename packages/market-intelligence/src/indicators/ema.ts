@@ -19,13 +19,17 @@ export class EmaIndicator {
       throw new Error('At least one market snapshot is required.');
     }
 
+    let previousValue = value;
+
     for (const snapshot of snapshots.slice(1)) {
+      previousValue = value;
       value = snapshot.lastPrice * multiplier + value * (1 - multiplier);
     }
 
     return createIndicatorSnapshot(this.id, snapshots, {
       period: this.period,
       value,
+      previousValue,
     });
   }
 }

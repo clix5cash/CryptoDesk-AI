@@ -18,6 +18,7 @@ export interface MarketSnapshot {
 export interface IndicatorSnapshot {
   readonly indicator: string;
   readonly marketId: MarketId;
+  readonly assetId: AssetId;
   readonly timeframe: Timeframe;
   readonly observedAt: IsoTimestamp;
   readonly values: Readonly<Record<string, number>>;

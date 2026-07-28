@@ -68,6 +68,7 @@ export function createIndicatorSnapshot(
   return {
     indicator,
     marketId: first.marketId,
+    assetId: first.baseAssetId,
     timeframe: first.timeframe,
     observedAt: latest.capturedAt,
     values,
