@@ -14,7 +14,7 @@ export interface MarketSnapshot {
   readonly liquidity?: number;
 }
 
-/** A normalized indicator result. Indicator calculation remains outside this package contract. */
+/** A normalized, provider-neutral indicator result. */
 export interface IndicatorSnapshot {
   readonly indicator: string;
   readonly marketId: MarketId;
