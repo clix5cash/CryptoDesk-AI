@@ -24,6 +24,8 @@ export enum MarketSignalType {
   BearishVwapReclaim = 'bearish_vwap_reclaim',
   BullishAtrBreakout = 'bullish_atr_breakout',
   BearishAtrBreakout = 'bearish_atr_breakout',
+  BullishVolumeExpansion = 'bullish_volume_expansion',
+  BearishVolumeDryUp = 'bearish_volume_dry_up',
 }
 
 export interface MarketSignal {
