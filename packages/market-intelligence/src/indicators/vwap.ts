@@ -8,21 +8,34 @@ export class VwapIndicator {
   calculate(snapshots: ReadonlyArray<MarketSnapshot>): IndicatorSnapshot {
     validateSnapshotSeries(snapshots);
 
-    let totalVolume = 0;
-    let totalPriceVolume = 0;
+    const value = calculateVwapValue(snapshots);
+    const latest = snapshots.at(-1);
+    const previousSnapshots = snapshots.slice(0, -1);
+    const previousValue = calculateVwapValue(previousSnapshots);
+    const previousPrice = previousSnapshots.at(-1)?.lastPrice;
 
-    for (const snapshot of snapshots) {
-      totalVolume += snapshot.volume;
-      totalPriceVolume += snapshot.lastPrice * snapshot.volume;
-    }
-
-    if (totalVolume <= 0) {
+    if (value === undefined || !latest) {
       throw new Error('VWAP requires a positive aggregate volume.');
     }
 
     return createIndicatorSnapshot(this.id, snapshots, {
-      value: totalPriceVolume / totalVolume,
-      volume: totalVolume,
+      value,
+      volume: snapshots.reduce((total, snapshot) => total + snapshot.volume, 0),
+      currentPrice: latest.lastPrice,
+      ...(previousValue === undefined ? {} : { previousValue }),
+      ...(previousPrice === undefined ? {} : { previousPrice }),
     });
   }
+}
+
+function calculateVwapValue(snapshots: ReadonlyArray<MarketSnapshot>): number | undefined {
+  let totalVolume = 0;
+  let totalPriceVolume = 0;
+
+  for (const snapshot of snapshots) {
+    totalVolume += snapshot.volume;
+    totalPriceVolume += snapshot.lastPrice * snapshot.volume;
+  }
+
+  return totalVolume > 0 ? totalPriceVolume / totalVolume : undefined;
 }

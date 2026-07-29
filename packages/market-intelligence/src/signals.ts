@@ -20,6 +20,8 @@ export enum MarketSignalType {
   LiquidityChange = 'liquidity_change',
   BullishCross = 'bullish_cross',
   BearishCross = 'bearish_cross',
+  BullishVwapReclaim = 'bullish_vwap_reclaim',
+  BearishVwapReclaim = 'bearish_vwap_reclaim',
 }
 
 export interface MarketSignal {
