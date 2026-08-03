@@ -1,4 +1,9 @@
-import type { AssetId, MarketId, Timeframe } from '@cryptodesk-ai/market-intelligence';
+import type {
+  AssetId,
+  IsoTimestamp,
+  MarketId,
+  Timeframe,
+} from '@cryptodesk-ai/market-intelligence';
 
 /** Explicit fetch boundary so callers choose the runtime HTTP implementation. */
 export interface CoinGeckoFetch {
@@ -34,6 +39,13 @@ export interface CoinGeckoProviderConfig {
   readonly apiKeyHeader?: string;
 }
 
+/** Adapter-level range query for CoinGecko historical price observations. */
+export interface CoinGeckoHistoricalQuoteQuery {
+  readonly marketId: MarketId;
+  readonly from: IsoTimestamp;
+  readonly to: IsoTimestamp;
+}
+
 /** Local representation of the CoinGecko `/coins/markets` response fields used by this adapter. */
 export interface CoinGeckoMarketResponse {
   readonly id: string;
@@ -45,4 +57,13 @@ export interface CoinGeckoMarketResponse {
   readonly total_volume: number | null;
   readonly price_change_percentage_24h: number | null;
   readonly last_updated: string | null;
+}
+
+export type CoinGeckoTimestampedValue = readonly [number, number];
+
+/** Local representation of the CoinGecko `/coins/{id}/market_chart/range` response fields used here. */
+export interface CoinGeckoMarketChartResponse {
+  readonly prices: ReadonlyArray<CoinGeckoTimestampedValue>;
+  readonly market_caps?: ReadonlyArray<CoinGeckoTimestampedValue>;
+  readonly total_volumes?: ReadonlyArray<CoinGeckoTimestampedValue>;
 }

@@ -1,5 +1,9 @@
-import type { MarketSnapshot, Timeframe } from '@cryptodesk-ai/market-intelligence';
-import type { CoinGeckoMarketDefinition, CoinGeckoMarketResponse } from './types.js';
+import type { MarketQuote, MarketSnapshot, Timeframe } from '@cryptodesk-ai/market-intelligence';
+import type {
+  CoinGeckoMarketChartResponse,
+  CoinGeckoMarketDefinition,
+  CoinGeckoMarketResponse,
+} from './types.js';
 
 export class CoinGeckoMappingError extends Error {}
 
@@ -37,6 +41,26 @@ export function mapCoinGeckoMarketToSnapshot(
   };
 }
 
+/** Pure conversion from CoinGecko historical price points into CryptoDesk market quotes. */
+export function mapCoinGeckoMarketChartToQuotes(
+  source: CoinGeckoMarketChartResponse,
+  definition: CoinGeckoMarketDefinition,
+): ReadonlyArray<MarketQuote> {
+  if (source.prices.length === 0) {
+    throw new CoinGeckoMappingError(
+      `CoinGecko historical response contains no prices for coin "${definition.coinId}".`,
+    );
+  }
+
+  return source.prices.map(([timestamp, price]) => ({
+    marketId: definition.marketId,
+    baseAssetId: definition.baseAssetId,
+    quoteAssetId: definition.quoteAssetId,
+    price: requireFiniteNumber(price, 'price', definition.coinId),
+    observedAt: requireUnixTimestamp(timestamp, definition.coinId),
+  }));
+}
+
 function requireNumber(value: number | null, field: string, coinId: string): number {
   if (value === null || !Number.isFinite(value)) {
     throw new CoinGeckoMappingError(
@@ -54,5 +78,25 @@ function requireTimestamp(value: string | null, coinId: string): string {
     );
   }
 
+  return new Date(value).toISOString();
+}
+
+function requireFiniteNumber(value: number, field: string, coinId: string): number {
+  if (!Number.isFinite(value)) {
+    throw new CoinGeckoMappingError(
+      `CoinGecko field "${field}" is missing or invalid for coin "${coinId}".`,
+    );
+  }
+
   return value;
+}
+
+function requireUnixTimestamp(value: number, coinId: string): string {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new CoinGeckoMappingError(
+      `CoinGecko historical timestamp is invalid for coin "${coinId}".`,
+    );
+  }
+
+  return new Date(value).toISOString();
 }
