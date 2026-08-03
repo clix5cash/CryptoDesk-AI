@@ -68,10 +68,8 @@ export interface MorningMeetingMarketView {
   readonly latestSnapshot: MarketSnapshot;
   readonly indicators: ReadonlyArray<IndicatorSnapshot>;
   readonly signals: ReadonlyArray<MarketSignal>;
-  /** Undefined until deterministic meeting analysis is introduced. */
-  readonly bias: MorningMeetingBias | undefined;
-  /** Undefined until deterministic meeting analysis is introduced. */
-  readonly riskLevel: MorningMeetingRiskLevel | undefined;
+  readonly bias: MorningMeetingBias;
+  readonly riskLevel: MorningMeetingRiskLevel;
   readonly evidence: ReadonlyArray<MorningMeetingEvidenceReference>;
 }
 

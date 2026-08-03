@@ -17,6 +17,7 @@ import {
   type MorningMeetingSection,
   type MorningMeetingService,
 } from './contracts.js';
+import { MorningMeetingAnalyzer } from './analyzer.js';
 
 /** Explicit source of report identifiers for application composition. */
 export interface MorningMeetingIdGenerator {
@@ -33,6 +34,7 @@ export interface MorningMeetingServiceDependencies {
   readonly snapshotProvider: MarketSnapshotProvider;
   readonly indicatorEngine: IndicatorEngine;
   readonly signalEngine: SignalEngine;
+  readonly analyzer: MorningMeetingAnalyzer;
   readonly idGenerator: MorningMeetingIdGenerator;
   readonly clock: MorningMeetingClock;
 }
@@ -63,7 +65,7 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       asOf: request.asOf ?? generatedAt,
       timeframe: request.timeframe,
       marketViews,
-      sections: marketViews.map((marketView) => this.assembleSection(marketView)),
+      sections: marketViews.flatMap((marketView) => this.assembleSections(marketView)),
     };
   }
 
@@ -78,6 +80,11 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       .list()
       .map((indicator) => indicator.calculate(snapshots));
     const signals = this.dependencies.signalEngine.generate(indicators);
+    const analysis = this.dependencies.analyzer.analyze({
+      latestSnapshot,
+      indicators,
+      signals,
+    });
 
     return {
       assetId: latestSnapshot.baseAssetId,
@@ -86,18 +93,65 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       latestSnapshot,
       indicators,
       signals,
-      bias: undefined,
-      riskLevel: undefined,
-      evidence: this.createEvidence(snapshots, indicators, signals, latestSnapshot.marketId),
+      bias: analysis.bias,
+      riskLevel: analysis.riskLevel,
+      evidence: this.mergeEvidence(
+        this.createEvidence(snapshots, indicators, signals, latestSnapshot.marketId),
+        analysis.evidence,
+      ),
     };
   }
 
-  private assembleSection(marketView: MorningMeetingMarketView): MorningMeetingSection {
+  private assembleSections(
+    marketView: MorningMeetingMarketView,
+  ): ReadonlyArray<MorningMeetingSection> {
+    const snapshotEvidence = marketView.evidence.filter(
+      (reference) => reference.kind === MorningMeetingEvidenceKind.MarketSnapshot,
+    );
+    const trendEvidence = marketView.evidence.filter(
+      (reference) =>
+        reference.kind === MorningMeetingEvidenceKind.IndicatorSnapshot &&
+        (reference.indicator === 'ema' || reference.indicator === 'vwap'),
+    );
+    const volatilityEvidence = marketView.evidence.filter(
+      (reference) =>
+        reference.kind === MorningMeetingEvidenceKind.IndicatorSnapshot &&
+        reference.indicator === 'atr',
+    );
+    const volumeEvidence = marketView.evidence.filter(
+      (reference) =>
+        reference.kind === MorningMeetingEvidenceKind.IndicatorSnapshot &&
+        reference.indicator === 'volume',
+    );
+    const signalEvidence = marketView.evidence.filter(
+      (reference) => reference.kind === MorningMeetingEvidenceKind.MarketSignal,
+    );
+    const riskEvidence = [...volatilityEvidence, ...volumeEvidence, ...signalEvidence];
+
+    return [
+      this.createSection(MorningMeetingSectionKind.MarketOverview, marketView, snapshotEvidence),
+      this.createSection(MorningMeetingSectionKind.Trend, marketView, trendEvidence),
+      this.createSection(MorningMeetingSectionKind.Volatility, marketView, volatilityEvidence),
+      this.createSection(MorningMeetingSectionKind.Volume, marketView, volumeEvidence),
+      this.createSection(MorningMeetingSectionKind.Signals, marketView, signalEvidence),
+      this.createSection(MorningMeetingSectionKind.Risk, marketView, riskEvidence),
+    ].filter((section): section is MorningMeetingSection => section !== undefined);
+  }
+
+  private createSection(
+    kind: MorningMeetingSectionKind,
+    marketView: MorningMeetingMarketView,
+    evidence: ReadonlyArray<MorningMeetingEvidenceReference>,
+  ): MorningMeetingSection | undefined {
+    if (evidence.length === 0) {
+      return undefined;
+    }
+
     return {
-      id: `market-overview:${marketView.marketId}`,
-      kind: MorningMeetingSectionKind.MarketOverview,
+      id: `${kind}:${marketView.marketId}`,
+      kind,
       marketIds: [marketView.marketId],
-      evidence: marketView.evidence,
+      evidence,
     };
   }
 
@@ -143,5 +197,30 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
         signalId: signal.id,
       })),
     ];
+  }
+
+  private mergeEvidence(
+    baseEvidence: ReadonlyArray<MorningMeetingEvidenceReference>,
+    analysisEvidence: ReadonlyArray<MorningMeetingEvidenceReference>,
+  ): ReadonlyArray<MorningMeetingEvidenceReference> {
+    const seen = new Set<string>();
+
+    return [...baseEvidence, ...analysisEvidence].filter((reference) => {
+      const key = [
+        reference.kind,
+        reference.assetId,
+        reference.marketId,
+        reference.observedAt,
+        reference.indicator ?? '',
+        reference.signalId ?? '',
+      ].join(':');
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
   }
 }

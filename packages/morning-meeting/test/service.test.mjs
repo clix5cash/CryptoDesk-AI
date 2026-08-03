@@ -12,7 +12,10 @@ import {
 } from '@cryptodesk-ai/market-intelligence';
 import {
   DefaultMorningMeetingService,
+  MorningMeetingAnalyzer,
+  MorningMeetingBias,
   MorningMeetingEvidenceKind,
+  MorningMeetingRiskLevel,
   MorningMeetingSectionKind,
 } from '../dist/index.js';
 
@@ -73,6 +76,7 @@ test('assembles deterministic Market Intelligence into a Morning Meeting report'
     snapshotProvider,
     indicatorEngine,
     signalEngine,
+    analyzer: new MorningMeetingAnalyzer(),
     idGenerator: { generate: () => 'meeting:2026-08-03' },
     clock: { now: () => '2026-08-03T06:00:00.000Z' },
   });
@@ -106,17 +110,20 @@ test('assembles deterministic Market Intelligence into a Morning Meeting report'
     ['ema', 'vwap', 'atr', 'volume'],
   );
   assert.equal(marketView.signals.length, 1);
-  assert.equal(marketView.bias, undefined);
-  assert.equal(marketView.riskLevel, undefined);
+  assert.equal(marketView.bias, MorningMeetingBias.Bullish);
+  assert.equal(marketView.riskLevel, MorningMeetingRiskLevel.High);
   assert.equal(marketView.evidence.length, 8);
-  assert.deepEqual(report.sections, [
-    {
-      id: 'market-overview:bitcoin-usd',
-      kind: MorningMeetingSectionKind.MarketOverview,
-      marketIds: ['bitcoin-usd'],
-      evidence: marketView.evidence,
-    },
-  ]);
+  assert.deepEqual(
+    report.sections.map((section) => section.kind),
+    [
+      MorningMeetingSectionKind.MarketOverview,
+      MorningMeetingSectionKind.Trend,
+      MorningMeetingSectionKind.Volatility,
+      MorningMeetingSectionKind.Volume,
+      MorningMeetingSectionKind.Signals,
+      MorningMeetingSectionKind.Risk,
+    ],
+  );
   assert.equal(
     marketView.evidence.filter(
       (reference) => reference.kind === MorningMeetingEvidenceKind.MarketSnapshot,
