@@ -16,6 +16,7 @@ import {
   MorningMeetingBias,
   MorningMeetingEvidenceKind,
   MorningMeetingRiskLevel,
+  MorningMeetingReportValidator,
   MorningMeetingSectionKind,
 } from '../dist/index.js';
 
@@ -77,6 +78,7 @@ test('assembles deterministic Market Intelligence into a Morning Meeting report'
     indicatorEngine,
     signalEngine,
     analyzer: new MorningMeetingAnalyzer(),
+    reportValidator: new MorningMeetingReportValidator(),
     idGenerator: { generate: () => 'meeting:2026-08-03' },
     clock: { now: () => '2026-08-03T06:00:00.000Z' },
   });
@@ -107,7 +109,7 @@ test('assembles deterministic Market Intelligence into a Morning Meeting report'
   assert.deepEqual(marketView.latestSnapshot, snapshots[2]);
   assert.deepEqual(
     marketView.indicators.map((indicator) => indicator.indicator),
-    ['ema', 'vwap', 'atr', 'volume'],
+    ['atr', 'ema', 'volume', 'vwap'],
   );
   assert.equal(marketView.signals.length, 1);
   assert.equal(marketView.bias, MorningMeetingBias.Bullish);

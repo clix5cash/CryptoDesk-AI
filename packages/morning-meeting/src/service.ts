@@ -18,6 +18,14 @@ import {
   type MorningMeetingService,
 } from './contracts.js';
 import { MorningMeetingAnalyzer } from './analyzer.js';
+import { MorningMeetingReportError } from './errors.js';
+import {
+  normalizeEvidence,
+  normalizeMarketSnapshots,
+  normalizeMarketViews,
+  normalizeSections,
+} from './normalization.js';
+import { MorningMeetingReportValidator } from './validator.js';
 
 /** Explicit source of report identifiers for application composition. */
 export interface MorningMeetingIdGenerator {
@@ -35,6 +43,7 @@ export interface MorningMeetingServiceDependencies {
   readonly indicatorEngine: IndicatorEngine;
   readonly signalEngine: SignalEngine;
   readonly analyzer: MorningMeetingAnalyzer;
+  readonly reportValidator: MorningMeetingReportValidator;
   readonly idGenerator: MorningMeetingIdGenerator;
   readonly clock: MorningMeetingClock;
 }
@@ -49,24 +58,32 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
 
   async generate(request: MorningMeetingRequest): Promise<MorningMeetingReport> {
     const generatedAt = this.dependencies.clock.now();
-    const snapshots = await this.dependencies.snapshotProvider.getSnapshots({
+    const providerSnapshots = await this.dependencies.snapshotProvider.getSnapshots({
       assetIds: request.assetIds,
       marketIds: request.marketIds,
       timeframe: request.timeframe,
       asOf: request.asOf,
     });
-    const marketViews = this.groupSnapshotsByMarket(snapshots).map((marketSnapshots) =>
-      this.assembleMarketView(marketSnapshots),
+    const snapshots = normalizeMarketSnapshots(providerSnapshots);
+    const marketViews = normalizeMarketViews(
+      this.groupSnapshotsByMarket(snapshots).map((marketSnapshots) =>
+        this.assembleMarketView(marketSnapshots),
+      ),
     );
-
-    return {
+    const report = {
       id: this.dependencies.idGenerator.generate(),
       generatedAt,
       asOf: request.asOf ?? generatedAt,
       timeframe: request.timeframe,
       marketViews,
-      sections: marketViews.flatMap((marketView) => this.assembleSections(marketView)),
+      sections: normalizeSections(
+        marketViews.flatMap((marketView) => this.assembleSections(marketView)),
+      ),
     };
+
+    this.dependencies.reportValidator.validate(report, request);
+
+    return report;
   }
 
   private assembleMarketView(snapshots: ReadonlyArray<MarketSnapshot>): MorningMeetingMarketView {
@@ -76,9 +93,15 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       throw new Error('A Morning Meeting market view requires at least one market snapshot.');
     }
 
-    const indicators = this.dependencies.indicatorEngine
-      .list()
-      .map((indicator) => indicator.calculate(snapshots));
+    const indicators = this.dependencies.indicatorEngine.list().map((indicator) => {
+      try {
+        return indicator.calculate(snapshots);
+      } catch {
+        throw new MorningMeetingReportError(
+          `Unable to calculate indicator "${indicator.id}" for market "${latestSnapshot.marketId}".`,
+        );
+      }
+    });
     const signals = this.dependencies.signalEngine.generate(indicators);
     const analysis = this.dependencies.analyzer.analyze({
       latestSnapshot,
@@ -95,9 +118,11 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       signals,
       bias: analysis.bias,
       riskLevel: analysis.riskLevel,
-      evidence: this.mergeEvidence(
-        this.createEvidence(snapshots, indicators, signals, latestSnapshot.marketId),
-        analysis.evidence,
+      evidence: normalizeEvidence(
+        [
+          this.createEvidence(snapshots, indicators, signals, latestSnapshot.marketId),
+          ...analysis.evidence,
+        ].flat(),
       ),
     };
   }
@@ -158,12 +183,17 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
   private groupSnapshotsByMarket(
     snapshots: ReadonlyArray<MarketSnapshot>,
   ): ReadonlyArray<ReadonlyArray<MarketSnapshot>> {
-    const snapshotsByMarket = new Map<MarketId, MarketSnapshot[]>();
+    const snapshotsByMarket = new Map<string, MarketSnapshot[]>();
 
     for (const snapshot of snapshots) {
-      const marketSnapshots = snapshotsByMarket.get(snapshot.marketId) ?? [];
+      const identity = JSON.stringify([
+        snapshot.baseAssetId,
+        snapshot.marketId,
+        snapshot.timeframe,
+      ]);
+      const marketSnapshots = snapshotsByMarket.get(identity) ?? [];
       marketSnapshots.push(snapshot);
-      snapshotsByMarket.set(snapshot.marketId, marketSnapshots);
+      snapshotsByMarket.set(identity, marketSnapshots);
     }
 
     return Array.from(snapshotsByMarket.values());
@@ -197,30 +227,5 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
         signalId: signal.id,
       })),
     ];
-  }
-
-  private mergeEvidence(
-    baseEvidence: ReadonlyArray<MorningMeetingEvidenceReference>,
-    analysisEvidence: ReadonlyArray<MorningMeetingEvidenceReference>,
-  ): ReadonlyArray<MorningMeetingEvidenceReference> {
-    const seen = new Set<string>();
-
-    return [...baseEvidence, ...analysisEvidence].filter((reference) => {
-      const key = [
-        reference.kind,
-        reference.assetId,
-        reference.marketId,
-        reference.observedAt,
-        reference.indicator ?? '',
-        reference.signalId ?? '',
-      ].join(':');
-
-      if (seen.has(key)) {
-        return false;
-      }
-
-      seen.add(key);
-      return true;
-    });
   }
 }
