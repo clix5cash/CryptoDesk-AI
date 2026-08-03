@@ -30,7 +30,11 @@ importers:
 
   packages/data: {}
 
-  packages/integrations: {}
+  packages/integrations:
+    dependencies:
+      '@cryptodesk-ai/market-intelligence':
+        specifier: workspace:*
+        version: link:../market-intelligence
 
   packages/market-intelligence: {}
 
