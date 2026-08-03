@@ -13,6 +13,10 @@
       "dependsOn": ["^typecheck"],
       "outputs": []
     },
+    "test": {
+      "dependsOn": ["build", "^build"],
+      "outputs": []
+    },
     "format:check": {
       "outputs": []
     }
