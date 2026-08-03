@@ -1,53 +1,104 @@
-export type MorningMeetingId = string;
-export type WorkspaceId = string;
-export type IsoTimestamp = string;
+import type {
+  AssetId,
+  IndicatorSnapshot,
+  IsoTimestamp,
+  MarketId,
+  MarketSignal,
+  MarketSnapshot,
+  Timeframe,
+} from '@cryptodesk-ai/market-intelligence';
 
-export enum MorningMeetingStatus {
-  Draft = 'draft',
-  Generating = 'generating',
-  Ready = 'ready',
-  Delivered = 'delivered',
-  Failed = 'failed',
+/** Stable identifier for one generated Morning Meeting report. */
+export type MorningMeetingId = string;
+
+export enum MorningMeetingBias {
+  Bullish = 'bullish',
+  Neutral = 'neutral',
+  Bearish = 'bearish',
+}
+
+export enum MorningMeetingRiskLevel {
+  Low = 'low',
+  Moderate = 'moderate',
+  High = 'high',
 }
 
 export enum MorningMeetingSectionKind {
   MarketOverview = 'market_overview',
-  NewsHighlights = 'news_highlights',
-  PortfolioUpdate = 'portfolio_update',
-  DefiResearch = 'defi_research',
-  Risks = 'risks',
-  FollowUps = 'follow_ups',
+  Trend = 'trend',
+  Momentum = 'momentum',
+  Volatility = 'volatility',
+  Volume = 'volume',
+  Signals = 'signals',
+  Risk = 'risk',
 }
 
-export interface MorningMeetingSource {
-  readonly sourceId: string;
-  readonly label: string;
-  readonly url?: string;
+export enum MorningMeetingEvidenceKind {
+  MarketSnapshot = 'market_snapshot',
+  IndicatorSnapshot = 'indicator_snapshot',
+  MarketSignal = 'market_signal',
 }
 
+/**
+ * A traceable reference to deterministic Market Intelligence used in a report
+ * or section. The referenced records remain provider-neutral domain models.
+ */
+export interface MorningMeetingEvidenceReference {
+  readonly kind: MorningMeetingEvidenceKind;
+  readonly assetId: AssetId;
+  readonly marketId: MarketId;
+  readonly observedAt: IsoTimestamp;
+  readonly indicator?: string;
+  readonly signalId?: string;
+}
+
+/** Input selecting the deterministic market intelligence for a meeting. */
+export interface MorningMeetingRequest {
+  readonly assetIds?: ReadonlyArray<AssetId>;
+  readonly marketIds?: ReadonlyArray<MarketId>;
+  readonly timeframe: Timeframe;
+  readonly asOf?: IsoTimestamp;
+}
+
+/** Deterministic analytical state for a single market at the meeting boundary. */
+export interface MorningMeetingMarketView {
+  readonly assetId: AssetId;
+  readonly marketId: MarketId;
+  readonly timeframe: Timeframe;
+  readonly latestSnapshot: MarketSnapshot;
+  readonly indicators: ReadonlyArray<IndicatorSnapshot>;
+  readonly signals: ReadonlyArray<MarketSignal>;
+  readonly bias: MorningMeetingBias;
+  readonly riskLevel: MorningMeetingRiskLevel;
+  readonly evidence: ReadonlyArray<MorningMeetingEvidenceReference>;
+}
+
+/**
+ * A structured grouping of deterministic evidence. Presentation and prose are
+ * deliberately left to downstream consumers such as a future narrator.
+ */
 export interface MorningMeetingSection {
+  readonly id: string;
   readonly kind: MorningMeetingSectionKind;
-  readonly title: string;
-  readonly content: string;
-  readonly sources: ReadonlyArray<MorningMeetingSource>;
+  readonly marketIds: ReadonlyArray<MarketId>;
+  readonly evidence: ReadonlyArray<MorningMeetingEvidenceReference>;
 }
 
-export interface MorningMeeting {
+/**
+ * Provider-neutral, deterministic Morning Meeting output. It is intentionally
+ * structured so a future AI narration layer can consume it without becoming
+ * the source of market facts.
+ */
+export interface MorningMeetingReport {
   readonly id: MorningMeetingId;
-  readonly workspaceId: WorkspaceId;
-  readonly status: MorningMeetingStatus;
-  readonly reportingDate: string;
-  readonly generatedAt?: IsoTimestamp;
+  readonly generatedAt: IsoTimestamp;
+  readonly asOf: IsoTimestamp;
+  readonly timeframe: Timeframe;
+  readonly marketViews: ReadonlyArray<MorningMeetingMarketView>;
   readonly sections: ReadonlyArray<MorningMeetingSection>;
 }
 
-export interface MorningMeetingRequest {
-  readonly workspaceId: WorkspaceId;
-  readonly reportingDate: string;
-  readonly requestedBy?: string;
-}
-
-/** Boundary for generating a persisted morning meeting artifact. */
-export interface MorningMeetingGenerator {
-  generate(request: MorningMeetingRequest): Promise<MorningMeeting>;
+/** Application-facing boundary for future Morning Meeting orchestration. */
+export interface MorningMeetingService {
+  generate(request: MorningMeetingRequest): Promise<MorningMeetingReport>;
 }

@@ -7,5 +7,10 @@
     "declaration": true,
     "declarationMap": true
   },
+  "references": [
+    {
+      "path": "../market-intelligence"
+    }
+  ],
   "include": ["src/**/*.ts"]
 }

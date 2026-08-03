@@ -38,7 +38,11 @@ importers:
 
   packages/market-intelligence: {}
 
-  packages/morning-meeting: {}
+  packages/morning-meeting:
+    dependencies:
+      '@cryptodesk-ai/market-intelligence':
+        specifier: workspace:*
+        version: link:../market-intelligence
 
   packages/news-intelligence: {}
 
