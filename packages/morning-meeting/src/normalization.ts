@@ -46,17 +46,22 @@ export function normalizeMarketSnapshots(
   return Array.from(snapshotsByIdentity.values()).sort(compareSnapshots);
 }
 
-/** Deduplicates and sorts evidence by its existing stable source identity fields. */
+/** Deduplicates and sorts evidence by source record ID when available, then logical identity. */
 export function normalizeEvidence(
   evidence: ReadonlyArray<MorningMeetingEvidenceReference>,
 ): ReadonlyArray<MorningMeetingEvidenceReference> {
-  const uniqueEvidence = new Map<string, MorningMeetingEvidenceReference>();
+  const identities = new Set<string>();
 
-  for (const reference of evidence) {
-    uniqueEvidence.set(evidenceIdentity(reference), reference);
-  }
+  return [...evidence].sort(compareEvidence).filter((reference) => {
+    const identity = evidenceIdentity(reference);
 
-  return Array.from(uniqueEvidence.values()).sort(compareEvidence);
+    if (identities.has(identity)) {
+      return false;
+    }
+
+    identities.add(identity);
+    return true;
+  });
 }
 
 /** Orders market views independently of provider response or map insertion order. */
@@ -91,6 +96,10 @@ export function marketViewIdentity(marketView: MorningMeetingMarketView): string
 }
 
 export function evidenceIdentity(reference: MorningMeetingEvidenceReference): string {
+  if (reference.sourceRecordId) {
+    return `source:${reference.sourceRecordId}`;
+  }
+
   return JSON.stringify([
     reference.kind,
     reference.assetId,
@@ -157,13 +166,21 @@ function compareEvidence(
   return (
     kindDifference ||
     compareTuple(
-      [left.assetId, left.marketId, left.observedAt, left.indicator ?? '', left.signalId ?? ''],
+      [
+        left.assetId,
+        left.marketId,
+        left.observedAt,
+        left.indicator ?? '',
+        left.signalId ?? '',
+        left.sourceRecordId ?? '',
+      ],
       [
         right.assetId,
         right.marketId,
         right.observedAt,
         right.indicator ?? '',
         right.signalId ?? '',
+        right.sourceRecordId ?? '',
       ],
     )
   );

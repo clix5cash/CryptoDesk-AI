@@ -11,6 +11,9 @@ import type {
 /** Stable identifier for one generated Morning Meeting report. */
 export type MorningMeetingId = string;
 
+/** Opaque provider-neutral identifier for a source record supporting evidence. */
+export type SourceRecordId = string;
+
 export enum MorningMeetingBias {
   Bullish = 'bullish',
   Neutral = 'neutral',
@@ -48,6 +51,8 @@ export interface MorningMeetingEvidenceReference {
   readonly assetId: AssetId;
   readonly marketId: MarketId;
   readonly observedAt: IsoTimestamp;
+  /** Optional for compatibility with source records that do not expose an opaque stable ID. */
+  readonly sourceRecordId?: SourceRecordId;
   readonly indicator?: string;
   readonly signalId?: string;
 }

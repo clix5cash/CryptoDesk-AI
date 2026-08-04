@@ -12,6 +12,7 @@ import {
   MorningMeetingRiskLevel,
   type MorningMeetingEvidenceReference,
 } from './contracts.js';
+import { evidenceIdentity, normalizeEvidence } from './normalization.js';
 
 export interface MorningMeetingAnalysisInput {
   readonly latestSnapshot: MarketSnapshot;
@@ -67,10 +68,11 @@ export class MorningMeetingAnalyzer {
   }
 
   private deriveBias(evidence: ReadonlyArray<DirectionalEvidence>): MorningMeetingBias {
-    const bullishCount = evidence.filter(
+    const deduplicatedEvidence = uniqueDirectionalEvidence(evidence);
+    const bullishCount = deduplicatedEvidence.filter(
       (item) => item.direction === SignalDirection.Bullish && item.countsForBias,
     ).length;
-    const bearishCount = evidence.filter(
+    const bearishCount = deduplicatedEvidence.filter(
       (item) => item.direction === SignalDirection.Bearish && item.countsForBias,
     ).length;
 
@@ -139,8 +141,9 @@ export class MorningMeetingAnalyzer {
     const volume = input.indicators.find((indicator) => indicator.indicator === 'volume');
     const atrExpansionRatio = calculateRatio(atr?.values.value, atr?.values.previousValue);
     const relativeVolume = volume?.values.relative;
-    const breakoutSignals = input.signals.filter(isAtrBreakout);
-    const directionalSignals = input.signals.filter(
+    const signals = uniqueSignals(input.signals, input.latestSnapshot);
+    const breakoutSignals = signals.filter(isAtrBreakout);
+    const directionalSignals = signals.filter(
       (signal) =>
         signal.direction === SignalDirection.Bullish ||
         signal.direction === SignalDirection.Bearish,
@@ -296,6 +299,7 @@ function createSignalReference(
     marketId: signal.marketId ?? latestSnapshot.marketId,
     observedAt: signal.detectedAt,
     signalId: signal.id,
+    sourceRecordId: signal.id,
   };
 }
 
@@ -303,23 +307,74 @@ function uniqueEvidence(
   evidence: ReadonlyArray<MorningMeetingEvidenceReference | DirectionalEvidence>,
 ): ReadonlyArray<MorningMeetingEvidenceReference> {
   const references = evidence.map((item) => ('reference' in item ? item.reference : item));
-  const seen = new Set<string>();
+  return normalizeEvidence(references);
+}
 
-  return references.filter((reference) => {
-    const key = [
-      reference.kind,
-      reference.assetId,
-      reference.marketId,
-      reference.observedAt,
-      reference.indicator ?? '',
-      reference.signalId ?? '',
-    ].join(':');
+function uniqueDirectionalEvidence(
+  evidence: ReadonlyArray<DirectionalEvidence>,
+): ReadonlyArray<DirectionalEvidence> {
+  const identities = new Set<string>();
 
-    if (seen.has(key)) {
-      return false;
-    }
+  return [...evidence]
+    .sort((left, right) => {
+      const leftIdentity = evidenceIdentity(left.reference);
+      const rightIdentity = evidenceIdentity(right.reference);
 
-    seen.add(key);
-    return true;
-  });
+      return leftIdentity < rightIdentity ? -1 : leftIdentity > rightIdentity ? 1 : 0;
+    })
+    .filter((item) => {
+      const identity = evidenceIdentity(item.reference);
+
+      if (identities.has(identity)) {
+        return false;
+      }
+
+      identities.add(identity);
+      return true;
+    });
+}
+
+function uniqueSignals(
+  signals: ReadonlyArray<MarketSignal>,
+  latestSnapshot: MarketSnapshot,
+): ReadonlyArray<MarketSignal> {
+  const identities = new Set<string>();
+
+  return [...signals]
+    .sort((left, right) => {
+      const leftIdentity = evidenceIdentity(createSignalReference(left, latestSnapshot));
+      const rightIdentity = evidenceIdentity(createSignalReference(right, latestSnapshot));
+
+      if (leftIdentity !== rightIdentity) {
+        return leftIdentity < rightIdentity ? -1 : 1;
+      }
+
+      return signalDeterministicKey(left) < signalDeterministicKey(right)
+        ? -1
+        : signalDeterministicKey(left) > signalDeterministicKey(right)
+          ? 1
+          : 0;
+    })
+    .filter((signal) => {
+      const identity = evidenceIdentity(createSignalReference(signal, latestSnapshot));
+
+      if (identities.has(identity)) {
+        return false;
+      }
+
+      identities.add(identity);
+      return true;
+    });
+}
+
+function signalDeterministicKey(signal: MarketSignal): string {
+  return JSON.stringify([
+    signal.type,
+    signal.direction,
+    signal.strength,
+    signal.assetId,
+    signal.marketId ?? '',
+    signal.timeframe ?? '',
+    signal.detectedAt,
+  ]);
 }

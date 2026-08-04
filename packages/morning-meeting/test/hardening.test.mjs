@@ -120,6 +120,55 @@ test('deduplicates and orders evidence using stable source identity fields', () 
   );
 });
 
+test('uses opaque source record IDs before logical evidence identity', () => {
+  const firstSource = {
+    kind: MorningMeetingEvidenceKind.MarketSnapshot,
+    assetId: 'bitcoin',
+    marketId: 'bitcoin-usd',
+    observedAt: '2026-08-03T02:00:00.000Z',
+    sourceRecordId: 'source:bitcoin:first',
+  };
+  const duplicateFirstSource = {
+    ...firstSource,
+    observedAt: '2026-08-03T03:00:00.000Z',
+  };
+  const secondSourceWithSameLogicalFields = {
+    ...firstSource,
+    sourceRecordId: 'source:bitcoin:second',
+  };
+  const fallbackReference = {
+    kind: MorningMeetingEvidenceKind.IndicatorSnapshot,
+    assetId: 'bitcoin',
+    marketId: 'bitcoin-usd',
+    observedAt: '2026-08-03T02:00:00.000Z',
+    indicator: 'ema',
+  };
+
+  const firstNormalized = normalizeEvidence([
+    secondSourceWithSameLogicalFields,
+    duplicateFirstSource,
+    fallbackReference,
+    firstSource,
+    fallbackReference,
+  ]);
+  const reorderedNormalized = normalizeEvidence([
+    fallbackReference,
+    firstSource,
+    fallbackReference,
+    duplicateFirstSource,
+    secondSourceWithSameLogicalFields,
+  ]);
+
+  assert.deepEqual(firstNormalized, reorderedNormalized);
+  assert.equal(firstNormalized.length, 3);
+  assert.deepEqual(
+    firstNormalized
+      .filter((reference) => reference.kind === MorningMeetingEvidenceKind.MarketSnapshot)
+      .map((reference) => reference.sourceRecordId),
+    ['source:bitcoin:first', 'source:bitcoin:second'],
+  );
+});
+
 test('rejects empty provider results and missing requested markets explicitly', async () => {
   const emptyService = createService([]);
 
@@ -147,6 +196,7 @@ test('fails explicitly when a registered indicator cannot calculate supplied sna
   const indicatorEngine = new IndicatorEngine();
   indicatorEngine.register({
     id: 'unavailable-indicator',
+    family: 'unavailable',
     calculate: () => {
       throw new Error('Insufficient source data.');
     },

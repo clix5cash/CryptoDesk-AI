@@ -225,6 +225,7 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
         marketId: signal.marketId ?? marketId,
         observedAt: signal.detectedAt,
         signalId: signal.id,
+        sourceRecordId: signal.id,
       })),
     ];
   }

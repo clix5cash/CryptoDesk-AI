@@ -214,6 +214,10 @@ export class MorningMeetingReportValidator {
     this.assertNonEmpty(reference.marketId, `Evidence market ID in ${owner}`);
     this.assertIsoTimestamp(reference.observedAt, `Evidence observedAt in ${owner}`);
 
+    if (reference.sourceRecordId !== undefined) {
+      this.assertNonEmpty(reference.sourceRecordId, `Evidence source record ID in ${owner}`);
+    }
+
     if (!Object.values(MorningMeetingEvidenceKind).includes(reference.kind)) {
       throw new MorningMeetingReportError(`Evidence in ${owner} has an invalid kind.`);
     }

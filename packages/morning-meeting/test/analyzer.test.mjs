@@ -130,6 +130,24 @@ test('derives a neutral bias from insufficient directional evidence', () => {
   assert.equal(analysis.bias, MorningMeetingBias.Neutral);
 });
 
+test('does not inflate bias or risk from duplicate signal source records', () => {
+  const duplicateSignal = signal({
+    id: 'bullish-cross',
+    type: MarketSignalType.BullishCross,
+    direction: SignalDirection.Bullish,
+  });
+  const analysis = new MorningMeetingAnalyzer().analyze({
+    latestSnapshot,
+    indicators: [],
+    signals: [duplicateSignal, { ...duplicateSignal }],
+  });
+
+  assert.equal(analysis.bias, MorningMeetingBias.Neutral);
+  assert.equal(analysis.riskLevel, MorningMeetingRiskLevel.Moderate);
+  assert.equal(analysis.evidence.length, 1);
+  assert.equal(analysis.evidence[0]?.sourceRecordId, 'bullish-cross');
+});
+
 test('derives low risk from stable available ATR and volume evidence', () => {
   const analysis = new MorningMeetingAnalyzer().analyze({
     latestSnapshot,
