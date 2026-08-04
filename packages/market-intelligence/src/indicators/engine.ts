@@ -1,39 +1,72 @@
 import type { IndicatorSnapshot, MarketSnapshot } from '../snapshot.js';
 
+export type IndicatorFamily = string;
+export type IndicatorInstanceId = string;
+
 /** A pure calculator that turns a supplied market snapshot series into one indicator snapshot. */
 export interface Indicator {
-  readonly id: string;
+  /** Stable identity of this configured calculator instance, such as `ema:9`. */
+  readonly id: IndicatorInstanceId;
+  /** Provider-neutral analytical family represented in resulting snapshots, such as `ema`. */
+  readonly family: IndicatorFamily;
   calculate(snapshots: ReadonlyArray<MarketSnapshot>): IndicatorSnapshot;
 }
 
 /** Extensible registry and dispatcher for provider-neutral indicator calculators. */
 export class IndicatorEngine {
-  private readonly indicators = new Map<string, Indicator>();
+  private readonly indicators = new Map<IndicatorInstanceId, Indicator>();
 
   register(indicator: Indicator): void {
     this.indicators.set(indicator.id, indicator);
   }
 
-  unregister(indicatorId: string): boolean {
-    return this.indicators.delete(indicatorId);
+  unregister(indicatorId: IndicatorInstanceId): boolean {
+    const indicator = this.resolve(indicatorId);
+
+    return indicator ? this.indicators.delete(indicator.id) : false;
   }
 
-  get(indicatorId: string): Indicator | undefined {
-    return this.indicators.get(indicatorId);
+  get(indicatorId: IndicatorInstanceId): Indicator | undefined {
+    return this.resolve(indicatorId);
   }
 
   list(): ReadonlyArray<Indicator> {
     return Array.from(this.indicators.values());
   }
 
-  calculate(indicatorId: string, snapshots: ReadonlyArray<MarketSnapshot>): IndicatorSnapshot {
-    const indicator = this.get(indicatorId);
+  listByFamily(family: IndicatorFamily): ReadonlyArray<Indicator> {
+    return this.list().filter((indicator) => indicator.family === family);
+  }
+
+  calculate(
+    indicatorId: IndicatorInstanceId,
+    snapshots: ReadonlyArray<MarketSnapshot>,
+  ): IndicatorSnapshot {
+    const indicator = this.resolve(indicatorId);
 
     if (!indicator) {
       throw new Error(`No indicator is registered for "${indicatorId}".`);
     }
 
     return indicator.calculate(snapshots);
+  }
+
+  private resolve(indicatorId: IndicatorInstanceId): Indicator | undefined {
+    const directMatch = this.indicators.get(indicatorId);
+
+    if (directMatch) {
+      return directMatch;
+    }
+
+    const familyMatches = this.listByFamily(indicatorId);
+
+    if (familyMatches.length > 1) {
+      throw new Error(
+        `Indicator family "${indicatorId}" has multiple registered configurations; use an instance ID.`,
+      );
+    }
+
+    return familyMatches[0];
   }
 }
 

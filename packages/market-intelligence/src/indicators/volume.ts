@@ -3,10 +3,12 @@ import { createIndicatorSnapshot, validatePeriod, validateSnapshotSeries } from 
 
 /** Volume baseline and relative-volume calculation over supplied snapshots. */
 export class VolumeIndicator {
-  readonly id = 'volume';
+  readonly family = 'volume';
+  readonly id: string;
 
   constructor(private readonly period: number) {
     validatePeriod(period);
+    this.id = `${this.family}:${period}`;
   }
 
   calculate(snapshots: ReadonlyArray<MarketSnapshot>): IndicatorSnapshot {
@@ -23,7 +25,7 @@ export class VolumeIndicator {
       recentSnapshots.reduce((total, snapshot) => total + snapshot.volume, 0) /
       recentSnapshots.length;
 
-    return createIndicatorSnapshot(this.id, snapshots, {
+    return createIndicatorSnapshot(this.family, snapshots, {
       period: this.period,
       current: latest.volume,
       average,

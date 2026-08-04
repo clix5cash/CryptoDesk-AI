@@ -4,6 +4,7 @@ import { createIndicatorSnapshot, validateSnapshotSeries } from './engine.js';
 /** Volume-weighted average price over the supplied snapshots. */
 export class VwapIndicator {
   readonly id = 'vwap';
+  readonly family = 'vwap';
 
   calculate(snapshots: ReadonlyArray<MarketSnapshot>): IndicatorSnapshot {
     validateSnapshotSeries(snapshots);
@@ -18,7 +19,7 @@ export class VwapIndicator {
       throw new Error('VWAP requires a positive aggregate volume.');
     }
 
-    return createIndicatorSnapshot(this.id, snapshots, {
+    return createIndicatorSnapshot(this.family, snapshots, {
       value,
       volume: snapshots.reduce((total, snapshot) => total + snapshot.volume, 0),
       currentPrice: latest.lastPrice,

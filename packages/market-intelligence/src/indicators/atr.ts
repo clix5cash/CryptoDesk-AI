@@ -3,10 +3,12 @@ import { createIndicatorSnapshot, validatePeriod, validateSnapshotSeries } from 
 
 /** Average true range over the most recent snapshots in the supplied series. */
 export class AtrIndicator {
-  readonly id = 'atr';
+  readonly family = 'atr';
+  readonly id: string;
 
   constructor(private readonly period: number) {
     validatePeriod(period);
+    this.id = `${this.family}:${period}`;
   }
 
   calculate(snapshots: ReadonlyArray<MarketSnapshot>): IndicatorSnapshot {
@@ -22,7 +24,7 @@ export class AtrIndicator {
       throw new Error('At least one market snapshot is required.');
     }
 
-    return createIndicatorSnapshot(this.id, snapshots, {
+    return createIndicatorSnapshot(this.family, snapshots, {
       period: this.period,
       value,
       currentPrice: latest.lastPrice,
