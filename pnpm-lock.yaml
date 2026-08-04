@@ -44,7 +44,11 @@ importers:
         specifier: workspace:*
         version: link:../market-intelligence
 
-  packages/news-intelligence: {}
+  packages/news-intelligence:
+    dependencies:
+      '@cryptodesk-ai/market-intelligence':
+        specifier: workspace:*
+        version: link:../market-intelligence
 
   packages/portfolio: {}
 
