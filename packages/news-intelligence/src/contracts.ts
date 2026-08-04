@@ -2,3 +2,5 @@
 export * from './models.js';
 export * from './providers.js';
 export * from './service.js';
+export * from './errors.js';
+export * from './normalization.js';
