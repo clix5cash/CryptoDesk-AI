@@ -11,6 +11,12 @@ CoinGecko candle support is intentionally unavailable: the available OHLC endpoi
 ## RSS/Atom adapter foundation
 
 The RSS/Atom adapter keeps feed definitions, HTTP access, parsing, and local
-feed models inside `src/rss`. It implements the provider-neutral News
-Intelligence boundary but intentionally defers fetching and feed ingestion to
-Sprint 6C.2.
+feed models inside `src/rss`. `RssNewsProvider` fetches all configured feeds,
+then parses and maps source content through provider-neutral News Intelligence
+contracts. A failure in any configured feed fails the whole request; there is
+no partial-success mode or automatic retry.
+
+RSS has no remote query protocol. The adapter applies source, configured asset
+and market mapping, topic, publication time-range, and limit constraints only
+after mapping source-provided records. It performs no normalization,
+deduplication, classification, or sentiment analysis.

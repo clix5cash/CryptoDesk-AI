@@ -34,6 +34,8 @@ export function mapNewsFeedItemToArticle(
     language: optionalText(item.language) ?? optionalText(definition.defaultLanguage),
     publishedAt,
     observedAt: normalizedObservedAt,
+    assetIds: normalizeValues(definition.defaultAssetIds ?? []),
+    marketIds: normalizeValues(definition.defaultMarketIds ?? []),
     topicIds: normalizeTopics([...(definition.defaultTopicIds ?? []), ...(item.categories ?? [])]),
   });
 }
@@ -105,6 +107,10 @@ function normalizeAuthors(authors: NewsFeedItem['authors']): ReadonlyArray<strin
 }
 
 function normalizeTopics(values: ReadonlyArray<string>): ReadonlyArray<string> | undefined {
+  return normalizeValues(values);
+}
+
+function normalizeValues(values: ReadonlyArray<string>): ReadonlyArray<string> | undefined {
   const topics = values.map(optionalText).filter((value): value is string => value !== undefined);
   return topics.length > 0 ? Array.from(new Set(topics)).sort(compareText) : undefined;
 }

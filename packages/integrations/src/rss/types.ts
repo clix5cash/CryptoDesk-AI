@@ -1,4 +1,4 @@
-import type { IsoTimestamp } from '@cryptodesk-ai/market-intelligence';
+import type { AssetId, IsoTimestamp, MarketId } from '@cryptodesk-ai/market-intelligence';
 import type { NewsSource, NewsTopicId } from '@cryptodesk-ai/news-intelligence';
 
 /** Explicit HTTP boundary for RSS/Atom feed retrieval. */
@@ -52,6 +52,8 @@ export interface RssFeedDefinition {
   readonly url: string;
   readonly source: NewsSource;
   readonly defaultLanguage?: string;
+  readonly defaultAssetIds?: ReadonlyArray<AssetId>;
+  readonly defaultMarketIds?: ReadonlyArray<MarketId>;
   readonly defaultTopicIds?: ReadonlyArray<NewsTopicId>;
 }
 
