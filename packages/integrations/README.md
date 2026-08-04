@@ -7,3 +7,10 @@ Provider-neutral integration contracts and adapters.
 The CoinGecko adapter uses an injected HTTP boundary and explicitly configured market mappings. It produces normalized `MarketSnapshot` values from current market data and implements provider-neutral `MarketQuote` range retrieval. It does not self-register.
 
 CoinGecko candle support is intentionally unavailable: the available OHLC endpoint lacks volume, while the historical chart endpoint lacks OHLC. The adapter does not fabricate `MarketCandle` data.
+
+## RSS/Atom adapter foundation
+
+The RSS/Atom adapter keeps feed definitions, HTTP access, parsing, and local
+feed models inside `src/rss`. It implements the provider-neutral News
+Intelligence boundary but intentionally defers fetching and feed ingestion to
+Sprint 6C.2.
