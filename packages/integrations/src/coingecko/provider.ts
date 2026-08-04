@@ -1,4 +1,6 @@
 import type {
+  HistoricalMarketQuoteProvider,
+  HistoricalMarketQuoteQuery,
   MarketQuote,
   MarketSnapshot,
   MarketSnapshotProvider,
@@ -6,7 +8,6 @@ import type {
 } from '@cryptodesk-ai/market-intelligence';
 import { mapCoinGeckoMarketChartToQuotes, mapCoinGeckoMarketToSnapshot } from './mappers.js';
 import type {
-  CoinGeckoHistoricalQuoteQuery,
   CoinGeckoMarketChartResponse,
   CoinGeckoMarketDefinition,
   CoinGeckoMarketResponse,
@@ -19,7 +20,9 @@ export class CoinGeckoProviderError extends Error {}
  * CoinGecko adapter for the provider-neutral MarketSnapshotProvider contract.
  * It is instantiated explicitly and never self-registers.
  */
-export class CoinGeckoMarketSnapshotProvider implements MarketSnapshotProvider {
+export class CoinGeckoMarketSnapshotProvider
+  implements MarketSnapshotProvider, HistoricalMarketQuoteProvider
+{
   constructor(private readonly config: CoinGeckoProviderConfig) {
     if (!config.baseUrl) {
       throw new CoinGeckoProviderError('CoinGecko base URL is required.');
@@ -61,11 +64,10 @@ export class CoinGeckoMarketSnapshotProvider implements MarketSnapshotProvider {
   }
 
   /**
-   * Retrieves timestamped historical prices from CoinGecko and returns neutral MarketQuote models.
-   * This adapter method does not introduce or alter a Market Intelligence provider contract.
+   * Retrieves timestamped historical prices through the provider-neutral historical quote boundary.
    */
   async getHistoricalQuotes(
-    query: CoinGeckoHistoricalQuoteQuery,
+    query: HistoricalMarketQuoteQuery,
   ): Promise<ReadonlyArray<MarketQuote>> {
     const market = this.getConfiguredMarket(query.marketId);
     const from = toUnixSeconds(query.from, 'from');

@@ -150,7 +150,7 @@ test('raises an adapter error for malformed CoinGecko JSON', async () => {
   );
 });
 
-test('maps historical CoinGecko prices to normalized MarketQuote values without candle fields', async () => {
+test('implements provider-neutral historical quote retrieval without candle fields', async () => {
   const provider = createProvider(async (url) => {
     assert.match(
       url,
@@ -169,11 +169,12 @@ test('maps historical CoinGecko prices to normalized MarketQuote values without 
     });
   });
 
-  const quotes = await provider.getHistoricalQuotes({
+  const historicalQuoteQuery = {
     marketId: 'bitcoin-usd',
     from: '2026-08-03T00:00:00.000Z',
     to: '2026-08-04T00:00:00.000Z',
-  });
+  };
+  const quotes = await provider.getHistoricalQuotes(historicalQuoteQuery);
 
   assert.deepEqual(quotes, [
     {

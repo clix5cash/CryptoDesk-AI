@@ -1,6 +1,6 @@
 import type {
   AssetId,
-  IsoTimestamp,
+  HistoricalMarketQuoteQuery,
   MarketId,
   Timeframe,
 } from '@cryptodesk-ai/market-intelligence';
@@ -39,12 +39,8 @@ export interface CoinGeckoProviderConfig {
   readonly apiKeyHeader?: string;
 }
 
-/** Adapter-level range query for CoinGecko historical price observations. */
-export interface CoinGeckoHistoricalQuoteQuery {
-  readonly marketId: MarketId;
-  readonly from: IsoTimestamp;
-  readonly to: IsoTimestamp;
-}
+/** @deprecated Use HistoricalMarketQuoteQuery from Market Intelligence instead. */
+export type CoinGeckoHistoricalQuoteQuery = HistoricalMarketQuoteQuery;
 
 /** Local representation of the CoinGecko `/coins/markets` response fields used by this adapter. */
 export interface CoinGeckoMarketResponse {
