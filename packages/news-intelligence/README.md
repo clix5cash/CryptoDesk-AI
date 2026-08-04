@@ -13,6 +13,12 @@ it has no built-in crypto catalog or provider-specific policy. It returns
 machine-readable evidence for explicit associations and exact token, phrase, or
 topic-ID matches.
 
+`getContext(query)` is an additive API. It requires an explicitly injected
+classifier, validator, and clock, and returns a validated `NewsContext` with
+normalized articles, article-ID-associated classifications, query provenance,
+and deterministic aggregate metadata. Empty provider output produces a valid
+empty context.
+
 Articles are ordered by publication time descending, then source ID and article
 ID ascending. Deduplication prefers source-record ID, then canonical URL, then
 the stable combination of source ID, article ID, title, and publication time.

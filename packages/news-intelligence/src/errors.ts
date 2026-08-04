@@ -3,3 +3,6 @@ export class NewsArticleError extends Error {}
 
 /** Explicit application error raised when deterministic classification configuration is invalid. */
 export class NewsClassificationError extends Error {}
+
+/** Explicit application error raised when a News Intelligence context is invalid. */
+export class NewsContextError extends Error {}

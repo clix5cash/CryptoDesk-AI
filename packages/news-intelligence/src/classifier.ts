@@ -16,11 +16,16 @@ import { NewsClassificationError } from './errors.js';
 import type { NewsArticle } from './models.js';
 import { normalizeNewsArticle } from './normalization.js';
 
+/** Provider-neutral boundary for deterministic classification of one article. */
+export interface NewsArticleClassifier {
+  classify(article: NewsArticle): NewsClassification;
+}
+
 /**
  * Stateless deterministic classifier. Its asset vocabulary and rules are
  * supplied explicitly by the composition layer; it has no provider knowledge.
  */
-export class NewsClassifier {
+export class NewsClassifier implements NewsArticleClassifier {
   private readonly assets: ReadonlyArray<NewsAssetVocabularyEntry>;
   private readonly rules: ReadonlyArray<NewsClassificationRule>;
 
