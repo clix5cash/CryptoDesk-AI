@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { CompositeNewsProvider, NewsSourceRegistry } from '@cryptodesk-ai/news-intelligence';
 import {
   RssNewsFeedParseError,
   RssNewsProvider,
@@ -222,4 +223,30 @@ test('keeps no-guid canonical URL article identity deterministic', async () => {
 
 test('rejects malformed XML directly through the concrete parser', () => {
   assert.throws(() => new XmlNewsFeedParser().parse('<rss>'), RssNewsFeedParseError);
+});
+
+test('plugs multiple explicit RSS/Atom providers into provider-neutral composition', async () => {
+  const rssDefinition = definition({ url: 'https://rss.example/feed.xml', sourceId: 'rss-source' });
+  const atomDefinition = definition({
+    url: 'https://atom.example/feed.xml',
+    sourceId: 'atom-source',
+  });
+  const rssProvider = createProvider([rssDefinition], { [rssDefinition.url]: response(rssFeed) });
+  const atomProvider = createProvider([atomDefinition], {
+    [atomDefinition.url]: response(atomFeed),
+  });
+  const composite = new CompositeNewsProvider(
+    new NewsSourceRegistry([rssDefinition.source, atomDefinition.source]),
+    [
+      { id: 'rss', provider: rssProvider, sourceIds: ['rss-source'] },
+      { id: 'atom', provider: atomProvider, sourceIds: ['atom-source'] },
+    ],
+  );
+
+  assert.deepEqual(
+    (await composite.getArticles({ sourceIds: ['rss-source', 'atom-source'] })).map(
+      (article) => article.sourceId,
+    ),
+    ['atom-source', 'rss-source', 'rss-source'],
+  );
 });

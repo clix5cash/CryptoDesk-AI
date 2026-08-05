@@ -9,3 +9,5 @@ export * from './classifier.js';
 export * from './context.js';
 export * from './context-assembly.js';
 export * from './validator.js';
+export * from './source-registry.js';
+export * from './composition.js';

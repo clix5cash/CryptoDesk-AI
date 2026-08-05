@@ -25,3 +25,11 @@ the stable combination of source ID, article ID, title, and publication time.
 The package preserves source, source-record, publication, observation, and
 canonical-reference provenance without fetching, ranking, scoring, summarizing,
 or analyzing news.
+
+`NewsSourceRegistry` holds explicitly configured provider-neutral sources in an
+instance-scoped registry. `CompositeNewsProvider` composes explicitly registered
+providers and their declared source ownership, then delegates normalization and
+deduplication back to this package. Providers are queried in provider-ID order;
+any provider failure fails the request explicitly. Empty provider output is
+valid, and conflicting cross-source identities remain explicit normalization
+errors rather than silently losing provenance.
