@@ -7,3 +7,6 @@ export * from './validator.js';
 export * from './news-brief.js';
 export * from './news-brief-assembler.js';
 export * from './news-brief-selector.js';
+export * from './news-narration.js';
+export * from './news-narration-assembler.js';
+export * from './news-narration-validator.js';
