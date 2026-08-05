@@ -44,3 +44,8 @@ only matching event-rule and explicit target identities within its injected
 `timeWindowHours` (24 hours by default); insufficient evidence remains in
 separate groups. Event groups preserve article/source provenance and existing
 impacts without creating narrative, ranking, or aggregate impact strength.
+
+`NewsMarketIntelligenceAggregator` separately organizes existing impacts and
+event groups by their explicit asset, market, or topic targets. It preserves
+individual impacts, source metadata, and available publication ranges; it does
+not infer targets, predict price, or turn repeated coverage into stronger impact.

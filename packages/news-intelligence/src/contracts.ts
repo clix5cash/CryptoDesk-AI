@@ -10,6 +10,8 @@ export * from './impact.js';
 export * from './impact-analyzer.js';
 export * from './event-group.js';
 export * from './event-grouper.js';
+export * from './market-intelligence.js';
+export * from './market-intelligence-aggregator.js';
 export * from './context.js';
 export * from './context-assembly.js';
 export * from './validator.js';
