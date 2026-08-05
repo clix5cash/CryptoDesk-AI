@@ -48,3 +48,26 @@ export interface MorningMeetingNewsNarration {
 export interface MorningMeetingNewsNarrator {
   narrate(input: MorningMeetingNewsNarrationInput): Promise<MorningMeetingNewsNarration>;
 }
+
+/** Opaque provider-neutral identity for an explicitly composed narration adapter. */
+export type NarratorProviderId = string;
+
+/** Opaque model identity declared by an adapter; no model catalog is maintained here. */
+export type NarratorModelId = string;
+
+export enum NarratorCapability {
+  NewsNarration = 'news_narration',
+}
+
+/** A concrete provider adapter remains outside Morning Meeting while satisfying this contract. */
+export interface MorningMeetingNewsNarratorAdapter extends MorningMeetingNewsNarrator {
+  readonly providerId: NarratorProviderId;
+  readonly capabilities: ReadonlyArray<NarratorCapability>;
+  readonly modelIds?: ReadonlyArray<NarratorModelId>;
+}
+
+/** Explicit provider choice; no fallback provider is selected implicitly. */
+export interface MorningMeetingNewsNarratorSelection {
+  readonly providerId: NarratorProviderId;
+  readonly modelId?: NarratorModelId;
+}

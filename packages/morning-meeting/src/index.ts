@@ -11,3 +11,4 @@ export * from './news-narration.js';
 export * from './news-narration-assembler.js';
 export * from './news-narration-validator.js';
 export * from './news-narration-service.js';
+export * from './news-narrator-registry.js';

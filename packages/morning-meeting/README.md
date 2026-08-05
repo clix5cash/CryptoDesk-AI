@@ -27,3 +27,9 @@ concrete AI provider is included in this package.
 callable orchestration boundary: News Brief → selection → narration input →
 injected provider-neutral narrator → validation → structured narration. Normal
 Morning Meeting report generation never requires or invokes it.
+
+Future narration adapters may be registered explicitly in an instance-scoped
+`MorningMeetingNewsNarratorRegistry` and selected by provider ID (and an
+adapter-declared model ID). Registry composition remains optional: direct
+narrator injection is still supported. No vendor adapter, SDK, prompt, or model
+configuration is included.
