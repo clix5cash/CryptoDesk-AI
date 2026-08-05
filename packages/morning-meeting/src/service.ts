@@ -67,7 +67,7 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
     const snapshots = normalizeMarketSnapshots(providerSnapshots);
     const marketViews = normalizeMarketViews(
       this.groupSnapshotsByMarket(snapshots).map((marketSnapshots) =>
-        this.assembleMarketView(marketSnapshots),
+        this.assembleMarketView(marketSnapshots, request.newsMarketIntelligenceViews),
       ),
     );
     const report = {
@@ -86,7 +86,10 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
     return report;
   }
 
-  private assembleMarketView(snapshots: ReadonlyArray<MarketSnapshot>): MorningMeetingMarketView {
+  private assembleMarketView(
+    snapshots: ReadonlyArray<MarketSnapshot>,
+    newsMarketIntelligenceViews: MorningMeetingRequest['newsMarketIntelligenceViews'],
+  ): MorningMeetingMarketView {
     const latestSnapshot = snapshots.at(-1);
 
     if (!latestSnapshot) {
@@ -107,6 +110,7 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       latestSnapshot,
       indicators,
       signals,
+      newsMarketIntelligenceViews,
     });
 
     return {
@@ -151,6 +155,9 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
     const signalEvidence = marketView.evidence.filter(
       (reference) => reference.kind === MorningMeetingEvidenceKind.MarketSignal,
     );
+    const newsEvidence = marketView.evidence.filter(
+      (reference) => reference.kind === MorningMeetingEvidenceKind.NewsMarketIntelligence,
+    );
     const riskEvidence = [...volatilityEvidence, ...volumeEvidence, ...signalEvidence];
 
     return [
@@ -159,6 +166,7 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       this.createSection(MorningMeetingSectionKind.Volatility, marketView, volatilityEvidence),
       this.createSection(MorningMeetingSectionKind.Volume, marketView, volumeEvidence),
       this.createSection(MorningMeetingSectionKind.Signals, marketView, signalEvidence),
+      this.createSection(MorningMeetingSectionKind.News, marketView, newsEvidence),
       this.createSection(MorningMeetingSectionKind.Risk, marketView, riskEvidence),
     ].filter((section): section is MorningMeetingSection => section !== undefined);
   }

@@ -12,6 +12,7 @@ const evidenceKindOrder: Readonly<Record<MorningMeetingEvidenceKind, number>> = 
   [MorningMeetingEvidenceKind.MarketSnapshot]: 0,
   [MorningMeetingEvidenceKind.IndicatorSnapshot]: 1,
   [MorningMeetingEvidenceKind.MarketSignal]: 2,
+  [MorningMeetingEvidenceKind.NewsMarketIntelligence]: 3,
 };
 
 const sectionKindOrder: Readonly<Record<MorningMeetingSectionKind, number>> = {
@@ -21,7 +22,8 @@ const sectionKindOrder: Readonly<Record<MorningMeetingSectionKind, number>> = {
   [MorningMeetingSectionKind.Volatility]: 3,
   [MorningMeetingSectionKind.Volume]: 4,
   [MorningMeetingSectionKind.Signals]: 5,
-  [MorningMeetingSectionKind.Risk]: 6,
+  [MorningMeetingSectionKind.News]: 6,
+  [MorningMeetingSectionKind.Risk]: 7,
 };
 
 /** Normalizes provider snapshots into one deterministic series per logical observation. */
@@ -107,6 +109,13 @@ export function evidenceIdentity(reference: MorningMeetingEvidenceReference): st
     reference.observedAt,
     reference.indicator ?? '',
     reference.signalId ?? '',
+    reference.newsTargetKind ?? '',
+    reference.newsTargetId ?? '',
+    reference.newsDirection ?? '',
+    reference.newsArticleIds?.join(',') ?? '',
+    reference.newsEventGroupIds?.join(',') ?? '',
+    reference.newsSourceIds?.join(',') ?? '',
+    reference.newsSourceRecordIds?.join(',') ?? '',
   ]);
 }
 
@@ -172,6 +181,13 @@ function compareEvidence(
         left.observedAt,
         left.indicator ?? '',
         left.signalId ?? '',
+        left.newsTargetKind ?? '',
+        left.newsTargetId ?? '',
+        left.newsDirection ?? '',
+        left.newsArticleIds?.join(',') ?? '',
+        left.newsEventGroupIds?.join(',') ?? '',
+        left.newsSourceIds?.join(',') ?? '',
+        left.newsSourceRecordIds?.join(',') ?? '',
         left.sourceRecordId ?? '',
       ],
       [
@@ -180,6 +196,13 @@ function compareEvidence(
         right.observedAt,
         right.indicator ?? '',
         right.signalId ?? '',
+        right.newsTargetKind ?? '',
+        right.newsTargetId ?? '',
+        right.newsDirection ?? '',
+        right.newsArticleIds?.join(',') ?? '',
+        right.newsEventGroupIds?.join(',') ?? '',
+        right.newsSourceIds?.join(',') ?? '',
+        right.newsSourceRecordIds?.join(',') ?? '',
         right.sourceRecordId ?? '',
       ],
     )

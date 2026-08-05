@@ -231,6 +231,15 @@ export class MorningMeetingReportValidator {
     if (reference.kind === MorningMeetingEvidenceKind.MarketSignal && !reference.signalId) {
       throw new MorningMeetingReportError(`Signal evidence in ${owner} requires a signal ID.`);
     }
+
+    if (
+      reference.kind === MorningMeetingEvidenceKind.NewsMarketIntelligence &&
+      (!reference.newsTargetKind || !reference.newsTargetId)
+    ) {
+      throw new MorningMeetingReportError(
+        `News Intelligence evidence in ${owner} requires a target identity.`,
+      );
+    }
   }
 
   private assertDeterministicMarketViewOrder(report: MorningMeetingReport): void {

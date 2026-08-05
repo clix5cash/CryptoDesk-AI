@@ -7,6 +7,11 @@ import type {
   MarketSnapshot,
   Timeframe,
 } from '@cryptodesk-ai/market-intelligence';
+import type {
+  NewsImpactDirection,
+  NewsImpactTargetKind,
+  NewsMarketIntelligenceView,
+} from '@cryptodesk-ai/news-intelligence';
 
 /** Stable identifier for one generated Morning Meeting report. */
 export type MorningMeetingId = string;
@@ -33,6 +38,7 @@ export enum MorningMeetingSectionKind {
   Volatility = 'volatility',
   Volume = 'volume',
   Signals = 'signals',
+  News = 'news',
   Risk = 'risk',
 }
 
@@ -40,6 +46,7 @@ export enum MorningMeetingEvidenceKind {
   MarketSnapshot = 'market_snapshot',
   IndicatorSnapshot = 'indicator_snapshot',
   MarketSignal = 'market_signal',
+  NewsMarketIntelligence = 'news_market_intelligence',
 }
 
 /**
@@ -55,6 +62,14 @@ export interface MorningMeetingEvidenceReference {
   readonly sourceRecordId?: SourceRecordId;
   readonly indicator?: string;
   readonly signalId?: string;
+  /** Provider-neutral News Intelligence provenance when news context is supplied. */
+  readonly newsTargetKind?: NewsImpactTargetKind;
+  readonly newsTargetId?: string;
+  readonly newsDirection?: NewsImpactDirection;
+  readonly newsArticleIds?: ReadonlyArray<string>;
+  readonly newsEventGroupIds?: ReadonlyArray<string>;
+  readonly newsSourceIds?: ReadonlyArray<string>;
+  readonly newsSourceRecordIds?: ReadonlyArray<SourceRecordId>;
 }
 
 /** Input selecting the deterministic market intelligence for a meeting. */
@@ -63,6 +78,8 @@ export interface MorningMeetingRequest {
   readonly marketIds?: ReadonlyArray<MarketId>;
   readonly timeframe: Timeframe;
   readonly asOf?: IsoTimestamp;
+  /** Already-produced provider-neutral News Intelligence; Morning Meeting never retrieves it. */
+  readonly newsMarketIntelligenceViews?: ReadonlyArray<NewsMarketIntelligenceView>;
 }
 
 /** Deterministic analytical state for a single market at the meeting boundary. */

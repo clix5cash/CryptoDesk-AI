@@ -15,7 +15,8 @@
     "dist"
   ],
   "dependencies": {
-    "@cryptodesk-ai/market-intelligence": "workspace:*"
+    "@cryptodesk-ai/market-intelligence": "workspace:*",
+    "@cryptodesk-ai/news-intelligence": "workspace:*"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",

@@ -10,6 +10,9 @@
   "references": [
     {
       "path": "../market-intelligence"
+    },
+    {
+      "path": "../news-intelligence"
     }
   ],
   "include": ["src/**/*.ts"]

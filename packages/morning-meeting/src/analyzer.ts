@@ -7,17 +7,24 @@ import {
   type MarketSnapshot,
 } from '@cryptodesk-ai/market-intelligence';
 import {
+  NewsImpactDirection,
+  NewsImpactTargetKind,
+  type NewsMarketIntelligenceView,
+} from '@cryptodesk-ai/news-intelligence';
+import {
   MorningMeetingBias,
   MorningMeetingEvidenceKind,
   MorningMeetingRiskLevel,
   type MorningMeetingEvidenceReference,
 } from './contracts.js';
+import { MorningMeetingReportError } from './errors.js';
 import { evidenceIdentity, normalizeEvidence } from './normalization.js';
 
 export interface MorningMeetingAnalysisInput {
   readonly latestSnapshot: MarketSnapshot;
   readonly indicators: ReadonlyArray<IndicatorSnapshot>;
   readonly signals: ReadonlyArray<MarketSignal>;
+  readonly newsMarketIntelligenceViews?: ReadonlyArray<NewsMarketIntelligenceView>;
 }
 
 export interface MorningMeetingAnalysis {
@@ -56,14 +63,18 @@ export class MorningMeetingAnalyzer {
   }
 
   analyze(input: MorningMeetingAnalysisInput): MorningMeetingAnalysis {
-    const directionalEvidence = this.collectDirectionalEvidence(input);
+    const news = this.collectNewsEvidence(input);
+    const directionalEvidence = [
+      ...this.collectDirectionalEvidence(input),
+      ...news.directionalEvidence,
+    ];
     const bias = this.deriveBias(directionalEvidence);
     const risk = this.deriveRisk(input);
 
     return {
       bias,
       riskLevel: risk.level,
-      evidence: uniqueEvidence([...directionalEvidence, ...risk.evidence]),
+      evidence: uniqueEvidence([...directionalEvidence, ...risk.evidence, ...news.evidence]),
     };
   }
 
@@ -134,6 +145,55 @@ export class MorningMeetingAnalyzer {
     });
 
     return [...signalEvidence, ...priceEvidence];
+  }
+
+  private collectNewsEvidence(input: MorningMeetingAnalysisInput): NewsAssessment {
+    const relevantViews = normalizeRelevantNewsViews(
+      input.newsMarketIntelligenceViews ?? [],
+      input.latestSnapshot,
+    );
+    const evidence = relevantViews.flatMap((view) => {
+      const reference = createNewsReference(view, input.latestSnapshot);
+      return reference ? [reference] : [];
+    });
+    const directions = new Set(
+      relevantViews
+        .filter((view) => view.lastPublishedAt !== undefined)
+        .map((view) => view.direction),
+    );
+    const hasOnlyPositive =
+      directions.size > 0 && directions.size === 1 && directions.has(NewsImpactDirection.Positive);
+    const hasOnlyNegative =
+      directions.size > 0 && directions.size === 1 && directions.has(NewsImpactDirection.Negative);
+    const directionalReference = evidence[0];
+
+    if (hasOnlyPositive && directionalReference) {
+      return {
+        evidence,
+        directionalEvidence: [
+          {
+            direction: SignalDirection.Bullish,
+            countsForBias: true,
+            reference: directionalReference,
+          },
+        ],
+      };
+    }
+
+    if (hasOnlyNegative && directionalReference) {
+      return {
+        evidence,
+        directionalEvidence: [
+          {
+            direction: SignalDirection.Bearish,
+            countsForBias: true,
+            reference: directionalReference,
+          },
+        ],
+      };
+    }
+
+    return { evidence, directionalEvidence: [] };
   }
 
   private deriveRisk(input: MorningMeetingAnalysisInput): RiskAssessment {
@@ -242,6 +302,11 @@ interface RiskAssessment {
   readonly evidence: ReadonlyArray<MorningMeetingEvidenceReference>;
 }
 
+interface NewsAssessment {
+  readonly evidence: ReadonlyArray<MorningMeetingEvidenceReference>;
+  readonly directionalEvidence: ReadonlyArray<DirectionalEvidence>;
+}
+
 function calculateRatio(
   value: number | undefined,
   previousValue: number | undefined,
@@ -301,6 +366,97 @@ function createSignalReference(
     signalId: signal.id,
     sourceRecordId: signal.id,
   };
+}
+
+function normalizeRelevantNewsViews(
+  views: ReadonlyArray<NewsMarketIntelligenceView>,
+  snapshot: MarketSnapshot,
+): ReadonlyArray<NewsMarketIntelligenceView> {
+  const byTarget = new Map<string, NewsMarketIntelligenceView>();
+
+  for (const view of views) {
+    if (!matchesMarket(view, snapshot)) {
+      continue;
+    }
+
+    const identity = newsTargetIdentity(view);
+    const existing = byTarget.get(identity);
+
+    if (existing && JSON.stringify(existing) !== JSON.stringify(view)) {
+      throw new MorningMeetingReportError(
+        `Conflicting News Market Intelligence views for target "${identity}".`,
+      );
+    }
+
+    byTarget.set(identity, existing ?? view);
+  }
+
+  return Array.from(byTarget.values()).sort((left, right) => {
+    const leftIdentity = newsTargetIdentity(left);
+    const rightIdentity = newsTargetIdentity(right);
+    return leftIdentity < rightIdentity ? -1 : leftIdentity > rightIdentity ? 1 : 0;
+  });
+}
+
+function matchesMarket(view: NewsMarketIntelligenceView, snapshot: MarketSnapshot): boolean {
+  switch (view.target.kind) {
+    case NewsImpactTargetKind.Asset:
+      return view.target.assetId === snapshot.baseAssetId;
+    case NewsImpactTargetKind.Market:
+      return view.target.marketId === snapshot.marketId;
+    case NewsImpactTargetKind.Topic:
+      return false;
+  }
+}
+
+function createNewsReference(
+  view: NewsMarketIntelligenceView,
+  snapshot: MarketSnapshot,
+): MorningMeetingEvidenceReference | undefined {
+  if (!view.lastPublishedAt) {
+    return undefined;
+  }
+
+  return {
+    kind: MorningMeetingEvidenceKind.NewsMarketIntelligence,
+    assetId: snapshot.baseAssetId,
+    marketId: snapshot.marketId,
+    observedAt: view.lastPublishedAt,
+    newsTargetKind: view.target.kind,
+    newsTargetId: newsTargetIdentifier(view),
+    ...(view.direction === undefined ? {} : { newsDirection: view.direction }),
+    newsArticleIds: uniqueSorted(view.articleIds),
+    newsEventGroupIds: uniqueSorted(view.eventGroupIds),
+    newsSourceIds: uniqueSorted(view.sourceIds),
+    newsSourceRecordIds: uniqueSorted(
+      view.impacts.flatMap((impact) =>
+        impact.evidence.flatMap((evidence) =>
+          evidence.sourceRecordId === undefined ? [] : [evidence.sourceRecordId],
+        ),
+      ),
+    ),
+  };
+}
+
+function newsTargetIdentity(view: NewsMarketIntelligenceView): string {
+  return `${view.target.kind}:${newsTargetIdentifier(view)}`;
+}
+
+function newsTargetIdentifier(view: NewsMarketIntelligenceView): string {
+  switch (view.target.kind) {
+    case NewsImpactTargetKind.Asset:
+      return view.target.assetId;
+    case NewsImpactTargetKind.Market:
+      return view.target.marketId;
+    case NewsImpactTargetKind.Topic:
+      return view.target.topicId;
+  }
+}
+
+function uniqueSorted(values: ReadonlyArray<string>): ReadonlyArray<string> {
+  return Array.from(new Set(values)).sort((left, right) =>
+    left < right ? -1 : left > right ? 1 : 0,
+  );
 }
 
 function uniqueEvidence(
