@@ -10,6 +10,7 @@ import type {
 import type {
   NewsImpactDirection,
   NewsImpactTargetKind,
+  NewsImpactType,
   NewsMarketIntelligenceView,
 } from '@cryptodesk-ai/news-intelligence';
 
@@ -66,6 +67,9 @@ export interface MorningMeetingEvidenceReference {
   readonly newsTargetKind?: NewsImpactTargetKind;
   readonly newsTargetId?: string;
   readonly newsDirection?: NewsImpactDirection;
+  readonly newsImpactTypes?: ReadonlyArray<NewsImpactType>;
+  readonly newsFirstPublishedAt?: IsoTimestamp;
+  readonly newsLastPublishedAt?: IsoTimestamp;
   readonly newsArticleIds?: ReadonlyArray<string>;
   readonly newsEventGroupIds?: ReadonlyArray<string>;
   readonly newsSourceIds?: ReadonlyArray<string>;
@@ -118,6 +122,8 @@ export interface MorningMeetingReport {
   readonly timeframe: Timeframe;
   readonly marketViews: ReadonlyArray<MorningMeetingMarketView>;
   readonly sections: ReadonlyArray<MorningMeetingSection>;
+  /** Present only when request-scoped News Intelligence input was explicitly supplied. */
+  readonly newsBrief?: import('./news-brief.js').MorningMeetingNewsBrief;
 }
 
 /** Application-facing boundary for future Morning Meeting orchestration. */

@@ -202,6 +202,8 @@ test('preserves News Intelligence provenance in a deterministic News report sect
   assert.deepEqual(newsEvidence?.newsSourceRecordIds, ['provider-record-1']);
   assert.equal(newsEvidence?.sourceRecordId, undefined);
   assert.equal(newsEvidence?.observedAt, '2026-08-03T01:00:00.000Z');
+  assert.deepEqual(report.newsBrief?.items[0]?.articleIds, ['article-a', 'article-b']);
+  assert.equal(report.newsBrief?.items[0]?.direction, NewsImpactDirection.Positive);
   assert.deepEqual(
     report.sections.map((section) => section.kind),
     [MorningMeetingSectionKind.MarketOverview, MorningMeetingSectionKind.News],
@@ -226,4 +228,17 @@ test('normalizes equivalent News Intelligence view ordering into repeatable repo
   });
 
   assert.deepEqual(first, second);
+});
+
+test('adds an empty news brief only for explicitly supplied empty news input', async () => {
+  const withoutNews = await service().generate({ timeframe: Timeframe.OneHour });
+  const withEmptyNews = await service().generate({
+    timeframe: Timeframe.OneHour,
+    newsMarketIntelligenceViews: [],
+  });
+
+  assert.equal('newsBrief' in withoutNews, false);
+  assert.deepEqual(withEmptyNews.newsBrief, { items: [] });
+  assert.equal(withEmptyNews.marketViews[0]?.bias, withoutNews.marketViews[0]?.bias);
+  assert.equal(withEmptyNews.marketViews[0]?.riskLevel, withoutNews.marketViews[0]?.riskLevel);
 });

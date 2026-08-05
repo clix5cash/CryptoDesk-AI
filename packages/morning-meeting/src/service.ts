@@ -26,6 +26,7 @@ import {
   normalizeSections,
 } from './normalization.js';
 import { MorningMeetingReportValidator } from './validator.js';
+import { MorningMeetingNewsBriefAssembler } from './news-brief-assembler.js';
 
 /** Explicit source of report identifiers for application composition. */
 export interface MorningMeetingIdGenerator {
@@ -46,6 +47,7 @@ export interface MorningMeetingServiceDependencies {
   readonly reportValidator: MorningMeetingReportValidator;
   readonly idGenerator: MorningMeetingIdGenerator;
   readonly clock: MorningMeetingClock;
+  readonly newsBriefAssembler?: MorningMeetingNewsBriefAssembler;
 }
 
 /**
@@ -70,6 +72,12 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
         this.assembleMarketView(marketSnapshots, request.newsMarketIntelligenceViews),
       ),
     );
+    const newsBrief =
+      request.newsMarketIntelligenceViews === undefined
+        ? undefined
+        : (this.dependencies.newsBriefAssembler ?? new MorningMeetingNewsBriefAssembler()).assemble(
+            marketViews.flatMap((marketView) => marketView.evidence),
+          );
     const report = {
       id: this.dependencies.idGenerator.generate(),
       generatedAt,
@@ -79,6 +87,7 @@ export class DefaultMorningMeetingService implements MorningMeetingService {
       sections: normalizeSections(
         marketViews.flatMap((marketView) => this.assembleSections(marketView)),
       ),
+      ...(newsBrief === undefined ? {} : { newsBrief }),
     };
 
     this.dependencies.reportValidator.validate(report, request);

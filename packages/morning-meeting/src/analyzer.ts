@@ -425,6 +425,9 @@ function createNewsReference(
     newsTargetKind: view.target.kind,
     newsTargetId: newsTargetIdentifier(view),
     ...(view.direction === undefined ? {} : { newsDirection: view.direction }),
+    newsImpactTypes: uniqueSorted(view.impacts.map((impact) => impact.type)),
+    ...(view.firstPublishedAt === undefined ? {} : { newsFirstPublishedAt: view.firstPublishedAt }),
+    ...(view.lastPublishedAt === undefined ? {} : { newsLastPublishedAt: view.lastPublishedAt }),
     newsArticleIds: uniqueSorted(view.articleIds),
     newsEventGroupIds: uniqueSorted(view.eventGroupIds),
     newsSourceIds: uniqueSorted(view.sourceIds),
@@ -453,7 +456,7 @@ function newsTargetIdentifier(view: NewsMarketIntelligenceView): string {
   }
 }
 
-function uniqueSorted(values: ReadonlyArray<string>): ReadonlyArray<string> {
+function uniqueSorted<T extends string>(values: ReadonlyArray<T>): ReadonlyArray<T> {
   return Array.from(new Set(values)).sort((left, right) =>
     left < right ? -1 : left > right ? 1 : 0,
   );

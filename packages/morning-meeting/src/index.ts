@@ -4,3 +4,5 @@ export * from './errors.js';
 export * from './normalization.js';
 export * from './service.js';
 export * from './validator.js';
+export * from './news-brief.js';
+export * from './news-brief-assembler.js';
