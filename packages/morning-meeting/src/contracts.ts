@@ -13,6 +13,7 @@ import type {
   NewsImpactType,
   NewsMarketIntelligenceView,
 } from '@cryptodesk-ai/news-intelligence';
+import type { MorningMeetingNewsBrief, MorningMeetingNewsSelectionPolicy } from './news-brief.js';
 
 /** Stable identifier for one generated Morning Meeting report. */
 export type MorningMeetingId = string;
@@ -84,6 +85,8 @@ export interface MorningMeetingRequest {
   readonly asOf?: IsoTimestamp;
   /** Already-produced provider-neutral News Intelligence; Morning Meeting never retrieves it. */
   readonly newsMarketIntelligenceViews?: ReadonlyArray<NewsMarketIntelligenceView>;
+  /** Explicit optional budget and qualitative ordering for an already-assembled news brief. */
+  readonly newsBriefSelectionPolicy?: MorningMeetingNewsSelectionPolicy;
 }
 
 /** Deterministic analytical state for a single market at the meeting boundary. */
@@ -123,7 +126,7 @@ export interface MorningMeetingReport {
   readonly marketViews: ReadonlyArray<MorningMeetingMarketView>;
   readonly sections: ReadonlyArray<MorningMeetingSection>;
   /** Present only when request-scoped News Intelligence input was explicitly supplied. */
-  readonly newsBrief?: import('./news-brief.js').MorningMeetingNewsBrief;
+  readonly newsBrief?: MorningMeetingNewsBrief;
 }
 
 /** Application-facing boundary for future Morning Meeting orchestration. */

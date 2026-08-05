@@ -18,6 +18,7 @@ import {
   MorningMeetingAnalyzer,
   MorningMeetingBias,
   MorningMeetingEvidenceKind,
+  MorningMeetingNewsPriority,
   MorningMeetingReportValidator,
   MorningMeetingRiskLevel,
   MorningMeetingSectionKind,
@@ -241,4 +242,40 @@ test('adds an empty news brief only for explicitly supplied empty news input', a
   assert.deepEqual(withEmptyNews.newsBrief, { items: [] });
   assert.equal(withEmptyNews.marketViews[0]?.bias, withoutNews.marketViews[0]?.bias);
   assert.equal(withEmptyNews.marketViews[0]?.riskLevel, withoutNews.marketViews[0]?.riskLevel);
+});
+
+test('news briefing selection changes presentation only, not market bias or risk', async () => {
+  const views = [
+    newsView({
+      eventGroupIds: ['group-listing'],
+      lastPublishedAt: '2026-08-03T01:00:00.000Z',
+    }),
+    newsView({
+      target: { kind: NewsImpactTargetKind.Market, marketId: 'bitcoin-usd' },
+      eventGroupIds: ['group-security'],
+      lastPublishedAt: '2026-08-03T02:00:00.000Z',
+    }),
+  ];
+  const unselected = await service().generate({
+    timeframe: Timeframe.OneHour,
+    newsMarketIntelligenceViews: views,
+  });
+  const selected = await service().generate({
+    timeframe: Timeframe.OneHour,
+    newsMarketIntelligenceViews: views,
+    newsBriefSelectionPolicy: {
+      maxItems: 1,
+      rules: [
+        {
+          id: 'listing-high',
+          impactTypes: [NewsImpactType.Listing],
+          priority: MorningMeetingNewsPriority.High,
+        },
+      ],
+    },
+  });
+
+  assert.equal(selected.newsBrief?.items.length, 1);
+  assert.equal(selected.marketViews[0]?.bias, unselected.marketViews[0]?.bias);
+  assert.equal(selected.marketViews[0]?.riskLevel, unselected.marketViews[0]?.riskLevel);
 });

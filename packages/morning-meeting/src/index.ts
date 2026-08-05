@@ -6,3 +6,4 @@ export * from './service.js';
 export * from './validator.js';
 export * from './news-brief.js';
 export * from './news-brief-assembler.js';
+export * from './news-brief-selector.js';
