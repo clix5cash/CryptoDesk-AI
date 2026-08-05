@@ -9,14 +9,19 @@ import { MorningMeetingNewsPriority } from './news-brief.js';
 import type {
   MorningMeetingNewsNarration,
   MorningMeetingNewsNarrationInput,
+  MorningMeetingNewsNarrationInputItem,
   MorningMeetingNewsNarrationItem,
 } from './news-narration.js';
 
 /** Validates that untrusted presentation output remains attached to immutable narration input. */
 export class MorningMeetingNewsNarrationValidator {
   validateInput(input: MorningMeetingNewsNarrationInput): void {
+    if (!input || !Array.isArray(input.items)) {
+      throw new MorningMeetingReportError('News narration input must contain an items array.');
+    }
     const identities = new Set<string>();
-    for (const item of input.items) {
+    const items = input.items as ReadonlyArray<MorningMeetingNewsNarrationInputItem>;
+    for (const item of items) {
       assertNonEmpty(item.briefItemId, 'News narration briefing item ID');
       assertNonEmpty(item.targetKind, 'News narration target kind');
       assertNonEmpty(item.targetId, 'News narration target ID');
@@ -55,10 +60,14 @@ export class MorningMeetingNewsNarrationValidator {
     narration: MorningMeetingNewsNarration,
   ): void {
     this.validateInput(input);
+    if (!narration || !Array.isArray(narration.items)) {
+      throw new MorningMeetingReportError('News narration output must contain an items array.');
+    }
     const knownItems = new Map(input.items.map((item) => [item.briefItemId, item]));
     const narrationIds = new Set<string>();
+    const items = narration.items as ReadonlyArray<MorningMeetingNewsNarrationItem>;
 
-    for (const item of narration.items) {
+    for (const item of items) {
       this.assertOutputItem(item, knownItems, narrationIds);
     }
   }
@@ -87,6 +96,9 @@ export class MorningMeetingNewsNarrationValidator {
     knownItems: ReadonlyMap<string, MorningMeetingNewsNarrationInput['items'][number]>,
     narrationIds: Set<string>,
   ): void {
+    if (!item || typeof item !== 'object') {
+      throw new MorningMeetingReportError('News narration output contains an invalid item.');
+    }
     assertNonEmpty(item.briefItemId, 'News narration item briefing ID');
     assertNonEmpty(item.text, 'News narration text');
     if (narrationIds.has(item.briefItemId)) {
@@ -131,6 +143,9 @@ function assertUniqueReferences(
 ): void {
   const identities = new Set<string>();
   for (const reference of references) {
+    if (!reference || typeof reference !== 'object') {
+      throw new MorningMeetingReportError(`Evidence in ${owner} is invalid.`);
+    }
     assertNonEmpty(reference.assetId, `Evidence asset ID in ${owner}`);
     assertNonEmpty(reference.marketId, `Evidence market ID in ${owner}`);
     assertNonEmpty(reference.observedAt, `Evidence observedAt in ${owner}`);
@@ -150,8 +165,8 @@ function assertUniqueReferences(
   }
 }
 
-function assertNonEmpty(value: string, label: string): void {
-  if (!value.trim()) {
+function assertNonEmpty(value: unknown, label: string): void {
+  if (typeof value !== 'string' || !value.trim()) {
     throw new MorningMeetingReportError(`${label} is required.`);
   }
 }

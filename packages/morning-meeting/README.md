@@ -22,3 +22,8 @@ narration-input boundary. Its text is untrusted presentation output: validation
 requires it to retain the input item identity, target, and provenance, while it
 cannot alter bias, risk, impacts, event groups, or the analytical report. No
 concrete AI provider is included in this package.
+
+`DefaultMorningMeetingNewsNarrationService` is an optional, independently
+callable orchestration boundary: News Brief → selection → narration input →
+injected provider-neutral narrator → validation → structured narration. Normal
+Morning Meeting report generation never requires or invokes it.
