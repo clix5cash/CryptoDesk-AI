@@ -63,6 +63,25 @@ export class MorningMeetingNewsNarrationValidator {
     }
   }
 
+  /**
+   * Returns validated untrusted presentation output in the canonical order of
+   * the immutable narration input. Narrative text itself is never interpreted.
+   */
+  normalizeOutput(
+    input: MorningMeetingNewsNarrationInput,
+    narration: MorningMeetingNewsNarration,
+  ): MorningMeetingNewsNarration {
+    this.validateOutput(input, narration);
+    const byBriefItemId = new Map(narration.items.map((item) => [item.briefItemId, item]));
+
+    return {
+      items: input.items.flatMap((inputItem) => {
+        const item = byBriefItemId.get(inputItem.briefItemId);
+        return item === undefined ? [] : [item];
+      }),
+    };
+  }
+
   private assertOutputItem(
     item: MorningMeetingNewsNarrationItem,
     knownItems: ReadonlyMap<string, MorningMeetingNewsNarrationInput['items'][number]>,

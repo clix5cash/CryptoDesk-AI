@@ -14,3 +14,11 @@ An optional request-scoped News Intelligence boundary accepts already-produced
 `NewsMarketIntelligenceView` records. Morning Meeting only matches explicit
 asset or market targets, preserves available provenance in a structured News
 section, and never retrieves, classifies, groups, or analyzes provider data.
+
+The structured `MorningMeetingNewsBrief` can be explicitly prioritized and
+selected using deterministic rules and budgets. A future provider-neutral
+`MorningMeetingNewsNarrator` receives only the selected facts through a stable
+narration-input boundary. Its text is untrusted presentation output: validation
+requires it to retain the input item identity, target, and provenance, while it
+cannot alter bias, risk, impacts, event groups, or the analytical report. No
+concrete AI provider is included in this package.
