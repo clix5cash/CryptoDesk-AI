@@ -33,3 +33,8 @@ deduplication back to this package. Providers are queried in provider-ID order;
 any provider failure fails the request explicitly. Empty provider output is
 valid, and conflicting cross-source identities remain explicit normalization
 errors rather than silently losing provenance.
+
+Concrete integrations compose upward into these provider-neutral boundaries:
+`NewsProvider` → `CompositeNewsProvider` → `DefaultNewsIntelligenceService` →
+`NewsContext`. This package does not import RSS, XML parsers, HTTP clients, or
+concrete provider implementations.

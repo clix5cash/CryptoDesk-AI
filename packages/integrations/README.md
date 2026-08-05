@@ -20,3 +20,9 @@ RSS has no remote query protocol. The adapter applies source, configured asset
 and market mapping, topic, publication time-range, and limit constraints only
 after mapping source-provided records. It performs no normalization,
 deduplication, classification, or sentiment analysis.
+
+At an application composition boundary, explicitly configured RSS/Atom
+providers may be supplied to `CompositeNewsProvider`, then to
+`DefaultNewsIntelligenceService` for normalized, classified, validated
+`NewsContext` output. Fetch, parser, and clock boundaries remain injected, so
+tests use fixtures rather than live network access.
