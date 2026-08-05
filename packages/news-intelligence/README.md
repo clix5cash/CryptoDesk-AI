@@ -38,3 +38,9 @@ Concrete integrations compose upward into these provider-neutral boundaries:
 `NewsProvider` → `CompositeNewsProvider` → `DefaultNewsIntelligenceService` →
 `NewsContext`. This package does not import RSS, XML parsers, HTTP clients, or
 concrete provider implementations.
+
+`NewsEventGrouper` is a separate deterministic enrichment component. It groups
+only matching event-rule and explicit target identities within its injected
+`timeWindowHours` (24 hours by default); insufficient evidence remains in
+separate groups. Event groups preserve article/source provenance and existing
+impacts without creating narrative, ranking, or aggregate impact strength.

@@ -7,6 +7,9 @@ export class NewsClassificationError extends Error {}
 /** Explicit application error raised when deterministic impact configuration or input is invalid. */
 export class NewsImpactError extends Error {}
 
+/** Explicit application error raised when deterministic event grouping input is invalid. */
+export class NewsEventGroupError extends Error {}
+
 /** Explicit application error raised when a News Intelligence context is invalid. */
 export class NewsContextError extends Error {}
 

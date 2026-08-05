@@ -8,6 +8,8 @@ export * from './classification.js';
 export * from './classifier.js';
 export * from './impact.js';
 export * from './impact-analyzer.js';
+export * from './event-group.js';
+export * from './event-grouper.js';
 export * from './context.js';
 export * from './context-assembly.js';
 export * from './validator.js';
