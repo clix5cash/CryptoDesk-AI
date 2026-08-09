@@ -33,3 +33,9 @@ Future narration adapters may be registered explicitly in an instance-scoped
 adapter-declared model ID). Registry composition remains optional: direct
 narrator injection is still supported. No vendor adapter, SDK, prompt, or model
 configuration is included.
+
+`ProviderNeutralMorningMeetingNewsNarratorAdapter` defines the injected
+completion-client boundary for a future vendor adapter. It sends a detached,
+canonical structured request and maps only validated text back onto canonical
+target identity and provenance. No network client, vendor SDK, or concrete
+model implementation is included.
