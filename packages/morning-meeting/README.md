@@ -39,3 +39,11 @@ completion-client boundary for a future vendor adapter. It sends a detached,
 canonical structured request and maps only validated text back onto canonical
 target identity and provenance. No network client, vendor SDK, or concrete
 model implementation is included.
+
+The completed narration path is explicit: narration service → registry plus
+explicit provider/model selection → provider-neutral adapter → completion-client
+contract → untrusted response → validation and normalization. There is no
+fallback provider or model substitution. Empty selected briefs return an empty
+narration without resolving a provider or invoking a completion client.
+Provider-generated IDs and unsupported metadata are not authoritative; narration
+cannot modify Morning Meeting analytical state.
