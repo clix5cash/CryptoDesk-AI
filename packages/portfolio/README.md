@@ -73,3 +73,15 @@ positions. Wallet observations retain their wallet ID, network, and address as
 source provenance; balance quantities remain their exact raw base-unit text.
 The mapper performs no wallet retrieval, price lookup, valuation, allocation,
 PnL, or risk analysis.
+
+`valuePortfolioSnapshot` is a separate, opt-in valuation foundation. It accepts
+an explicit provider-neutral `PortfolioPriceObservation` collection and a
+valuation currency; `PortfolioPriceProvider` is only a read-contract, with no
+implementation in this package. Unit prices and computed values use exact
+non-negative decimal text with `BigInt` arithmetic. Raw string quantities are
+base units and therefore require explicit asset decimals; missing prices or
+decimals yield explicit unvalued positions while the total includes only valued
+positions. Prices in another currency or after the caller-supplied as-of cutoff
+are not eligible for the valuation. Price provenance, timestamps, and the cutoff
+are retained deterministically. No concrete market provider, allocation, PnL,
+or risk capability exists here.
