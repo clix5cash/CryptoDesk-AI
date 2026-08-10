@@ -90,7 +90,8 @@ export function validateWalletSnapshotIdentity(
 ): void {
   validateWalletMetadata(snapshot.wallet, addressValidator);
   assertIsoTimestamp(snapshot.observedAt, 'Wallet snapshot observedAt');
-  assertOptionalNonEmpty(snapshot.blockHeight, 'Wallet snapshot block height');
+  if (snapshot.blockHeight !== undefined)
+    assertUnsignedDecimal(snapshot.blockHeight, 'Wallet snapshot block height');
 }
 
 /** Validates an explicit, network-scoped wallet snapshot request. */
@@ -120,4 +121,11 @@ function containsControlCharacter(value: string): boolean {
     const codePoint = character.codePointAt(0) ?? 0;
     return codePoint < 32 || codePoint === 127;
   });
+}
+
+function assertUnsignedDecimal(value: string, label: string): void {
+  assertNonEmpty(value, label);
+  if (!/^\d+$/u.test(value)) {
+    throw new PortfolioValidationError(`${label} must contain only unsigned decimal digits.`);
+  }
 }

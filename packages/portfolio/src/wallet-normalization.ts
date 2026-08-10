@@ -108,8 +108,10 @@ function validateAsset(asset: WalletAsset, walletNetworkId: string): void {
 function validateBalance(balance: WalletBalance, walletNetworkId: string): void {
   validateAsset(balance.asset, walletNetworkId);
   assertNonEmpty(balance.amount, 'Wallet balance amount');
-  if (balance.amount.trim() !== balance.amount || /\s/u.test(balance.amount)) {
-    throw new PortfolioValidationError('Wallet balance amount must not contain whitespace.');
+  if (!/^\d+$/u.test(balance.amount)) {
+    throw new PortfolioValidationError(
+      'Wallet balance amount must contain only unsigned decimal base-unit digits.',
+    );
   }
 }
 

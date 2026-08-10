@@ -57,3 +57,9 @@ and rejects conflicting records. Raw balance text, decimals, contract locators,
 metadata, block height, and observation time remain unchanged. There is still no
 Wallet-to-Portfolio mapping, RPC/provider implementation, pricing, valuation,
 PnL, or risk analysis.
+
+Sprint 7B completes the deterministic Wallet foundation: externally supplied
+wallet IDs, network-plus-address logical identity, optional local address
+validation, raw snapshot canonicalization, and explicit conflict failures. No
+blockchain runtime provider, SDK, Wallet-to-Portfolio mapping, pricing,
+valuation, PnL, or risk capability exists here.
