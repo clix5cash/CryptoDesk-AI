@@ -19,6 +19,9 @@ export function portfolioAssetIdentity(asset: PortfolioAsset): PortfolioAssetIde
   assertOptionalNonEmpty(asset.networkId, 'Portfolio asset network ID');
   assertOptionalNonEmpty(asset.contractAddress, 'Portfolio asset contract address');
   assertOptionalNonEmpty(asset.underlyingAssetId, 'Portfolio underlying asset ID');
+  if (asset.decimals !== undefined && (!Number.isInteger(asset.decimals) || asset.decimals < 0)) {
+    throw new PortfolioValidationError('Portfolio asset decimals must be a non-negative integer.');
+  }
 
   return JSON.stringify([
     asset.id,
@@ -26,6 +29,7 @@ export function portfolioAssetIdentity(asset: PortfolioAsset): PortfolioAssetIde
     asset.networkId ?? '',
     asset.contractAddress ?? '',
     asset.underlyingAssetId ?? '',
+    asset.decimals ?? '',
   ]);
 }
 
@@ -123,6 +127,9 @@ function validatePortfolioIdentity(portfolio: Portfolio): void {
   );
   for (const source of portfolio.sources) {
     assertNonEmpty(source.label, 'Portfolio source label');
+    assertOptionalNonEmpty(source.externalRecordId, 'Portfolio source external record ID');
+    assertOptionalNonEmpty(source.networkId, 'Portfolio source network ID');
+    assertOptionalNonEmpty(source.externalLocator, 'Portfolio source external locator');
   }
 
   const accounts = portfolio.accounts ?? [];
@@ -180,7 +187,15 @@ function assertIsoTimestamp(value: string, label: string): void {
   }
 }
 
-function assertQuantity(value: number): void {
+function assertQuantity(value: number | string): void {
+  if (typeof value === 'string') {
+    if (!/^\d+$/u.test(value)) {
+      throw new PortfolioValidationError(
+        'Portfolio position quantity text must contain only unsigned decimal base-unit digits.',
+      );
+    }
+    return;
+  }
   if (!Number.isFinite(value) || value < 0) {
     throw new PortfolioValidationError(
       'Portfolio position quantity must be a finite non-negative number.',

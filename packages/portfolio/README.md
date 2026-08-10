@@ -21,7 +21,9 @@ read the current time.
 `validatePortfolioSnapshotIdentity` checks identity invariants—empty IDs,
 unknown source/account references, duplicate logical positions, and conflicting
 asset or position identity records—without normalizing, merging, pricing, or
-analyzing holdings. Position quantities must be finite and non-negative.
+analyzing holdings. Legacy numeric position quantities must be finite and
+non-negative; exact source base-unit quantities may instead be unsigned decimal
+text, which is preserved without conversion.
 `PortfolioValidationError` is its explicit domain error.
 
 `normalizePortfolioSnapshot` is an opt-in canonicalization boundary. It validates
@@ -61,5 +63,13 @@ PnL, or risk analysis.
 Sprint 7B completes the deterministic Wallet foundation: externally supplied
 wallet IDs, network-plus-address logical identity, optional local address
 validation, raw snapshot canonicalization, and explicit conflict failures. No
-blockchain runtime provider, SDK, Wallet-to-Portfolio mapping, pricing,
-valuation, PnL, or risk capability exists here.
+blockchain runtime provider, SDK, pricing, valuation, PnL, or risk capability
+exists here.
+
+`mapWalletSnapshotToPortfolioSnapshot` is an opt-in, deterministic,
+provider-neutral mapping boundary. It maps one normalized `WalletSnapshot` to
+a Portfolio source, account, network-scoped asset records, and asset-balance
+positions. Wallet observations retain their wallet ID, network, and address as
+source provenance; balance quantities remain their exact raw base-unit text.
+The mapper performs no wallet retrieval, price lookup, valuation, allocation,
+PnL, or risk analysis.
