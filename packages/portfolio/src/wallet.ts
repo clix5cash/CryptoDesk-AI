@@ -33,6 +33,7 @@ export interface WalletAsset {
   readonly id: WalletAssetId;
   readonly networkId: WalletNetworkId;
   readonly symbol: string;
+  readonly name?: string;
   readonly decimals: number;
   /** Source-supplied token contract locator, absent for a network native asset. */
   readonly contractAddress?: string;
@@ -48,6 +49,8 @@ export interface WalletBalance {
 /** Immutable point-in-time raw blockchain observation for one wallet. */
 export interface WalletSnapshot {
   readonly wallet: WalletMetadata;
+  /** Optional source-supplied raw asset catalog, including assets with no balance. */
+  readonly assets?: ReadonlyArray<WalletAsset>;
   readonly balances: ReadonlyArray<WalletBalance>;
   readonly observedAt: IsoTimestamp;
   readonly blockHeight?: WalletBlockHeight;

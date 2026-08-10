@@ -49,3 +49,11 @@ decode, or apply any network-specific rule. Optional `WalletAddressValidator`
 implementations may be injected by composition for local chain-specific checks.
 Snapshot queries require both wallet and network IDs, so they cannot be
 network-ambiguous. Duplicate or conflicting wallet records fail explicitly.
+
+`normalizeWalletSnapshot` is an opt-in, provider-neutral raw-observation
+boundary. It validates wallet identity, sorts network-scoped assets and balances
+by stable asset identity, collapses only exact duplicate balance observations,
+and rejects conflicting records. Raw balance text, decimals, contract locators,
+metadata, block height, and observation time remain unchanged. There is still no
+Wallet-to-Portfolio mapping, RPC/provider implementation, pricing, valuation,
+PnL, or risk analysis.
