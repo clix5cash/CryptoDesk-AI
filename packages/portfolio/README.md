@@ -33,3 +33,10 @@ all available provenance without wallet access, valuation, or risk analysis.
 
 Sprint 7A is a provider-neutral domain foundation only: there is no wallet or
 provider integration, valuation, risk, persistence, cache, or scheduler.
+
+The Wallet subdomain defines raw read-only observations before any future
+Portfolio mapping: wallet metadata, network-scoped assets, exact base-unit
+balances, block height, and observation time. `WalletProvider` and
+`WalletSnapshotProvider` are provider-neutral interfaces only. There is no RPC,
+blockchain client, wallet implementation, pricing, valuation, allocation, PnL,
+risk, persistence, or Portfolio integration.
