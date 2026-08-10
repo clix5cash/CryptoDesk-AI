@@ -17,6 +17,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "lint": "eslint src --max-warnings=0",
+    "test": "node --test test/*.test.mjs",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   }
 }
