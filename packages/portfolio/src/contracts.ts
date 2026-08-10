@@ -1,75 +1,50 @@
+/** Opaque provider-neutral identity for a logical portfolio. */
 export type PortfolioId = string;
-export type AccountId = string;
-export type AssetId = string;
-export type PositionId = string;
+
+/** Opaque identity for an asset held by a portfolio. */
+export type PortfolioAssetId = string;
+
+/** Opaque identity for a position within a portfolio snapshot. */
+export type PortfolioPositionId = string;
+
+/** Opaque identity for a source that supplied portfolio position data. */
+export type PortfolioSourceId = string;
+
+/** ISO-8601 timestamp supplied by the portfolio domain boundary. */
 export type IsoTimestamp = string;
 
-export enum AccountKind {
-  Wallet = 'wallet',
-  Exchange = 'exchange',
-  Custody = 'custody',
-}
-
-export enum PositionKind {
-  Spot = 'spot',
-  Derivative = 'derivative',
-  Lending = 'lending',
-  Borrowing = 'borrowing',
-  LiquidityPool = 'liquidity_pool',
-  Staking = 'staking',
-}
-
-export enum RiskLevel {
-  Low = 'low',
-  Medium = 'medium',
-  High = 'high',
-  Critical = 'critical',
-}
-
-export interface PortfolioAccount {
-  readonly id: AccountId;
-  readonly portfolioId: PortfolioId;
-  readonly kind: AccountKind;
+/** A provider-neutral source descriptor retained for portfolio provenance. */
+export interface PortfolioSource {
+  readonly id: PortfolioSourceId;
   readonly label: string;
-  readonly chainId?: string;
 }
 
+/** Provider-neutral descriptive identity for a portfolio-held asset. */
+export interface PortfolioAsset {
+  readonly id: PortfolioAssetId;
+  readonly symbol: string;
+  readonly name?: string;
+}
+
+/** An immutable quantity observation for one explicitly identified portfolio asset. */
 export interface PortfolioPosition {
-  readonly id: PositionId;
-  readonly accountId: AccountId;
-  readonly assetId: AssetId;
-  readonly kind: PositionKind;
+  readonly id: PortfolioPositionId;
+  readonly asset: PortfolioAsset;
   readonly quantity: number;
-  readonly marketValue?: number;
-  readonly valuationCurrency: string;
+  readonly sourceId?: PortfolioSourceId;
   readonly observedAt: IsoTimestamp;
 }
 
-export interface PortfolioExposure {
-  readonly dimension: string;
-  readonly value: string;
-  readonly marketValue: number;
-  readonly percentage: number;
+/** Immutable provider-neutral portfolio identity and declared data sources. */
+export interface Portfolio {
+  readonly id: PortfolioId;
+  readonly label: string;
+  readonly sources: ReadonlyArray<PortfolioSource>;
 }
 
-export interface PortfolioRisk {
-  readonly level: RiskLevel;
-  readonly category: string;
-  readonly summary: string;
-  readonly affectedPositionIds: ReadonlyArray<PositionId>;
-}
-
+/** Immutable point-in-time portfolio holdings without pricing or analysis. */
 export interface PortfolioSnapshot {
-  readonly portfolioId: PortfolioId;
+  readonly portfolio: Portfolio;
   readonly capturedAt: IsoTimestamp;
-  readonly totalValue: number;
-  readonly valuationCurrency: string;
   readonly positions: ReadonlyArray<PortfolioPosition>;
-  readonly exposures: ReadonlyArray<PortfolioExposure>;
-  readonly risks: ReadonlyArray<PortfolioRisk>;
-}
-
-/** Provider-neutral boundary for portfolio snapshots. */
-export interface PortfolioDataProvider {
-  getSnapshot(portfolioId: PortfolioId, asOf?: IsoTimestamp): Promise<PortfolioSnapshot>;
 }
