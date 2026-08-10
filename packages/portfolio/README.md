@@ -22,3 +22,10 @@ read the current time.
 unknown source/account references, duplicate logical positions, and conflicting
 asset or position identity records—without normalizing, merging, pricing, or
 analyzing holdings. `PortfolioValidationError` is its explicit domain error.
+
+`normalizePortfolioSnapshot` is an opt-in canonicalization boundary. It validates
+the resulting snapshot, sorts sources/accounts/positions by stable domain
+identity, and collapses only exact equivalent observations of one logical
+position. Conflicting observations fail explicitly; independent positions—even
+in the same asset—remain separate. It preserves quantities, timestamps, and
+all available provenance without wallet access, valuation, or risk analysis.
