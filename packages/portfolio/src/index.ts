@@ -3,3 +3,4 @@ export * from './errors.js';
 export * from './identity.js';
 export * from './normalization.js';
 export * from './wallet.js';
+export * from './wallet-identity.js';

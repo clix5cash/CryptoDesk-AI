@@ -15,6 +15,9 @@ export type WalletAssetId = string;
 /** Source-supplied block-height text, retained without numeric conversion. */
 export type WalletBlockHeight = string;
 
+/** Derived deterministic logical identity for one network-scoped wallet address. */
+export type WalletIdentity = string;
+
 /** Immutable raw wallet identity and descriptive metadata. */
 export interface WalletMetadata {
   readonly id: WalletId;
@@ -53,7 +56,14 @@ export interface WalletSnapshot {
 /** Provider-neutral, read-only query for one wallet observation. */
 export interface WalletSnapshotQuery {
   readonly walletId: WalletId;
+  /** Required to prevent a wallet query from being network-ambiguous. */
+  readonly networkId: WalletNetworkId;
   readonly asOf?: IsoTimestamp;
+}
+
+/** Optional injected validator for chain-specific local address rules. */
+export interface WalletAddressValidator {
+  validate(networkId: WalletNetworkId, address: WalletAddress): void;
 }
 
 /** Read-only adapter capability for resolving raw wallet metadata. */

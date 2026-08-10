@@ -40,3 +40,12 @@ balances, block height, and observation time. `WalletProvider` and
 `WalletSnapshotProvider` are provider-neutral interfaces only. There is no RPC,
 blockchain client, wallet implementation, pricing, valuation, allocation, PnL,
 risk, persistence, or Portfolio integration.
+
+Wallet IDs remain externally supplied opaque identifiers. `walletIdentity`
+derives a separate deterministic logical identity from the explicit network ID
+and unchanged address text; labels do not participate. Core validation rejects
+empty, whitespace, and control-character address text but does not lowercase,
+decode, or apply any network-specific rule. Optional `WalletAddressValidator`
+implementations may be injected by composition for local chain-specific checks.
+Snapshot queries require both wallet and network IDs, so they cannot be
+network-ambiguous. Duplicate or conflicting wallet records fail explicitly.
