@@ -85,3 +85,13 @@ positions. Prices in another currency or after the caller-supplied as-of cutoff
 are not eligible for the valuation. Price provenance, timestamps, and the cutoff
 are retained deterministically. No concrete market provider, allocation, PnL,
 or risk capability exists here.
+
+`analyzePortfolioAllocation` is a separate descriptive analysis over an
+already-produced `PortfolioSnapshot` and `PortfolioValuation`. It reports asset
+allocation plus network, source, and account exposure using total valued value
+as the only percentage denominator. Unvalued positions are never estimated or
+treated as zero; coverage and unvalued-reason counts remain explicit. Ratios use
+exact fixed-point arithmetic, rounded half-up to four decimal places without a
+forced residual adjustment. The output is not risk scoring and makes no trading
+or diversification recommendation. It fetches no prices and implements no
+Sprint 7D risk behavior.

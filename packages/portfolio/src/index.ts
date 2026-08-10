@@ -7,3 +7,4 @@ export * from './wallet-identity.js';
 export * from './wallet-normalization.js';
 export * from './wallet-portfolio-mapper.js';
 export * from './valuation.js';
+export * from './allocation.js';
