@@ -21,7 +21,8 @@ read the current time.
 `validatePortfolioSnapshotIdentity` checks identity invariants—empty IDs,
 unknown source/account references, duplicate logical positions, and conflicting
 asset or position identity records—without normalizing, merging, pricing, or
-analyzing holdings. `PortfolioValidationError` is its explicit domain error.
+analyzing holdings. Position quantities must be finite and non-negative.
+`PortfolioValidationError` is its explicit domain error.
 
 `normalizePortfolioSnapshot` is an opt-in canonicalization boundary. It validates
 the resulting snapshot, sorts sources/accounts/positions by stable domain
@@ -29,3 +30,6 @@ identity, and collapses only exact equivalent observations of one logical
 position. Conflicting observations fail explicitly; independent positions—even
 in the same asset—remain separate. It preserves quantities, timestamps, and
 all available provenance without wallet access, valuation, or risk analysis.
+
+Sprint 7A is a provider-neutral domain foundation only: there is no wallet or
+provider integration, valuation, risk, persistence, cache, or scheduler.

@@ -67,6 +67,7 @@ export function validatePortfolioSnapshotIdentity(snapshot: PortfolioSnapshot): 
 
   for (const position of snapshot.positions) {
     assertIsoTimestamp(position.observedAt, 'Portfolio position observedAt');
+    assertQuantity(position.quantity);
     const identity = portfolioPositionIdentity(position);
     const assetIdentity = portfolioAssetIdentity(position.asset);
     const existingAsset = assets.get(position.asset.id);
@@ -176,5 +177,13 @@ function assertIsoTimestamp(value: string, label: string): void {
   assertNonEmpty(value, label);
   if (Number.isNaN(Date.parse(value))) {
     throw new PortfolioValidationError(`${label} must be a valid ISO timestamp.`);
+  }
+}
+
+function assertQuantity(value: number): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new PortfolioValidationError(
+      'Portfolio position quantity must be a finite non-negative number.',
+    );
   }
 }
