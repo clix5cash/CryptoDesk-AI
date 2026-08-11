@@ -189,3 +189,12 @@ remain structural facts. Explicit `includedSections`, `excludedSections`, and
 `maxItemsPerSection` options are caller-driven and never rerank insights or
 rewrite evidence. There is no AI, narrative generation, recommendation,
 prediction, UI framework, or Morning Meeting integration.
+
+Sprint 7F.3 adds an opt-in Stable Consumer Payload after deterministic sections.
+Schema version `"1"` identifies only the payload shape. The payload is
+JSON-safe and normalized: one canonical item table is referenced by ordered
+section item IDs, preserving evidence, provenance, exact decimal strings, and
+partial/unavailable facts without divergent copies. `stringifyPortfolioPresentationPayload`
+produces a no-whitespace canonical JSON representation with stable object-key
+and array ordering. This is not an HTTP API, UI model, or AI prompt format; it
+adds no narrative, recommendation, prediction, or Morning Meeting integration.

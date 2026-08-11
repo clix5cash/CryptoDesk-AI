@@ -12,3 +12,4 @@ export * from './risk.js';
 export * from './insight.js';
 export * from './insight-prioritization.js';
 export * from './presentation.js';
+export * from './presentation-payload.js';
