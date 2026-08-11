@@ -123,3 +123,14 @@ zero-value denominators are structured unavailable-data facts. These are
 descriptive rule observations only: there is no composite score, VaR,
 volatility, drawdown, correlation, liquidation analysis, performance risk, AI
 interpretation, or trading recommendation.
+
+Sprint 7D.3 hardens network, source, and account exposure observations using
+the same explicit threshold configuration. Unclassified exposure remains a
+measured canonical allocation item and carries a matching data-quality reason;
+no network, source, or account identity is invented. Every exposure observation
+also retains the Portfolio risk coverage state, keeping measured valued-portfolio
+exposure distinct from unavailable information. The Portfolio asset contract has
+no explicit stable-value classification, so stable-value exposure is deferred;
+symbols and names are never used as heuristics. There is no composite score,
+VaR, volatility, drawdown, correlation, liquidation model, recommendation, AI,
+or Morning Meeting integration.

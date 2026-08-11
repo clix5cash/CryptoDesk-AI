@@ -109,6 +109,10 @@ export interface PortfolioRiskExposureObservation {
   readonly level?: PortfolioRiskConcentrationLevel;
   /** Preserves the explicit configuration used to derive `level`. */
   readonly thresholdEvidence?: PortfolioRiskThresholdEvidence;
+  /** Availability of the portfolio facts behind this measured exposure. */
+  readonly coverageState?: PortfolioRiskDataState;
+  /** Explicitly explains an unclassified canonical exposure without inventing a target. */
+  readonly dataQualityReason?: PortfolioRiskUnavailableReason;
 }
 
 /** Explicit record of unavailable evidence; no value, score, or recommendation is implied. */
@@ -154,7 +158,7 @@ export function analyzePortfolioRisk(
         ...input.allocation.exposure.network.items,
         ...input.allocation.exposure.source.items,
         ...input.allocation.exposure.account.items,
-      ].map((item) => observation(item, options.thresholds))
+      ].map((item) => exposureObservation(item, options.thresholds, coverage.state))
     : [];
   const unavailable = [
     ...input.valuation.unvaluedPositions.map((position) => ({
@@ -358,6 +362,22 @@ function validateExposures(observations: ReadonlyArray<PortfolioRiskExposureObse
     }
     assertAllocationIdentity(allocation, identities, 'Portfolio risk exposure observation');
     validateObservationRuleEvidence(observation);
+    validateExposureDataQuality(observation);
+  }
+}
+
+function validateExposureDataQuality(observation: PortfolioRiskExposureObservation): void {
+  if (observation.coverageState !== undefined) {
+    if (!Object.values(PortfolioRiskDataState).includes(observation.coverageState)) {
+      throw new PortfolioRiskValidationError('Portfolio risk exposure coverage state is invalid.');
+    }
+  }
+  if (observation.dataQualityReason === undefined) return;
+  const expected = unclassifiedReason(observation.allocation.dimension);
+  if (!observation.allocation.unclassified || expected !== observation.dataQualityReason) {
+    throw new PortfolioRiskValidationError(
+      'Portfolio risk exposure data-quality reason does not match unclassified exposure provenance.',
+    );
   }
 }
 
@@ -473,10 +493,11 @@ function assertAllocationIdentity(
   label: string,
 ): void {
   assertNonEmpty(allocation.identity, `${label} identity`);
-  if (identities.has(allocation.identity)) {
-    throw new PortfolioRiskValidationError(`${label} "${allocation.identity}" is duplicated.`);
+  const identity = `${allocation.dimension}:${allocation.identity}`;
+  if (identities.has(identity)) {
+    throw new PortfolioRiskValidationError(`${label} "${identity}" is duplicated.`);
   }
-  identities.add(allocation.identity);
+  identities.add(identity);
 }
 
 function assertUniqueIdentities(
@@ -546,6 +567,21 @@ function observation(
   };
 }
 
+function exposureObservation(
+  allocation: PortfolioAllocationItem,
+  thresholds: PortfolioRiskThresholdConfiguration,
+  coverageState: PortfolioRiskDataState,
+): PortfolioRiskExposureObservation {
+  const base = observation(allocation, thresholds);
+  return {
+    ...base,
+    coverageState,
+    ...(unclassifiedReason(allocation.dimension) === undefined || !allocation.unclassified
+      ? {}
+      : { dataQualityReason: unclassifiedReason(allocation.dimension) }),
+  };
+}
+
 function thresholdsFor(
   dimension: PortfolioAllocationDimension,
   thresholds: PortfolioRiskThresholdConfiguration,
@@ -602,6 +638,21 @@ function unclassifiedProvenance(
     observations.push({ reason: PortfolioRiskUnavailableReason.MissingAccountProvenance });
   }
   return observations;
+}
+
+function unclassifiedReason(
+  dimension: PortfolioAllocationDimension,
+): PortfolioRiskUnavailableReason | undefined {
+  switch (dimension) {
+    case PortfolioAllocationDimension.Network:
+      return PortfolioRiskUnavailableReason.MissingNetworkProvenance;
+    case PortfolioAllocationDimension.Source:
+      return PortfolioRiskUnavailableReason.MissingSourceProvenance;
+    case PortfolioAllocationDimension.Account:
+      return PortfolioRiskUnavailableReason.MissingAccountProvenance;
+    case PortfolioAllocationDimension.Asset:
+      return undefined;
+  }
 }
 
 function compareObservations(
