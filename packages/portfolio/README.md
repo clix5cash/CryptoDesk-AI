@@ -170,3 +170,11 @@ partial coverage and unavailable facts. Priority preserves canonical evidence
 and does not reinterpret it as advice. There is no narrative generation,
 AI/LLM dependency, recommendation, prediction, trading logic, or Morning
 Meeting integration.
+
+Sprint 7F.1 adds opt-in Structured Presentation after prioritization. It
+consumes only canonical Portfolio Intelligence results and preserves their
+ordered insights, identity, machine-readable priority reasons, evidence,
+price provenance where applicable, exact decimal text, and partial-coverage
+semantics. The presentation boundary is provider-, transport-, and UI-neutral;
+it does not recalculate portfolio facts, generate narrative, make
+recommendations, invoke AI/LLMs, or integrate with Morning Meeting.
