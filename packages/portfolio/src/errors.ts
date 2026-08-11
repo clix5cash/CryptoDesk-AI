@@ -13,3 +13,11 @@ export class PortfolioRiskValidationError extends PortfolioValidationError {
     this.name = 'PortfolioRiskValidationError';
   }
 }
+
+/** Explicit validation failure for provider-neutral Portfolio insight contract data. */
+export class PortfolioInsightValidationError extends PortfolioValidationError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PortfolioInsightValidationError';
+  }
+}

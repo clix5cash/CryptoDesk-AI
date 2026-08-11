@@ -143,3 +143,10 @@ unavailable data behind an aggregate score. Empty, all-unvalued, and zero-total
 portfolios retain explicit insufficient-data facts; they are not interpreted as
 low risk. The risk foundation remains descriptive only, with no performance,
 trading, provider-runtime, or AI capability.
+
+Sprint 7E.1 introduces opt-in Portfolio Insight contracts after the canonical
+valuation, allocation/exposure, and risk path. Insights are externally
+identified, deterministic, machine-evidence-backed descriptions of valuation,
+allocation, exposure, concentration, coverage, and data-quality facts. They do
+not generate narrative text, rankings, recommendations, predictions, trading
+logic, AI/LLM behavior, or Morning Meeting integration.

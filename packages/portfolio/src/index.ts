@@ -9,3 +9,4 @@ export * from './wallet-portfolio-mapper.js';
 export * from './valuation.js';
 export * from './allocation.js';
 export * from './risk.js';
+export * from './insight.js';
