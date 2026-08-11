@@ -150,3 +150,14 @@ identified, deterministic, machine-evidence-backed descriptions of valuation,
 allocation, exposure, concentration, coverage, and data-quality facts. They do
 not generate narrative text, rankings, recommendations, predictions, trading
 logic, AI/LLM behavior, or Morning Meeting integration.
+
+Sprint 7E.3 adds an opt-in deterministic prioritization view over already
+generated insights. It preserves canonical evidence and uses only ordinal
+priority buckets, insight severity, explicit category precedence, compatible
+measured magnitudes, canonical target identity, and insight ID as stable
+ordering facts. Machine-readable priority reasons explain severity, coverage or
+data-quality limitations, category precedence, magnitude, and identity
+tie-breaks. Optional `minimumSeverity` and `maxItems` selection is explicit;
+without options every valid insight is retained. This is not AI ranking, a
+hidden relevance score, narrative generation, prediction, recommendation, or
+Morning Meeting integration.
