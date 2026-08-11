@@ -95,3 +95,12 @@ exact fixed-point arithmetic, rounded half-up to four decimal places without a
 forced residual adjustment. The output is not risk scoring and makes no trading
 or diversification recommendation. It fetches no prices and implements no
 Sprint 7D risk behavior.
+
+Sprint 7C completes the in-memory Portfolio analytics path: canonical Wallet
+observations map deterministically to canonical Portfolio snapshots, which may
+then be valued from explicit provider-neutral price observations and analyzed
+for descriptive allocation/exposure. The path is precision-safe, immutable,
+provenance-preserving, and explicit about partial coverage. There is no concrete
+Wallet or price provider, RPC/network fetching, PnL/performance engine, risk
+classification, recommendation, Morning Meeting integration, or AI/LLM
+integration.
