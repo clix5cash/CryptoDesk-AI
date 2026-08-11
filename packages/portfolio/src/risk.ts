@@ -39,6 +39,40 @@ export enum PortfolioRiskUnavailableReason {
   MissingSourceProvenance = 'missing_source_provenance',
   MissingAccountProvenance = 'missing_account_provenance',
   NoValuedPositions = 'no_valued_positions',
+  ZeroTotalValue = 'zero_total_value',
+}
+
+/** Rule-based concentration level; it is not a composite score or recommendation. */
+export enum PortfolioRiskConcentrationLevel {
+  None = 'none',
+  Moderate = 'moderate',
+  High = 'high',
+}
+
+/** Explicit percentage boundaries for one allocation dimension. */
+export interface PortfolioRiskConcentrationThresholds {
+  /** Inclusive lower boundary for a moderate concentration observation. */
+  readonly moderatePercentage: string;
+  /** Inclusive lower boundary for a high concentration observation. */
+  readonly highPercentage: string;
+}
+
+/** Explicit, provider-neutral thresholds for every supported descriptive dimension. */
+export interface PortfolioRiskThresholdConfiguration {
+  readonly asset: PortfolioRiskConcentrationThresholds;
+  readonly network: PortfolioRiskConcentrationThresholds;
+  readonly source: PortfolioRiskConcentrationThresholds;
+  readonly account: PortfolioRiskConcentrationThresholds;
+}
+
+/** Required caller-supplied rule configuration; there are no hidden threshold defaults. */
+export interface PortfolioRiskAnalysisOptions {
+  readonly thresholds: PortfolioRiskThresholdConfiguration;
+}
+
+/** Machine-readable rule evidence for an analyzer-produced concentration observation. */
+export interface PortfolioRiskThresholdEvidence extends PortfolioRiskConcentrationThresholds {
+  readonly matchedLevel: PortfolioRiskConcentrationLevel;
 }
 
 /** Immutable canonical inputs a future risk engine may consume. */
@@ -62,11 +96,19 @@ export interface PortfolioRiskCoverage {
 /** Descriptive concentration evidence derived from one existing allocation item. */
 export interface PortfolioRiskConcentrationObservation {
   readonly allocation: PortfolioAllocationItem;
+  /** Present only when produced by deterministic threshold analysis. */
+  readonly level?: PortfolioRiskConcentrationLevel;
+  /** Preserves the explicit configuration used to derive `level`. */
+  readonly thresholdEvidence?: PortfolioRiskThresholdEvidence;
 }
 
 /** Descriptive network, source, or account exposure evidence from existing allocation data. */
 export interface PortfolioRiskExposureObservation {
   readonly allocation: PortfolioAllocationItem;
+  /** Present only when produced by deterministic threshold analysis. */
+  readonly level?: PortfolioRiskConcentrationLevel;
+  /** Preserves the explicit configuration used to derive `level`. */
+  readonly thresholdEvidence?: PortfolioRiskThresholdEvidence;
 }
 
 /** Explicit record of unavailable evidence; no value, score, or recommendation is implied. */
@@ -78,7 +120,7 @@ export interface PortfolioRiskUnavailableObservation {
   readonly sourceId?: PortfolioSourceId;
 }
 
-/** Immutable descriptive risk-domain artifact. It intentionally contains no score or classification. */
+/** Immutable descriptive risk-domain artifact. It intentionally contains no composite score. */
 export interface PortfolioRiskAnalysis {
   readonly analysisId: PortfolioRiskAnalysisId;
   readonly portfolioId: string;
@@ -87,6 +129,72 @@ export interface PortfolioRiskAnalysis {
   readonly concentrationObservations: ReadonlyArray<PortfolioRiskConcentrationObservation>;
   readonly exposureObservations: ReadonlyArray<PortfolioRiskExposureObservation>;
   readonly unavailableObservations: ReadonlyArray<PortfolioRiskUnavailableObservation>;
+}
+
+/**
+ * Derives rule-based, descriptive concentration and exposure observations from
+ * canonical allocation facts. It never fetches data, scores the portfolio, or
+ * estimates unvalued positions.
+ */
+export function analyzePortfolioRisk(
+  input: PortfolioRiskAnalysisInput,
+  options: PortfolioRiskAnalysisOptions,
+): PortfolioRiskAnalysis {
+  validatePortfolioRiskAnalysisInput(input);
+  validatePortfolioRiskAnalysisOptions(options);
+
+  const coverage = riskCoverage(input);
+  const hasValuedPositions = input.valuation.positions.length > 0;
+  const hasPositiveTotal = comparePercentage(input.valuation.totalValue, '0') > 0;
+  const concentrations = hasPositiveTotal
+    ? input.allocation.assetAllocation.items.map((item) => observation(item, options.thresholds))
+    : [];
+  const exposures = hasPositiveTotal
+    ? [
+        ...input.allocation.exposure.network.items,
+        ...input.allocation.exposure.source.items,
+        ...input.allocation.exposure.account.items,
+      ].map((item) => observation(item, options.thresholds))
+    : [];
+  const unavailable = [
+    ...input.valuation.unvaluedPositions.map((position) => ({
+      reason:
+        position.reason === 'missing_price'
+          ? PortfolioRiskUnavailableReason.MissingPrice
+          : PortfolioRiskUnavailableReason.MissingDecimals,
+      positionIdentity: position.positionIdentity,
+      asset: cloneAsset(position.asset),
+    })),
+    ...unclassifiedProvenance(input.allocation),
+    ...(hasValuedPositions
+      ? hasPositiveTotal
+        ? []
+        : [{ reason: PortfolioRiskUnavailableReason.ZeroTotalValue }]
+      : [{ reason: PortfolioRiskUnavailableReason.NoValuedPositions }]),
+  ].sort(compareUnavailableObservations);
+
+  const analysis: PortfolioRiskAnalysis = {
+    analysisId: input.analysisId,
+    portfolioId: input.snapshot.portfolio.id,
+    asOf: input.asOf,
+    coverage,
+    concentrationObservations: concentrations.sort(compareObservations),
+    exposureObservations: exposures.sort(compareObservations),
+    unavailableObservations: unavailable,
+  };
+  validatePortfolioRiskAnalysis(input, analysis);
+  return analysis;
+}
+
+/** Validates caller-supplied thresholds without applying a hidden default. */
+export function validatePortfolioRiskAnalysisOptions(options: PortfolioRiskAnalysisOptions): void {
+  if (options === null || typeof options !== 'object' || options.thresholds === undefined) {
+    throw new PortfolioRiskValidationError('Portfolio risk threshold configuration is required.');
+  }
+  validateThresholds(options.thresholds.asset, 'asset');
+  validateThresholds(options.thresholds.network, 'network');
+  validateThresholds(options.thresholds.source, 'source');
+  validateThresholds(options.thresholds.account, 'account');
 }
 
 /** Validates cross-module identity and coverage coherence for canonical risk inputs. */
@@ -235,6 +343,7 @@ function validateConcentrations(
     }
     portfolioAssetIdentity(allocation.asset ?? missingAsset());
     assertAllocationIdentity(allocation, identities, 'Portfolio risk concentration observation');
+    validateObservationRuleEvidence(observation);
   }
 }
 
@@ -248,6 +357,33 @@ function validateExposures(observations: ReadonlyArray<PortfolioRiskExposureObse
       );
     }
     assertAllocationIdentity(allocation, identities, 'Portfolio risk exposure observation');
+    validateObservationRuleEvidence(observation);
+  }
+}
+
+function validateObservationRuleEvidence(
+  observation: PortfolioRiskConcentrationObservation | PortfolioRiskExposureObservation,
+): void {
+  if (observation.level === undefined && observation.thresholdEvidence === undefined) return;
+  if (observation.level === undefined || observation.thresholdEvidence === undefined) {
+    throw new PortfolioRiskValidationError(
+      'Portfolio risk observation level and threshold evidence must be supplied together.',
+    );
+  }
+  validateThresholds(observation.thresholdEvidence, 'observation');
+  if (
+    observation.level !== observation.thresholdEvidence.matchedLevel ||
+    !Object.values(PortfolioRiskConcentrationLevel).includes(observation.level)
+  ) {
+    throw new PortfolioRiskValidationError(
+      'Portfolio risk observation level does not match its threshold evidence.',
+    );
+  }
+  const expected = classify(observation.allocation.percentage, observation.thresholdEvidence);
+  if (observation.level !== expected) {
+    throw new PortfolioRiskValidationError(
+      'Portfolio risk observation level does not match the measured allocation percentage.',
+    );
   }
 }
 
@@ -374,6 +510,162 @@ function unvaluedFingerprint(position: PortfolioUnvaluedPosition): string {
   ]);
 }
 
+function riskCoverage(input: PortfolioRiskAnalysisInput): PortfolioRiskCoverage {
+  const valuedPositionIdentities = input.valuation.positions
+    .map((position) => position.positionIdentity)
+    .sort();
+  const totalIsPositive = comparePercentage(input.valuation.totalValue, '0') > 0;
+  const state =
+    input.valuation.positions.length === 0
+      ? input.valuation.totalPositionCount === 0
+        ? PortfolioRiskDataState.InsufficientData
+        : PortfolioRiskDataState.Unavailable
+      : !totalIsPositive
+        ? PortfolioRiskDataState.InsufficientData
+        : input.valuation.unvaluedPositions.length === 0
+          ? PortfolioRiskDataState.Complete
+          : PortfolioRiskDataState.Partial;
+  return {
+    state,
+    coverage: cloneCoverage(input.allocation.coverage),
+    valuedPositionIdentities,
+    unvaluedPositions: input.valuation.unvaluedPositions.map(cloneUnvaluedPosition),
+  };
+}
+
+function observation(
+  allocation: PortfolioAllocationItem,
+  thresholds: PortfolioRiskThresholdConfiguration,
+): PortfolioRiskConcentrationObservation | PortfolioRiskExposureObservation {
+  const threshold = thresholdsFor(allocation.dimension, thresholds);
+  const level = classify(allocation.percentage, threshold);
+  return {
+    allocation: cloneAllocation(allocation),
+    level,
+    thresholdEvidence: { ...threshold, matchedLevel: level },
+  };
+}
+
+function thresholdsFor(
+  dimension: PortfolioAllocationDimension,
+  thresholds: PortfolioRiskThresholdConfiguration,
+): PortfolioRiskConcentrationThresholds {
+  switch (dimension) {
+    case PortfolioAllocationDimension.Asset:
+      return thresholds.asset;
+    case PortfolioAllocationDimension.Network:
+      return thresholds.network;
+    case PortfolioAllocationDimension.Source:
+      return thresholds.source;
+    case PortfolioAllocationDimension.Account:
+      return thresholds.account;
+  }
+}
+
+function classify(
+  percentage: string,
+  thresholds: PortfolioRiskConcentrationThresholds,
+): PortfolioRiskConcentrationLevel {
+  if (comparePercentage(percentage, thresholds.highPercentage) >= 0) {
+    return PortfolioRiskConcentrationLevel.High;
+  }
+  if (comparePercentage(percentage, thresholds.moderatePercentage) >= 0) {
+    return PortfolioRiskConcentrationLevel.Moderate;
+  }
+  return PortfolioRiskConcentrationLevel.None;
+}
+
+function validateThresholds(thresholds: PortfolioRiskConcentrationThresholds, label: string): void {
+  if (thresholds === null || typeof thresholds !== 'object') {
+    throw new PortfolioRiskValidationError(`Portfolio risk ${label} thresholds are required.`);
+  }
+  assertPercentage(thresholds.moderatePercentage, `Portfolio risk ${label} moderate threshold`);
+  assertPercentage(thresholds.highPercentage, `Portfolio risk ${label} high threshold`);
+  if (comparePercentage(thresholds.moderatePercentage, thresholds.highPercentage) >= 0) {
+    throw new PortfolioRiskValidationError(
+      `Portfolio risk ${label} moderate threshold must be lower than the high threshold.`,
+    );
+  }
+}
+
+function unclassifiedProvenance(
+  allocation: PortfolioAllocationAnalysis,
+): ReadonlyArray<PortfolioRiskUnavailableObservation> {
+  const observations: PortfolioRiskUnavailableObservation[] = [];
+  if (allocation.exposure.network.items.some((item) => item.unclassified)) {
+    observations.push({ reason: PortfolioRiskUnavailableReason.MissingNetworkProvenance });
+  }
+  if (allocation.exposure.source.items.some((item) => item.unclassified)) {
+    observations.push({ reason: PortfolioRiskUnavailableReason.MissingSourceProvenance });
+  }
+  if (allocation.exposure.account.items.some((item) => item.unclassified)) {
+    observations.push({ reason: PortfolioRiskUnavailableReason.MissingAccountProvenance });
+  }
+  return observations;
+}
+
+function compareObservations(
+  left: PortfolioRiskConcentrationObservation | PortfolioRiskExposureObservation,
+  right: PortfolioRiskConcentrationObservation | PortfolioRiskExposureObservation,
+): number {
+  const level = severity(right.level) - severity(left.level);
+  if (level !== 0) return level;
+  const dimension = left.allocation.dimension.localeCompare(right.allocation.dimension);
+  if (dimension !== 0) return dimension;
+  const percentage = comparePercentage(right.allocation.percentage, left.allocation.percentage);
+  if (percentage !== 0) return percentage;
+  return left.allocation.identity.localeCompare(right.allocation.identity);
+}
+
+function compareUnavailableObservations(
+  left: PortfolioRiskUnavailableObservation,
+  right: PortfolioRiskUnavailableObservation,
+): number {
+  const reason = left.reason.localeCompare(right.reason);
+  if (reason !== 0) return reason;
+  const position = (left.positionIdentity ?? '').localeCompare(right.positionIdentity ?? '');
+  if (position !== 0) return position;
+  const asset = (left.asset === undefined ? '' : portfolioAssetIdentity(left.asset)).localeCompare(
+    right.asset === undefined ? '' : portfolioAssetIdentity(right.asset),
+  );
+  if (asset !== 0) return asset;
+  return (left.networkId ?? '').localeCompare(right.networkId ?? '');
+}
+
+function severity(level: PortfolioRiskConcentrationLevel | undefined): number {
+  switch (level) {
+    case PortfolioRiskConcentrationLevel.High:
+      return 2;
+    case PortfolioRiskConcentrationLevel.Moderate:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+function cloneCoverage(coverage: PortfolioCoverage): PortfolioCoverage {
+  return {
+    ...coverage,
+    unvaluedReasons: coverage.unvaluedReasons.map((reason) => ({ ...reason })),
+  };
+}
+
+function cloneUnvaluedPosition(position: PortfolioUnvaluedPosition): PortfolioUnvaluedPosition {
+  return { ...position, asset: cloneAsset(position.asset) };
+}
+
+function cloneAllocation(allocation: PortfolioAllocationItem): PortfolioAllocationItem {
+  return {
+    ...allocation,
+    positionIdentities: [...allocation.positionIdentities],
+    ...(allocation.asset === undefined ? {} : { asset: cloneAsset(allocation.asset) }),
+  };
+}
+
+function cloneAsset(asset: PortfolioAsset): PortfolioAsset {
+  return { ...asset };
+}
+
 function missingAsset(): PortfolioAsset {
   throw new PortfolioRiskValidationError(
     'Portfolio risk concentration observation must preserve the allocated asset identity.',
@@ -385,6 +677,27 @@ function assertIsoTimestamp(value: string, label: string): void {
   if (Number.isNaN(Date.parse(value))) {
     throw new PortfolioRiskValidationError(`${label} must be a valid ISO timestamp.`);
   }
+}
+
+function assertPercentage(value: string, label: string): void {
+  if (typeof value !== 'string') {
+    throw new PortfolioRiskValidationError(`${label} must be a decimal percentage from 0 to 100.`);
+  }
+  assertNonEmpty(value, label);
+  if (!/^\d+(?:\.\d+)?$/.test(value) || comparePercentage(value, '100') > 0) {
+    throw new PortfolioRiskValidationError(`${label} must be a decimal percentage from 0 to 100.`);
+  }
+}
+
+function comparePercentage(left: string, right: string): number {
+  const leftParts = left.split('.');
+  const rightParts = right.split('.');
+  const scale = Math.max(leftParts[1]?.length ?? 0, rightParts[1]?.length ?? 0);
+  const normalize = (value: string, parts: ReadonlyArray<string>): bigint =>
+    BigInt(`${parts[0]}${(parts[1] ?? '').padEnd(scale, '0')}`);
+  const leftValue = normalize(left, leftParts);
+  const rightValue = normalize(right, rightParts);
+  return leftValue === rightValue ? 0 : leftValue < rightValue ? -1 : 1;
 }
 
 function assertOptionalNonEmpty(value: string | undefined, label: string): void {

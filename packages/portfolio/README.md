@@ -105,11 +105,21 @@ Wallet or price provider, RPC/network fetching, PnL/performance engine, risk
 classification, recommendation, Morning Meeting integration, or AI/LLM
 integration.
 
-Sprint 7D.1 introduces provider-neutral Portfolio risk contracts only.
+Sprint 7D.1 introduces provider-neutral Portfolio risk contracts.
 `PortfolioRiskAnalysisInput` preserves canonical Portfolio, valuation, and
 allocation identities; `PortfolioRiskAnalysis` can carry descriptive
 concentration, exposure, coverage, and explicit unavailable-data observations.
 `PortfolioRiskDataState` describes evidence availability only, never a risk
 level. `PortfolioRiskValidationError` validates cross-module identity and
-coverage coherence. There is no risk engine, score, threshold, calculation,
-recommendation, provider runtime, or AI integration.
+coverage coherence.
+
+Sprint 7D.2 adds `analyzePortfolioRisk`, a deterministic, opt-in analysis over
+existing Portfolio valuation and allocation facts. Asset, network, source, and
+account observations retain the measured percentage and explicit caller-supplied
+moderate/high threshold evidence. Thresholds are inclusive and must satisfy
+`moderate < high`; there are no hidden defaults. Partial valuation remains
+explicit, while missing prices/decimals, absent provenance, and unavailable
+zero-value denominators are structured unavailable-data facts. These are
+descriptive rule observations only: there is no composite score, VaR,
+volatility, drawdown, correlation, liquidation analysis, performance risk, AI
+interpretation, or trading recommendation.
