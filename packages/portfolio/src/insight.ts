@@ -80,7 +80,55 @@ export interface PortfolioInsightAnalysisInput {
 export interface PortfolioInsightAnalysis {
   readonly portfolioId: string;
   readonly asOf: string;
+  /** Explicit canonical coverage retained by generated insight analyses. */
+  readonly coverageState?: PortfolioRiskDataState;
   readonly insights: ReadonlyArray<PortfolioInsight>;
+}
+
+/** Generates deterministic, evidence-only Portfolio insights from canonical analysis results. */
+export function generatePortfolioInsights(
+  input: PortfolioInsightAnalysisInput,
+): PortfolioInsightAnalysis {
+  const riskInput = {
+    analysisId: input.risk.analysisId,
+    asOf: input.risk.asOf,
+    snapshot: input.snapshot,
+    valuation: input.valuation,
+    allocation: input.allocation,
+  };
+  try {
+    validatePortfolioRiskAnalysisInput(riskInput);
+    validatePortfolioRiskAnalysis(riskInput, input.risk);
+  } catch (error) {
+    throw new PortfolioInsightValidationError(
+      error instanceof Error ? error.message : 'Portfolio insight input is invalid.',
+    );
+  }
+
+  const candidates: PortfolioInsight[] = [
+    ...coverageInsights(input),
+    ...allocationInsights(input),
+    ...riskInsights(input),
+    ...dataQualityInsights(input),
+  ];
+  const unique = new Map<string, PortfolioInsight>();
+  for (const insight of candidates) {
+    const existing = unique.get(insight.id);
+    if (existing !== undefined && JSON.stringify(existing) !== JSON.stringify(insight)) {
+      throw new PortfolioInsightValidationError(
+        `Portfolio insight identity "${insight.id}" has contradictory evidence.`,
+      );
+    }
+    unique.set(insight.id, insight);
+  }
+  const analysis: PortfolioInsightAnalysis = {
+    portfolioId: input.snapshot.portfolio.id,
+    asOf: input.risk.asOf,
+    coverageState: input.risk.coverage.state,
+    insights: Array.from(unique.values()).sort(compareInsights),
+  };
+  validatePortfolioInsightAnalysis(input, analysis);
+  return analysis;
 }
 
 /** Validates an evidence-backed insight collection against existing canonical Portfolio results. */
@@ -110,6 +158,14 @@ export function validatePortfolioInsightAnalysis(
       'Portfolio insight analysis identity does not match canonical Portfolio risk input.',
     );
   }
+  if (
+    analysis.coverageState !== undefined &&
+    analysis.coverageState !== input.risk.coverage.state
+  ) {
+    throw new PortfolioInsightValidationError(
+      'Portfolio insight analysis coverage state conflicts with canonical risk coverage.',
+    );
+  }
   const insightIds = new Set<string>();
   for (const insight of analysis.insights) {
     assertNonEmpty(insight.id, 'Portfolio insight ID');
@@ -121,6 +177,158 @@ export function validatePortfolioInsightAnalysis(
     insightIds.add(insight.id);
     validateInsight(insight, input);
   }
+}
+
+function coverageInsights(input: PortfolioInsightAnalysisInput): ReadonlyArray<PortfolioInsight> {
+  if (input.risk.coverage.state === 'complete') return [];
+  return [
+    insight(input, PortfolioInsightCategory.Coverage, 'coverage', PortfolioInsightSeverity.Info, {
+      coverageState: input.risk.coverage.state,
+    }),
+  ];
+}
+
+function allocationInsights(input: PortfolioInsightAnalysisInput): ReadonlyArray<PortfolioInsight> {
+  const items = [
+    ...input.allocation.assetAllocation.items,
+    ...input.allocation.exposure.network.items,
+    ...input.allocation.exposure.source.items,
+    ...input.allocation.exposure.account.items,
+  ];
+  return items.map((allocation) => {
+    const category =
+      allocation.dimension === PortfolioAllocationDimension.Asset
+        ? PortfolioInsightCategory.Allocation
+        : PortfolioInsightCategory.Exposure;
+    return insight(
+      input,
+      category,
+      `${allocation.dimension}:${allocation.identity}`,
+      PortfolioInsightSeverity.Notable,
+      {
+        allocation,
+        measuredValue: allocation.value,
+        measuredPercentage: allocation.percentage,
+        ...(allocation.asset === undefined ? {} : { asset: allocation.asset }),
+        ...(allocation.networkId === undefined ? {} : { networkId: allocation.networkId }),
+        ...(allocation.sourceId === undefined ? {} : { sourceId: allocation.sourceId }),
+        ...(allocation.accountId === undefined ? {} : { accountId: allocation.accountId }),
+        coverageState: input.risk.coverage.state,
+      },
+    );
+  });
+}
+
+function riskInsights(input: PortfolioInsightAnalysisInput): ReadonlyArray<PortfolioInsight> {
+  const observations = [
+    ...input.risk.concentrationObservations.map((observation) => ({
+      observation,
+      category: PortfolioInsightCategory.Concentration,
+    })),
+    ...input.risk.exposureObservations.map((observation) => ({
+      observation,
+      category: PortfolioInsightCategory.Exposure,
+    })),
+  ];
+  return observations
+    .filter(
+      ({ observation }) =>
+        (observation.level === PortfolioRiskConcentrationLevel.Moderate ||
+          observation.level === PortfolioRiskConcentrationLevel.High) &&
+        observation.thresholdEvidence !== undefined,
+    )
+    .map(({ observation, category }) =>
+      insight(
+        input,
+        category,
+        `risk:${observation.allocation.dimension}:${observation.allocation.identity}:${observation.level}`,
+        observation.level === PortfolioRiskConcentrationLevel.High
+          ? PortfolioInsightSeverity.Significant
+          : PortfolioInsightSeverity.Notable,
+        {
+          allocation: observation.allocation,
+          measuredValue: observation.allocation.value,
+          measuredPercentage: observation.allocation.percentage,
+          thresholdEvidence: observation.thresholdEvidence,
+          riskLevel: observation.level,
+          coverageState: input.risk.coverage.state,
+          ...(observation.allocation.asset === undefined
+            ? {}
+            : { asset: observation.allocation.asset }),
+          ...(observation.allocation.networkId === undefined
+            ? {}
+            : { networkId: observation.allocation.networkId }),
+          ...(observation.allocation.sourceId === undefined
+            ? {}
+            : { sourceId: observation.allocation.sourceId }),
+          ...(observation.allocation.accountId === undefined
+            ? {}
+            : { accountId: observation.allocation.accountId }),
+        },
+      ),
+    );
+}
+
+function dataQualityInsights(
+  input: PortfolioInsightAnalysisInput,
+): ReadonlyArray<PortfolioInsight> {
+  return input.risk.unavailableObservations.map((observation) =>
+    insight(
+      input,
+      PortfolioInsightCategory.DataQuality,
+      `unavailable:${observation.reason}:${observation.positionIdentity ?? observation.networkId ?? observation.sourceId ?? ''}`,
+      PortfolioInsightSeverity.Info,
+      {
+        unavailableReason: observation.reason,
+        ...(observation.positionIdentity === undefined
+          ? {}
+          : { positionIdentity: observation.positionIdentity }),
+        ...(observation.asset === undefined ? {} : { asset: observation.asset }),
+        ...(observation.networkId === undefined ? {} : { networkId: observation.networkId }),
+        ...(observation.sourceId === undefined ? {} : { sourceId: observation.sourceId }),
+        coverageState: input.risk.coverage.state,
+      },
+    ),
+  );
+}
+
+function insight(
+  input: PortfolioInsightAnalysisInput,
+  category: PortfolioInsightCategory,
+  target: string,
+  severity: PortfolioInsightSeverity,
+  evidence: Omit<PortfolioInsightEvidence, 'portfolioId'>,
+): PortfolioInsight {
+  return {
+    id: JSON.stringify([input.snapshot.portfolio.id, category, target]),
+    category,
+    severity,
+    evidence: { portfolioId: input.snapshot.portfolio.id, ...evidence },
+  };
+}
+
+function compareInsights(left: PortfolioInsight, right: PortfolioInsight): number {
+  const severity = severityOrder(right.severity) - severityOrder(left.severity);
+  if (severity !== 0) return severity;
+  const category = left.category.localeCompare(right.category);
+  if (category !== 0) return category;
+  const target = insightTarget(left).localeCompare(insightTarget(right));
+  return target || left.id.localeCompare(right.id);
+}
+
+function insightTarget(insight: PortfolioInsight): string {
+  if (insight.evidence.allocation !== undefined) return insight.evidence.allocation.identity;
+  if (insight.evidence.positionIdentity !== undefined) return insight.evidence.positionIdentity;
+  if (insight.evidence.asset !== undefined) return portfolioAssetIdentity(insight.evidence.asset);
+  return insight.evidence.unavailableReason ?? 'coverage';
+}
+
+function severityOrder(severity: PortfolioInsightSeverity | undefined): number {
+  return severity === PortfolioInsightSeverity.Significant
+    ? 2
+    : severity === PortfolioInsightSeverity.Notable
+      ? 1
+      : 0;
 }
 
 function validateInsight(insight: PortfolioInsight, input: PortfolioInsightAnalysisInput): void {

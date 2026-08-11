@@ -10,6 +10,7 @@ import {
   PortfolioInsightValidationError,
   analyzePortfolioAllocation,
   analyzePortfolioRisk,
+  generatePortfolioInsights,
   validatePortfolioInsightAnalysis,
   valuePortfolioSnapshot,
 } from '../dist/index.js';
@@ -234,4 +235,26 @@ test('remains deterministic for equivalent insight ordering and preserves existi
   assert.equal('insights' in input.valuation, false);
   assert.equal('insights' in input.allocation, false);
   assert.equal('insights' in input.risk, false);
+});
+
+test('generates deterministic evidence-only insights from canonical partial analysis', () => {
+  const input = context();
+  const first = generatePortfolioInsights(input);
+  const second = generatePortfolioInsights({
+    ...input,
+    allocation: analyzePortfolioAllocation(input.snapshot, input.valuation),
+  });
+  assert.equal(first.coverageState, PortfolioRiskDataState.Partial);
+  assert.ok(first.insights.some((item) => item.category === PortfolioInsightCategory.Allocation));
+  assert.ok(first.insights.some((item) => item.category === PortfolioInsightCategory.Exposure));
+  assert.ok(
+    first.insights.some((item) => item.category === PortfolioInsightCategory.Concentration),
+  );
+  assert.ok(
+    first.insights.some(
+      (item) => item.evidence.unavailableReason === PortfolioRiskUnavailableReason.MissingDecimals,
+    ),
+  );
+  assert.deepEqual(first, second);
+  assert.ok(!JSON.stringify(first).match(/recommend|buy|sell|rebalance|narrative|prediction/i));
 });
