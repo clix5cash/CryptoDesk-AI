@@ -198,3 +198,12 @@ partial/unavailable facts without divergent copies. `stringifyPortfolioPresentat
 produces a no-whitespace canonical JSON representation with stable object-key
 and array ordering. This is not an HTTP API, UI model, or AI prompt format; it
 adds no narrative, recommendation, prediction, or Morning Meeting integration.
+
+Sprint 7F closes the Presentation Foundation: canonical Portfolio facts flow
+through Structured Presentation, deterministic sections, a schema-versioned
+JSON-safe consumer payload, and byte-stable canonical JSON. The complete path
+preserves evidence, provenance, exact decimal strings, canonical identities,
+and explicit partial or unavailable coverage. It remains deterministic,
+immutable, transport-neutral, UI-neutral, provider-neutral, and AI-independent.
+It adds no HTTP/API runtime, UI framework, narrative generation,
+recommendations, predictions, or Morning Meeting integration.

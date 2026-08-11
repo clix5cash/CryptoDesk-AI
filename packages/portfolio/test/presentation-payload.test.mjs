@@ -152,6 +152,21 @@ test('validates empty payloads and rejects broken references, duplicate records,
       }),
     PortfolioInsightValidationError,
   );
+  assert.throws(
+    () =>
+      validatePortfolioPresentationPayload({
+        ...payload,
+        items: [item('data-quality', PortfolioInsightCategory.DataQuality, 'missing_price')],
+        sections: [
+          {
+            id: JSON.stringify(['portfolio-payload', PortfolioPresentationSection.Concentration]),
+            section: PortfolioPresentationSection.Concentration,
+            itemIds: ['data-quality'],
+          },
+        ],
+      }),
+    PortfolioInsightValidationError,
+  );
   const unsafe = presentation([
     item('unsafe', PortfolioInsightCategory.Exposure, 'source-a', {
       evidence: {

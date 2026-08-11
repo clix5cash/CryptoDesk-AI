@@ -141,13 +141,38 @@ export function validatePortfolioPresentationPayload(payload: PortfolioPresentat
     sectionIds.add(section.id);
     const references = new Set<string>();
     for (const itemId of section.itemIds) {
-      if (!itemIds.has(itemId) || references.has(itemId)) {
+      const item = payload.items.find((candidate) => candidate.id === itemId);
+      if (
+        item === undefined ||
+        references.has(itemId) ||
+        !isCompatibleSectionItem(section.section, item)
+      ) {
         throw new PortfolioInsightValidationError(
           'Portfolio presentation payload item reference is invalid.',
         );
       }
       references.add(itemId);
     }
+  }
+}
+
+function isCompatibleSectionItem(
+  section: PortfolioPresentationSection,
+  item: PortfolioPresentationItem,
+): boolean {
+  switch (section) {
+    case PortfolioPresentationSection.Concentration:
+      return item.category === PortfolioInsightCategory.Concentration;
+    case PortfolioPresentationSection.Exposure:
+      return item.category === PortfolioInsightCategory.Exposure;
+    case PortfolioPresentationSection.DataQuality:
+      return item.category === PortfolioInsightCategory.DataQuality;
+    case PortfolioPresentationSection.Overview:
+    case PortfolioPresentationSection.Valuation:
+    case PortfolioPresentationSection.Coverage:
+      return false;
+    case PortfolioPresentationSection.PrioritizedInsights:
+      return true;
   }
 }
 
