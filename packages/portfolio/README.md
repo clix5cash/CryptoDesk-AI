@@ -178,3 +178,14 @@ price provenance where applicable, exact decimal text, and partial-coverage
 semantics. The presentation boundary is provider-, transport-, and UI-neutral;
 it does not recalculate portfolio facts, generate narrative, make
 recommendations, invoke AI/LLMs, or integrate with Morning Meeting.
+
+Sprint 7F.2 adds opt-in deterministic section composition over Structured
+Presentation. Sections are ordered as overview, valuation, applicable coverage,
+concentration, exposure, data quality, and prioritized insights. Section IDs
+derive from portfolio identity and section kind; item-oriented sections contain
+only canonical item IDs in their existing prioritized order. Empty optional
+item sections are omitted, while overview, valuation, and applicable coverage
+remain structural facts. Explicit `includedSections`, `excludedSections`, and
+`maxItemsPerSection` options are caller-driven and never rerank insights or
+rewrite evidence. There is no AI, narrative generation, recommendation,
+prediction, UI framework, or Morning Meeting integration.
