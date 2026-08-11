@@ -161,3 +161,12 @@ tie-breaks. Optional `minimumSeverity` and `maxItems` selection is explicit;
 without options every valid insight is retained. This is not AI ranking, a
 hidden relevance score, narrative generation, prediction, recommendation, or
 Morning Meeting integration.
+
+Sprint 7E closes the Portfolio Intelligence foundation: canonical Portfolio
+facts flow through valuation, allocation/exposure, descriptive risk
+observations, deterministic insights, and explainable prioritization. Each
+stage is provider-neutral, immutable, precision-safe, and explicit about
+partial coverage and unavailable facts. Priority preserves canonical evidence
+and does not reinterpret it as advice. There is no narrative generation,
+AI/LLM dependency, recommendation, prediction, trading logic, or Morning
+Meeting integration.
