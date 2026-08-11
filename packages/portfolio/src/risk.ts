@@ -234,6 +234,7 @@ export function validatePortfolioRiskAnalysisInput(input: PortfolioRiskAnalysisI
     );
   }
   validateAllocationCoverage(input.allocation, input.valuation);
+  validateAllocationStructure(input.allocation, input.valuation);
 }
 
 /** Validates a descriptive risk artifact against already validated canonical inputs. */
@@ -272,6 +273,119 @@ function validateAllocationCoverage(
   ) {
     throw new PortfolioRiskValidationError(
       'Portfolio risk allocation coverage does not match the valuation coverage.',
+    );
+  }
+}
+
+/** Verifies that risk consumes structurally canonical allocation facts without recomputing them. */
+function validateAllocationStructure(
+  allocation: PortfolioAllocationAnalysis,
+  valuation: PortfolioValuation,
+): void {
+  const valuedPositionIdentities = new Set(
+    valuation.positions.map((position) => position.positionIdentity),
+  );
+  validateAllocationItems(
+    allocation.assetAllocation,
+    PortfolioAllocationDimension.Asset,
+    valuedPositionIdentities,
+  );
+  validateAllocationItems(
+    allocation.exposure.network,
+    PortfolioAllocationDimension.Network,
+    valuedPositionIdentities,
+  );
+  validateAllocationItems(
+    allocation.exposure.source,
+    PortfolioAllocationDimension.Source,
+    valuedPositionIdentities,
+  );
+  validateAllocationItems(
+    allocation.exposure.account,
+    PortfolioAllocationDimension.Account,
+    valuedPositionIdentities,
+  );
+}
+
+function validateAllocationItems(
+  allocation: PortfolioAllocationAnalysis['assetAllocation'],
+  dimension: PortfolioAllocationDimension,
+  valuedPositionIdentities: ReadonlySet<PortfolioPositionIdentity>,
+): void {
+  if (
+    allocation.dimension !== dimension ||
+    !Array.isArray(allocation.items) ||
+    allocation.totalValuedValue === undefined
+  ) {
+    throw new PortfolioRiskValidationError('Portfolio risk allocation dimension is malformed.');
+  }
+  assertDecimal(allocation.totalValuedValue, 'Portfolio risk allocation total valued value');
+  const identities = new Set<string>();
+  for (const item of allocation.items) {
+    if (item.dimension !== dimension) {
+      throw new PortfolioRiskValidationError(
+        'Portfolio risk allocation item dimension is malformed.',
+      );
+    }
+    assertAllocationIdentity(item, identities, 'Portfolio risk allocation item');
+    assertDecimal(item.value, 'Portfolio risk allocation item value');
+    assertPercentage(item.percentage, 'Portfolio risk allocation item percentage');
+    const positions = new Set<PortfolioPositionIdentity>();
+    for (const positionIdentity of item.positionIdentities) {
+      if (!valuedPositionIdentities.has(positionIdentity) || positions.has(positionIdentity)) {
+        throw new PortfolioRiskValidationError(
+          'Portfolio risk allocation item references an unknown or duplicate valued position.',
+        );
+      }
+      positions.add(positionIdentity);
+    }
+    validateAllocationTarget(item, dimension);
+  }
+}
+
+function validateAllocationTarget(
+  allocation: PortfolioAllocationItem,
+  dimension: PortfolioAllocationDimension,
+): void {
+  switch (dimension) {
+    case PortfolioAllocationDimension.Asset:
+      if (
+        allocation.asset === undefined ||
+        allocation.unclassified ||
+        portfolioAssetIdentity(allocation.asset) !== allocation.identity
+      ) {
+        throw new PortfolioRiskValidationError(
+          'Portfolio risk asset allocation identity is malformed.',
+        );
+      }
+      return;
+    case PortfolioAllocationDimension.Network:
+      validateExposureTarget(allocation, allocation.networkId, 'network');
+      return;
+    case PortfolioAllocationDimension.Source:
+      validateExposureTarget(allocation, allocation.sourceId, 'source');
+      return;
+    case PortfolioAllocationDimension.Account:
+      validateExposureTarget(allocation, allocation.accountId, 'account');
+  }
+}
+
+function validateExposureTarget(
+  allocation: PortfolioAllocationItem,
+  targetId: string | undefined,
+  label: string,
+): void {
+  if (allocation.unclassified) {
+    if (targetId !== undefined || allocation.identity !== 'unclassified') {
+      throw new PortfolioRiskValidationError(
+        `Portfolio risk unclassified ${label} exposure identity is malformed.`,
+      );
+    }
+    return;
+  }
+  if (targetId === undefined || targetId !== allocation.identity) {
+    throw new PortfolioRiskValidationError(
+      `Portfolio risk ${label} exposure identity is malformed.`,
     );
   }
 }
@@ -737,6 +851,12 @@ function assertPercentage(value: string, label: string): void {
   assertNonEmpty(value, label);
   if (!/^\d+(?:\.\d+)?$/.test(value) || comparePercentage(value, '100') > 0) {
     throw new PortfolioRiskValidationError(`${label} must be a decimal percentage from 0 to 100.`);
+  }
+}
+
+function assertDecimal(value: string, label: string): void {
+  if (typeof value !== 'string' || !/^\d+(?:\.\d+)?$/.test(value)) {
+    throw new PortfolioRiskValidationError(`${label} must be a non-negative decimal value.`);
   }
 }
 

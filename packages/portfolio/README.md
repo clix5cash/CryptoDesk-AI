@@ -134,3 +134,12 @@ no explicit stable-value classification, so stable-value exposure is deferred;
 symbols and names are never used as heuristics. There is no composite score,
 VaR, volatility, drawdown, correlation, liquidation model, recommendation, AI,
 or Morning Meeting integration.
+
+Sprint 7D.4 validates the completed deterministic risk path:
+`PortfolioSnapshot` → valuation → allocation/exposure → risk observations.
+Risk consumes canonical allocation facts without recomputing them, validates
+their structure and provenance references, and never hides partial coverage or
+unavailable data behind an aggregate score. Empty, all-unvalued, and zero-total
+portfolios retain explicit insufficient-data facts; they are not interpreted as
+low risk. The risk foundation remains descriptive only, with no performance,
+trading, provider-runtime, or AI capability.
