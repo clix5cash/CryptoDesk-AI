@@ -5,3 +5,11 @@ export class PortfolioValidationError extends Error {
     this.name = 'PortfolioValidationError';
   }
 }
+
+/** Explicit validation failure for provider-neutral Portfolio risk contract data. */
+export class PortfolioRiskValidationError extends PortfolioValidationError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PortfolioRiskValidationError';
+  }
+}
