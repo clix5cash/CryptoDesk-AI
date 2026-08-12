@@ -41,3 +41,23 @@ and unavailable-data semantics remain solely in the authoritative context.
 This is validation only: no model/provider invocation, prompt, tokenizer,
 narrative-generation engine, recommendation, prediction, or runtime transport
 is implemented.
+
+Sprint 8A.4 closes the deterministic AI boundary with end-to-end regression
+coverage of the complete path:
+
+```text
+Canonical Portfolio Payload
+        ↓
+Deterministic AI Context
+        ↓
+Grounded Non-Authoritative Interpretation Boundary
+```
+
+Portfolio remains the canonical authority throughout. Context facts retain
+canonical item and section grounding, exact decimal strings, source provenance,
+and complete, partial, unavailable, or insufficient-data coverage unchanged.
+Interpretation content can only reference those facts and is always explicitly
+`non_authoritative_interpretation`; it cannot add or override canonical
+financial facts. Sprint 8A includes no model or provider runtime, prompts,
+tokenization, narrative generation, recommendations, predictions, Morning
+Meeting integration, persistence, cache, or scheduler.
