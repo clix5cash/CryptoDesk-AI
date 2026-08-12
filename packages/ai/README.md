@@ -30,3 +30,14 @@ or unavailable coverage remain unchanged. Explicit section selection and
 invocation, prompt or system/user-message template, model configuration,
 provider adapter, tokenization, narrative generation, recommendation,
 prediction, or Morning Meeting integration.
+
+Sprint 8A.3 adds a grounded interpretation-result contract after deterministic
+context construction. A future interpretation is explicitly
+`non_authoritative_interpretation` and may contain only opaque content plus
+exact references to selected context facts, presentation items, and canonical
+sections. Validation rejects unknown, duplicate, contradictory, or fabricated
+canonical fields; portfolio identity, provenance, decimal strings, coverage,
+and unavailable-data semantics remain solely in the authoritative context.
+This is validation only: no model/provider invocation, prompt, tokenizer,
+narrative-generation engine, recommendation, prediction, or runtime transport
+is implemented.
