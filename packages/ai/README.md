@@ -159,3 +159,26 @@ there is no default, retry, fallback, or routing. Raw results are structurally
 validated but remain untrusted and cannot satisfy the grounded interpretation
 boundary. Sprint 8B includes no concrete provider, network runtime, prompt
 rendering, credentials, or automatic grounding.
+
+Sprint 8C.1 adds a contract-only pre-grounding boundary for descriptive model
+output:
+
+```text
+Raw untrusted_model_execution
+        ↓
+Untrusted candidate interpretation
+        ↓
+future explicit grounding/validation
+        ↓
+non_authoritative_interpretation
+```
+
+`PortfolioAiCandidateInterpretationResult` is distinct from both the raw
+execution result and the grounded interpretation result. Candidate records use
+externally supplied opaque IDs and can assert only exact selected context-fact
+and section references. Validation rejects unknown, duplicate, contradictory,
+or added canonical financial fields; Portfolio/context facts, provenance,
+coverage, and decimal precision remain authoritative. Sprint 8C.1 adds no
+provider or parser runtime, automatic grounding, prompt/model configuration,
+narrative generator, recommendation, prediction, or Morning Meeting
+integration.

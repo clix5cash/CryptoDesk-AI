@@ -94,11 +94,12 @@ function validateInterpretation(
 
   const references = new Set<string>();
   for (const reference of interpretation.factReferences) {
-    validateFactReference(reference, context.facts, references);
+    validatePortfolioAiContextFactReference(reference, context.facts, references);
   }
 }
 
-function validateFactReference(
+/** Validates an exact reference to selected deterministic context facts and sections. */
+export function validatePortfolioAiContextFactReference(
   reference: PortfolioAiContextFactReference,
   facts: ReadonlyArray<PortfolioAiContextFact>,
   references: Set<string>,
