@@ -132,3 +132,30 @@ invocation attempt. It does not register providers, build prompts, retry,
 fallback, route, ground interpretations, or reinterpret raw output. Returned
 results remain validated and detached `untrusted_model_execution` records; no
 concrete provider, SDK, HTTP transport, credentials, or model runtime is added.
+
+Sprint 8B.4 closes the provider-neutral execution boundary with end-to-end
+coverage:
+
+```text
+Canonical Portfolio
+        ↓
+Deterministic AI Context
+        ↓
+Explicit Execution Request
+        ↓
+Provider-Neutral Execution Service
+        ↓
+Explicit Adapter
+        ↓
+Raw untrusted_model_execution
+        ↓
+separate future grounding operation
+```
+
+The completed boundary preserves canonical identity, provenance, exact decimal
+strings, and complete, partial, unavailable, and missing-data semantics. One
+request resolves one explicitly selected provider/model and makes one attempt;
+there is no default, retry, fallback, or routing. Raw results are structurally
+validated but remain untrusted and cannot satisfy the grounded interpretation
+boundary. Sprint 8B includes no concrete provider, network runtime, prompt
+rendering, credentials, or automatic grounding.
