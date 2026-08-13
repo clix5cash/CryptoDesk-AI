@@ -83,3 +83,28 @@ provider-neutral counters rather than tokenizer semantics. No provider SDK,
 model invocation, HTTP transport, credentials, registry/routing behavior,
 prompt construction, narrative generation, recommendation, prediction, or
 Morning Meeting integration is added.
+
+Sprint 8B.2 adds an opt-in, instance-scoped adapter registry for the 8B.1
+execution contracts:
+
+```text
+Deterministic AI Context
+        ↓
+explicit provider/model selection
+        ↓
+provider-neutral adapter
+        ↓
+raw untrusted model execution
+        ↓
+separate grounded interpretation validation
+```
+
+`PortfolioAiModelProviderRegistry` registers explicitly supplied adapters by
+opaque provider ID, rejects duplicates, and resolves only a caller-selected
+provider/model. Its deterministic listing exposes detached descriptors; there
+is no singleton, discovery, fallback, routing, health policy, or automatic
+selection. Invocation copies the request before calling an adapter, validates
+the returned `untrusted_model_execution` result against the original request,
+and never turns it into a grounded interpretation. No concrete provider, SDK,
+HTTP transport, credential handling, prompt rendering, or model execution
+runtime is included.
