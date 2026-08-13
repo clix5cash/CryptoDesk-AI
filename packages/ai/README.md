@@ -108,3 +108,27 @@ the returned `untrusted_model_execution` result against the original request,
 and never turns it into a grounded interpretation. No concrete provider, SDK,
 HTTP transport, credential handling, prompt rendering, or model execution
 runtime is included.
+
+Sprint 8B.3 adds `PortfolioAiModelExecutionService`, an opt-in thin
+composition layer:
+
+```text
+Deterministic AI Context
+        ↓
+Explicit Model Execution Request
+        ↓
+Execution Service
+        ↓
+Explicit Provider Adapter
+        ↓
+Raw untrusted_model_execution
+        ↓
+future grounding step
+```
+
+The service delegates to the existing registry and adapter-invocation boundary:
+one request resolves one explicitly selected provider/model and makes one
+invocation attempt. It does not register providers, build prompts, retry,
+fallback, route, ground interpretations, or reinterpret raw output. Returned
+results remain validated and detached `untrusted_model_execution` records; no
+concrete provider, SDK, HTTP transport, credentials, or model runtime is added.

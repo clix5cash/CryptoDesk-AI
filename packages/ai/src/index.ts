@@ -8,3 +8,4 @@ export * from './portfolio-intelligence-context.js';
 export * from './portfolio-grounded-interpretation.js';
 export * from './portfolio-model-execution.js';
 export * from './portfolio-model-adapters.js';
+export * from './portfolio-model-execution-service.js';
