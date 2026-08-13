@@ -203,3 +203,24 @@ natural-language content, invoke AI, parse model output, or recompute
 Portfolio analytics. Grounded interpretations remain explicitly
 non-authoritative; partial, unavailable, and missing-data coverage stays
 canonical in the referenced context.
+
+Sprint 8C.3 adds the structured candidate-assembly boundary:
+
+```text
+raw untrusted_model_execution
+        ↓
+structured candidate assembly
+        ↓
+untrusted_candidate_interpretation
+        ↓
+deterministic grounding
+        ↓
+non_authoritative_interpretation
+```
+
+`assemblePortfolioAiCandidateInterpretation(...)` accepts only already-
+structured candidate fields, inherits execution/provider/model identity from a
+validated execution result, and validates exact context-fact and section
+references through the existing candidate contract. It does not parse raw text
+or JSON, infer references or meaning, create canonical facts, or promote a
+candidate to grounded output. Assembled candidates remain explicitly untrusted.

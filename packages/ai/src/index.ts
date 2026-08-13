@@ -11,3 +11,4 @@ export * from './portfolio-model-adapters.js';
 export * from './portfolio-model-execution-service.js';
 export * from './portfolio-model-output-interpretation.js';
 export * from './portfolio-candidate-grounding.js';
+export * from './portfolio-candidate-assembly.js';

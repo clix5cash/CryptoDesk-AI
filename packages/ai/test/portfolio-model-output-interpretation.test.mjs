@@ -8,6 +8,7 @@ import {
   PortfolioAiRawExecutionAuthority,
   PortfolioAiResultAuthority,
   PortfolioAiTask,
+  assemblePortfolioAiCandidateInterpretation,
   buildPortfolioAiContext,
   groundPortfolioAiCandidateInterpretation,
   validatePortfolioAiCandidateInterpretationResult,
@@ -201,6 +202,23 @@ function candidateResult(source, overrides = {}) {
         sectionIds: [source.context.sections[2].id],
       },
     ],
+    ...overrides,
+  };
+}
+
+function assemblyInput(source, overrides = {}) {
+  const result = candidateResult(source);
+  return {
+    context: source.context,
+    request: source.request,
+    execution: source.execution,
+    candidates: result.candidates.map(({ id, kind, content, factReferences, sectionIds }) => ({
+      id,
+      kind,
+      content,
+      ...(factReferences === undefined ? {} : { factReferences }),
+      ...(sectionIds === undefined ? {} : { sectionIds }),
+    })),
     ...overrides,
   };
 }
@@ -517,4 +535,117 @@ test('rejects inconsistent promotion inputs without contaminating later valid gr
     AiBoundaryValidationError,
   );
   assert.equal(groundPortfolioAiCandidateInterpretation(input).coverageState, 'unavailable');
+});
+
+test('assembles detached structured candidates in supplied order without parsing execution output', () => {
+  const source = boundary();
+  const input = assemblyInput(source);
+  const before = JSON.stringify({ source, input });
+  const assembled = assemblePortfolioAiCandidateInterpretation(input);
+
+  assert.equal(assembled.authority, 'untrusted_candidate_interpretation');
+  assert.equal(assembled.executionId, source.execution.executionId);
+  assert.deepEqual(assembled.model, source.execution.model);
+  assert.deepEqual(
+    assembled.candidates.map((candidate) => candidate.id),
+    ['candidate-1', 'candidate-2'],
+  );
+  assert.deepEqual(assembled.candidates[0].factReferences, input.candidates[0].factReferences);
+  assert.equal(source.context.facts[0].evidence.insight.asset.networkId, 'network-a');
+  assert.equal(source.context.facts[1].evidence.insight.asset.networkId, 'network-b');
+  assert.equal(
+    source.context.facts[0].evidence.insight.measuredValue,
+    '900719925474099312345678.1234',
+  );
+  assert.equal(JSON.stringify({ source, input }), before);
+  assembled.candidates[0].factReferences[0].sectionIds[0] = 'detached-change';
+  assert.notEqual(input.candidates[0].factReferences[0].sectionIds[0], 'detached-change');
+  assert.throws(
+    () => validatePortfolioAiGroundedInterpretationResult(source.context, assembled),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(assemblePortfolioAiCandidateInterpretation(input), candidateResult(source));
+});
+
+test('rejects malformed structured assembly without contaminating later valid assembly', () => {
+  const source = boundary('unavailable');
+  const input = assemblyInput(source);
+
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        candidates: [input.candidates[0], { ...input.candidates[0] }],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        candidates: [{ ...input.candidates[0], kind: 'unsupported' }],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        candidates: [
+          {
+            ...input.candidates[0],
+            factReferences: [{ ...input.candidates[0].factReferences[0], factId: 'unknown-fact' }],
+          },
+        ],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        candidates: [{ ...input.candidates[1], sectionIds: ['unknown-section'] }],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        candidates: [{ ...input.candidates[0], measuredPercentage: '0' }],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => assemblePortfolioAiCandidateInterpretation({ ...input, authority: 'grounded' }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        execution: { ...source.execution, model: { providerId: 'other-provider' } },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        execution: {
+          ...source.execution,
+          model: { providerId: 'opaque-provider', modelId: 'other-model' },
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      assemblePortfolioAiCandidateInterpretation({
+        ...input,
+        execution: { ...source.execution, executionId: 'other-execution' },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.equal(assemblePortfolioAiCandidateInterpretation(input).candidates[0].id, 'candidate-1');
 });
