@@ -6,8 +6,10 @@ import {
   PortfolioAiCandidateInterpretationAuthority,
   PortfolioAiCandidateInterpretationKind,
   PortfolioAiRawExecutionAuthority,
+  PortfolioAiResultAuthority,
   PortfolioAiTask,
   buildPortfolioAiContext,
+  groundPortfolioAiCandidateInterpretation,
   validatePortfolioAiCandidateInterpretationResult,
   validatePortfolioAiGroundedInterpretationResult,
 } from '../dist/index.js';
@@ -379,4 +381,140 @@ test('preserves unavailable context and rejects malformed, unknown, contradictor
     source.execution,
     valid,
   );
+});
+
+test('deterministically promotes fact and section grounded candidates without changing canonical context', () => {
+  const source = boundary();
+  const candidate = candidateResult(source);
+  const before = JSON.stringify({ source, candidate });
+  const grounded = groundPortfolioAiCandidateInterpretation({
+    context: source.context,
+    request: source.request,
+    execution: source.execution,
+    candidate,
+  });
+
+  assert.equal(grounded.authority, PortfolioAiResultAuthority.NonAuthoritativeInterpretation);
+  assert.equal(grounded.coverageState, 'partial');
+  assert.deepEqual(
+    grounded.interpretations.map((interpretation) => interpretation.id),
+    ['candidate-1', 'candidate-2'],
+  );
+  assert.deepEqual(
+    grounded.interpretations[0].factReferences,
+    candidate.candidates[0].factReferences,
+  );
+  assert.deepEqual(grounded.interpretations[1].sectionIds, [source.context.sections[2].id]);
+  assert.equal(
+    source.context.facts[0].evidence.insight.measuredValue,
+    '900719925474099312345678.1234',
+  );
+  assert.equal(source.context.facts[0].evidence.insight.asset.networkId, 'network-a');
+  assert.equal(source.context.facts[1].evidence.insight.asset.networkId, 'network-b');
+  assert.equal(JSON.stringify({ source, candidate }), before);
+  grounded.interpretations[0].factReferences[0].sectionIds[0] = 'detached-change';
+  assert.notEqual(source.context.facts[0].grounding[0].sectionIds[0], 'detached-change');
+  assert.deepEqual(
+    groundPortfolioAiCandidateInterpretation({
+      context: source.context,
+      request: source.request,
+      execution: source.execution,
+      candidate,
+    }),
+    {
+      ...grounded,
+      interpretations: grounded.interpretations.map((interpretation, index) =>
+        index === 0
+          ? {
+              ...interpretation,
+              factReferences: candidate.candidates[0].factReferences,
+            }
+          : interpretation,
+      ),
+    },
+  );
+});
+
+test('rejects inconsistent promotion inputs without contaminating later valid grounding', () => {
+  const source = boundary('unavailable');
+  const valid = candidateResult(source);
+  const input = {
+    context: source.context,
+    request: source.request,
+    execution: source.execution,
+    candidate: valid,
+  };
+
+  assert.throws(
+    () =>
+      groundPortfolioAiCandidateInterpretation({
+        ...input,
+        candidate: { ...valid, executionId: 'wrong-execution' },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      groundPortfolioAiCandidateInterpretation({
+        ...input,
+        execution: { ...source.execution, model: { providerId: 'wrong-provider' } },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      groundPortfolioAiCandidateInterpretation({
+        ...input,
+        execution: {
+          ...source.execution,
+          model: { providerId: 'opaque-provider', modelId: 'wrong-model' },
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      groundPortfolioAiCandidateInterpretation({
+        ...input,
+        candidate: {
+          ...valid,
+          candidates: [{ ...valid.candidates[0], factReferences: [], sectionIds: [] }],
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      groundPortfolioAiCandidateInterpretation({
+        ...input,
+        candidate: {
+          ...valid,
+          candidates: [{ ...valid.candidates[0], sectionIds: ['unknown-section'] }],
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      groundPortfolioAiCandidateInterpretation({
+        ...input,
+        candidate: {
+          ...valid,
+          authority: PortfolioAiResultAuthority.NonAuthoritativeInterpretation,
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      groundPortfolioAiCandidateInterpretation({
+        ...input,
+        candidate: {
+          ...valid,
+          candidates: [{ ...valid.candidates[0], measuredPercentage: '0' }],
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.equal(groundPortfolioAiCandidateInterpretation(input).coverageState, 'unavailable');
 });

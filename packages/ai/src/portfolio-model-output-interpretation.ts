@@ -3,6 +3,7 @@ import { AiBoundaryValidationError } from './errors.js';
 import {
   type PortfolioAiContextFactReference,
   validatePortfolioAiContextFactReference,
+  validatePortfolioAiContextSectionReferences,
 } from './portfolio-grounded-interpretation.js';
 import type { PortfolioAiBuiltContext } from './portfolio-intelligence-context.js';
 import {
@@ -119,55 +120,11 @@ function validateCandidate(
   for (const reference of candidate.factReferences ?? []) {
     validatePortfolioAiContextFactReference(reference, context.facts, factIds);
   }
-  validateCandidateSections(candidate, context);
-}
-
-function validateCandidateSections(
-  candidate: PortfolioAiCandidateInterpretation,
-  context: PortfolioAiBuiltContext,
-): void {
-  const sections = candidate.sectionIds;
-  if (sections === undefined) return;
-  const known = new Map(context.sections.map((section, index) => [section.id, index]));
-  const seen = new Set<string>();
-  let previous = -1;
-  for (const sectionId of sections) {
-    const index = known.get(sectionId);
-    if (
-      !isNonEmptyString(sectionId) ||
-      index === undefined ||
-      seen.has(sectionId) ||
-      index <= previous
-    ) {
-      throw new AiBoundaryValidationError('Portfolio AI candidate section reference is invalid.');
-    }
-    seen.add(sectionId);
-    previous = index;
-  }
-
-  if (candidate.factReferences === undefined) return;
-  const expected = uniqueFactSectionIds(candidate.factReferences, context);
-  if (
-    expected.length !== sections.length ||
-    expected.some((sectionId, index) => sectionId !== sections[index])
-  ) {
-    throw new AiBoundaryValidationError(
-      'Portfolio AI candidate fact and section references are contradictory.',
-    );
-  }
-}
-
-function uniqueFactSectionIds(
-  references: ReadonlyArray<PortfolioAiContextFactReference>,
-  context: PortfolioAiBuiltContext,
-): ReadonlyArray<string> {
-  const ids = new Set<string>();
-  for (const reference of references) {
-    for (const sectionId of reference.sectionIds) {
-      ids.add(sectionId);
-    }
-  }
-  return context.sections.map((section) => section.id).filter((sectionId) => ids.has(sectionId));
+  validatePortfolioAiContextSectionReferences(
+    candidate.sectionIds,
+    context.sections,
+    candidate.factReferences,
+  );
 }
 
 function sameModelReference(

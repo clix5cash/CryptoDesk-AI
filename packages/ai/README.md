@@ -182,3 +182,24 @@ coverage, and decimal precision remain authoritative. Sprint 8C.1 adds no
 provider or parser runtime, automatic grounding, prompt/model configuration,
 narrative generator, recommendation, prediction, or Morning Meeting
 integration.
+
+Sprint 8C.2 adds the opt-in deterministic promotion boundary:
+
+```text
+raw untrusted_model_execution
+        ↓
+untrusted_candidate_interpretation
+        ↓
+deterministic grounding validation
+        ↓
+non_authoritative_interpretation
+```
+
+`groundPortfolioAiCandidateInterpretation(...)` validates completed execution,
+candidate identity, and exact context-fact/section references before producing
+a detached grounded interpretation result. Grounding validates structural
+references only: it does not create canonical Portfolio truth, fact-check
+natural-language content, invoke AI, parse model output, or recompute
+Portfolio analytics. Grounded interpretations remain explicitly
+non-authoritative; partial, unavailable, and missing-data coverage stays
+canonical in the referenced context.

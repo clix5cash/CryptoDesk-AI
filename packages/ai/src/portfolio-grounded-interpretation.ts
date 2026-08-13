@@ -25,6 +25,8 @@ export interface PortfolioAiGroundedInterpretation {
   readonly authority: PortfolioAiResultAuthority.NonAuthoritativeInterpretation;
   readonly content: string;
   readonly factReferences: ReadonlyArray<PortfolioAiContextFactReference>;
+  /** Optional exact context-section grounding for section-level statements. */
+  readonly sectionIds?: ReadonlyArray<string>;
   readonly coverageState?: PortfolioAiBuiltContext['summary']['coverage']['state'];
 }
 
@@ -78,6 +80,7 @@ function validateInterpretation(
       'authority',
       'content',
       'factReferences',
+      'sectionIds',
       'coverageState',
     ]) ||
     !interpretation.id?.trim() ||
@@ -86,7 +89,8 @@ function validateInterpretation(
     !interpretation.content?.trim() ||
     interpretation.coverageState !== context.summary.coverage.state ||
     !Array.isArray(interpretation.factReferences) ||
-    interpretation.factReferences.length === 0
+    (interpretation.sectionIds !== undefined && !Array.isArray(interpretation.sectionIds)) ||
+    (interpretation.factReferences.length === 0 && interpretation.sectionIds?.length === 0)
   ) {
     throw new AiBoundaryValidationError('Grounded Portfolio AI interpretation is malformed.');
   }
@@ -96,6 +100,11 @@ function validateInterpretation(
   for (const reference of interpretation.factReferences) {
     validatePortfolioAiContextFactReference(reference, context.facts, references);
   }
+  validatePortfolioAiContextSectionReferences(
+    interpretation.sectionIds,
+    context.sections,
+    interpretation.factReferences.length === 0 ? undefined : interpretation.factReferences,
+  );
 }
 
 /** Validates an exact reference to selected deterministic context facts and sections. */
@@ -128,6 +137,53 @@ export function validatePortfolioAiContextFactReference(
   references.add(reference.factId);
 }
 
+/** Validates exact selected context sections and their relationship to fact grounding. */
+export function validatePortfolioAiContextSectionReferences(
+  sectionIds: ReadonlyArray<string> | undefined,
+  sections: PortfolioAiBuiltContext['sections'],
+  factReferences?: ReadonlyArray<PortfolioAiContextFactReference>,
+): void {
+  if (sectionIds === undefined) return;
+  const known = new Map(sections.map((section, index) => [section.id, index]));
+  const seen = new Set<string>();
+  let previous = -1;
+  for (const sectionId of sectionIds) {
+    const index = known.get(sectionId);
+    if (
+      !isNonEmptyString(sectionId) ||
+      index === undefined ||
+      seen.has(sectionId) ||
+      index <= previous
+    ) {
+      throw new AiBoundaryValidationError('Grounded Portfolio AI section reference is invalid.');
+    }
+    seen.add(sectionId);
+    previous = index;
+  }
+
+  if (factReferences === undefined) return;
+  const expected = sectionIdsForFactReferences(factReferences, sections);
+  if (
+    expected.length !== sectionIds.length ||
+    expected.some((sectionId, index) => sectionId !== sectionIds[index])
+  ) {
+    throw new AiBoundaryValidationError(
+      'Grounded Portfolio AI fact and section references are contradictory.',
+    );
+  }
+}
+
+function sectionIdsForFactReferences(
+  factReferences: ReadonlyArray<PortfolioAiContextFactReference>,
+  sections: PortfolioAiBuiltContext['sections'],
+): ReadonlyArray<string> {
+  const ids = new Set<string>();
+  for (const reference of factReferences) {
+    for (const sectionId of reference.sectionIds) ids.add(sectionId);
+  }
+  return sections.map((section) => section.id).filter((sectionId) => ids.has(sectionId));
+}
+
 function sameSectionIds(
   sectionIds: ReadonlyArray<string>,
   grounding: PortfolioAiContextFact['grounding'],
@@ -144,6 +200,10 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return (
     value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype
   );
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function hasOnlyKeys(value: Record<string, unknown>, allowed: ReadonlyArray<string>): boolean {
