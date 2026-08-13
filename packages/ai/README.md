@@ -224,3 +224,24 @@ validated execution result, and validates exact context-fact and section
 references through the existing candidate contract. It does not parse raw text
 or JSON, infer references or meaning, create canonical facts, or promote a
 candidate to grounded output. Assembled candidates remain explicitly untrusted.
+
+Sprint 8C.4 closes the candidate-interpretation boundary with end-to-end
+coverage of:
+
+```text
+untrusted_model_execution
+        ↓
+structured candidate assembly
+        ↓
+untrusted_candidate_interpretation
+        ↓
+deterministic grounding
+        ↓
+non_authoritative_interpretation
+```
+
+The completed path uses structured input only, preserves exact canonical
+fact/section references and partial or unavailable coverage, and never creates
+Portfolio truth. Grounding remains structural rather than semantic: there is
+no parser, provider, prompt, model runtime, natural-language inference, or
+automatic authority promotion in Sprint 8C.
