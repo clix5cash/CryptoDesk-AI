@@ -61,3 +61,25 @@ Interpretation content can only reference those facts and is always explicitly
 financial facts. Sprint 8A includes no model or provider runtime, prompts,
 tokenization, narrative generation, recommendations, predictions, Morning
 Meeting integration, persistence, cache, or scheduler.
+
+Sprint 8B.1 adds a contract-only execution boundary:
+
+```text
+Canonical Portfolio
+        ↓
+Deterministic AI Context
+        ↓
+Raw Provider-Neutral Model Execution (untrusted)
+        ↓
+Grounded Non-Authoritative Interpretation
+```
+
+`PortfolioAiModelExecutionRequest` references validated deterministic context.
+Its raw result is explicitly `untrusted_model_execution`, contains only opaque
+provider/model references and structural output or failure data, and cannot be
+used as a grounded interpretation or Portfolio truth. Grounding validation
+remains a separate required step. Usage units, when supplied, are opaque
+provider-neutral counters rather than tokenizer semantics. No provider SDK,
+model invocation, HTTP transport, credentials, registry/routing behavior,
+prompt construction, narrative generation, recommendation, prediction, or
+Morning Meeting integration is added.
