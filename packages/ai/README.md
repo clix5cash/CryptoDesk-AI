@@ -407,3 +407,23 @@ prompt-document version, exact block order, rendered repository-owned fragments,
 and fact/section references. It is not a vendor request body: it has no vendor
 roles, HTTP payload, generation parameters, automatic selection, or execution
 behavior. Concrete provider mapping remains future work.
+
+Sprint 8F.3 adds `invokePortfolioAiProviderAdapterBridge(...)`:
+
+```text
+PortfolioAiPromptDocument
+        ↓
+PortfolioAiProviderRequest
+        ↓
+PortfolioAiProviderRequestDescriptor
+        ↓
+explicit provider-neutral adapter bridge
+        ↓
+untrusted_model_execution
+```
+
+The bridge validates the descriptor and delegates exactly one call through the
+existing explicitly supplied registry and provider-neutral adapter boundary.
+Adapter output is still validated, detached `untrusted_model_execution`; the
+bridge does not parse, ground, or promote it. No concrete provider, network
+runtime, retry, fallback, or routing behavior is included.

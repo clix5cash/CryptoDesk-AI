@@ -3,13 +3,17 @@ import test from 'node:test';
 import { PortfolioPresentationSection } from '@cryptodesk-ai/portfolio';
 import {
   AiBoundaryValidationError,
+  AiExecutionStatus,
+  PortfolioAiModelProviderRegistry,
   PortfolioAiPromptDocumentVersion,
+  PortfolioAiRawExecutionAuthority,
   PortfolioAiTask,
   buildPortfolioAiContext,
   createPortfolioAiMessagePlan,
   createPortfolioAiModelInput,
   createPortfolioAiPromptDocument,
   createPortfolioAiProviderRequest,
+  invokePortfolioAiProviderAdapterBridge,
   mapPortfolioAiProviderRequest,
   validatePortfolioAiMessagePlan,
   validatePortfolioAiModelInput,
@@ -403,4 +407,112 @@ test('maps a provider request to detached ordered logical descriptor blocks with
     AiBoundaryValidationError,
   );
   assert.deepEqual(mapPortfolioAiProviderRequest(request), mapPortfolioAiProviderRequest(request));
+});
+
+test('bridges one exact descriptor through an explicit in-memory adapter without changing authority', async () => {
+  const prepared = preparation();
+  const descriptor = mapPortfolioAiProviderRequest(
+    createPortfolioAiProviderRequest({
+      executionId: 'provider-bridge-e2e',
+      model: { providerId: 'provider-a', modelId: 'model-a' },
+      promptDocument: prepared.document,
+    }),
+  );
+  const before = JSON.stringify(descriptor);
+  const registry = new PortfolioAiModelProviderRegistry();
+  let calls = 0;
+  registry.register({
+    providerId: 'provider-a',
+    supportedModels: ['model-a'],
+    async execute(input) {
+      calls += 1;
+      input.context.summary.coverage.state = 'complete';
+      return {
+        executionId: input.executionId,
+        status: AiExecutionStatus.Completed,
+        authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+        output: 'Opaque raw adapter output.',
+        model: input.model,
+      };
+    },
+  });
+
+  const result = await invokePortfolioAiProviderAdapterBridge(registry, descriptor);
+  assert.equal(calls, 1);
+  assert.equal(result.executionId, descriptor.executionId);
+  assert.deepEqual(result.model, descriptor.model);
+  assert.equal(result.authority, 'untrusted_model_execution');
+  assert.equal(
+    descriptor.request.promptDocument.plan.input.context.summary.coverage.state,
+    'partial',
+  );
+  assert.equal(JSON.stringify(descriptor), before);
+  const networkFacts = descriptor.request.promptDocument.plan.input.context.facts.filter(
+    (fact) => fact.evidence.insight.asset?.symbol === 'USDC',
+  );
+  assert.deepEqual(
+    networkFacts.map((fact) => fact.evidence.insight.asset.networkId),
+    ['network-a', 'network-b'],
+  );
+  assert.equal(
+    descriptor.request.promptDocument.plan.input.context.summary.totalValuedValue,
+    '900719925474099312345678.1234',
+  );
+  assert.deepEqual(await invokePortfolioAiProviderAdapterBridge(registry, descriptor), result);
+  assert.equal(calls, 2);
+
+  await assert.rejects(
+    () =>
+      invokePortfolioAiProviderAdapterBridge(new PortfolioAiModelProviderRegistry(), descriptor),
+    AiBoundaryValidationError,
+  );
+  const unsupported = new PortfolioAiModelProviderRegistry();
+  unsupported.register({
+    providerId: 'provider-a',
+    supportedModels: ['other-model'],
+    async execute() {
+      throw new Error('must not execute');
+    },
+  });
+  await assert.rejects(
+    () => invokePortfolioAiProviderAdapterBridge(unsupported, descriptor),
+    AiBoundaryValidationError,
+  );
+  const malformed = new PortfolioAiModelProviderRegistry();
+  malformed.register({
+    providerId: 'provider-a',
+    supportedModels: ['model-a'],
+    async execute(input) {
+      return {
+        executionId: 'wrong-execution',
+        status: AiExecutionStatus.Completed,
+        authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+        output: 'Malformed.',
+        model: input.model,
+      };
+    },
+  });
+  await assert.rejects(
+    () => invokePortfolioAiProviderAdapterBridge(malformed, descriptor),
+    AiBoundaryValidationError,
+  );
+  const throwing = new PortfolioAiModelProviderRegistry();
+  let throwingCalls = 0;
+  throwing.register({
+    providerId: 'provider-a',
+    supportedModels: ['model-a'],
+    async execute() {
+      throwingCalls += 1;
+      throw new Error('opaque failure');
+    },
+  });
+  await assert.rejects(
+    () => invokePortfolioAiProviderAdapterBridge(throwing, descriptor),
+    AiBoundaryValidationError,
+  );
+  assert.equal(throwingCalls, 1);
+  assert.equal(
+    (await invokePortfolioAiProviderAdapterBridge(registry, descriptor)).authority,
+    'untrusted_model_execution',
+  );
 });
