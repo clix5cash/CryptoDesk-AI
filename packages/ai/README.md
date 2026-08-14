@@ -324,3 +324,12 @@ cross-network identity, canonical decimal strings, ordering, provenance, and
 partial or unavailable data through the complete path. Sprint 8D adds no
 concrete provider, network runtime, credentials, prompt or parser runtime,
 automatic grounding, retry/fallback/routing, or hidden global pipeline state.
+
+Sprint 8E.1 adds an opt-in provider-neutral structured model-input boundary.
+`PortfolioAiModelInput` carries a validated deterministic AI context together
+with caller-selected exact context-fact and section IDs. It is structured data
+only: it does not render natural-language prompts or system/user/chat messages,
+and it carries no provider schema, model settings, tokenizer behavior, or
+execution capability. The Portfolio context and its evidence remain canonical;
+the model-input boundary preserves exact references, coverage limitations, and
+decimal strings without creating or changing Portfolio facts.
