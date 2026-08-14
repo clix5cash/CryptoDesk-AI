@@ -19,6 +19,8 @@ import {
   AiExecutionStatus,
   PortfolioAiModelExecutionService,
   PortfolioAiModelProviderRegistry,
+  PortfolioAiInterpretationPipeline,
+  PortfolioAiCandidateInterpretationKind,
   PortfolioAiRawExecutionAuthority,
   PortfolioAiTask,
   buildPortfolioAiContext,
@@ -141,6 +143,42 @@ function rawResult(input, overrides = {}) {
     model: input.model,
     ...overrides,
   };
+}
+
+function structuredCandidates(context, networkAId) {
+  const networkFact = context.facts.find((fact) => fact.evidence.insight.asset?.id === networkAId);
+  const missingPriceFact = context.facts.find(
+    (fact) => fact.evidence.insight.unavailableReason === 'missing_price',
+  );
+  assert.ok(networkFact);
+  assert.ok(missingPriceFact);
+  const references = [networkFact, missingPriceFact].map((fact) => ({
+    factId: fact.id,
+    presentationItemId: fact.presentationItemId,
+    sectionIds: fact.grounding.map((grounding) => grounding.sectionIds[0]),
+  }));
+  const sectionIds = context.sections
+    .filter((section) =>
+      references.flatMap((reference) => reference.sectionIds).includes(section.id),
+    )
+    .map((section) => section.id);
+  const coverage = context.sections.find((section) => section.section === 'coverage');
+  assert.ok(coverage);
+  return [
+    {
+      id: 'pipeline-fact-and-section',
+      kind: PortfolioAiCandidateInterpretationKind.Descriptive,
+      content: 'Opaque pre-structured candidate.',
+      factReferences: references,
+      sectionIds,
+    },
+    {
+      id: 'pipeline-section-only',
+      kind: PortfolioAiCandidateInterpretationKind.Descriptive,
+      content: 'Opaque coverage candidate.',
+      sectionIds: [coverage.id],
+    },
+  ];
 }
 
 test('preserves canonical Portfolio evidence through the full explicit provider-neutral execution path', async () => {
@@ -336,4 +374,101 @@ test('keeps unavailable coverage explicit and validates provider/model and malic
   assert.equal(validOutput.authority, 'untrusted_model_execution');
   assert.equal(unavailableRequest.context.summary.coverage.state, 'unavailable');
   assert.equal(fallbackCalls, 0);
+});
+
+test('orchestrates the explicit Portfolio AI path without adding authority, parsing, or provider selection', async () => {
+  const networkA = asset('pipeline-usdc-network-a', 'network-a', 6);
+  const networkB = asset('pipeline-usdc-network-b', 'network-b', 0);
+  const missingDecimals = asset('pipeline-missing-decimals', 'network-a', undefined);
+  const missingPrice = asset('pipeline-missing-price', 'network-b', 0);
+  const source = snapshot([
+    position('pipeline-large', '900719925474099312345678', networkA, 'source-a', 'account-a'),
+    position('pipeline-network-b', '20', networkB, 'source-b', 'account-b'),
+    position('pipeline-missing-decimals', '1', missingDecimals, 'source-a', 'account-a'),
+    position('pipeline-missing-price', '1', missingPrice, 'source-b', 'account-b'),
+  ]);
+  const prices = [price(networkA, '1.25'), price(networkB, '2'), price(missingDecimals, '1')];
+  const payload = portfolioPayload(source, prices);
+  const context = buildPortfolioAiContext({
+    analysisId: 'pipeline-analysis',
+    task: PortfolioAiTask.Interpret,
+    payload,
+  });
+  const candidates = structuredCandidates(context, networkA.id);
+  const input = {
+    context: { analysisId: 'pipeline-analysis', task: PortfolioAiTask.Interpret, payload },
+    execution: {
+      executionId: 'pipeline-execution',
+      model: { providerId: 'provider-a', modelId: 'model-a' },
+    },
+    candidates,
+  };
+  const before = JSON.stringify({ source, prices, input });
+  const registry = new PortfolioAiModelProviderRegistry();
+  let calls = 0;
+  registry.register({
+    providerId: 'provider-a',
+    supportedModels: ['model-a'],
+    async execute(requestValue) {
+      calls += 1;
+      return rawResult(requestValue);
+    },
+  });
+  const pipeline = new PortfolioAiInterpretationPipeline(
+    new PortfolioAiModelExecutionService(registry),
+  );
+  const result = await pipeline.execute(input);
+
+  assert.equal(calls, 1);
+  assert.equal(result.context.source.portfolioId, payload.portfolioId);
+  assert.equal(result.execution.authority, 'untrusted_model_execution');
+  assert.equal(result.candidate.authority, 'untrusted_candidate_interpretation');
+  assert.equal(result.grounded.authority, 'non_authoritative_interpretation');
+  assert.equal(result.execution.executionId, input.execution.executionId);
+  assert.deepEqual(result.execution.model, input.execution.model);
+  assert.deepEqual(result.candidate.model, input.execution.model);
+  assert.deepEqual(
+    result.grounded.interpretations.map((item) => item.id),
+    ['pipeline-fact-and-section', 'pipeline-section-only'],
+  );
+  assert.equal(result.context.summary.coverage.state, 'partial');
+  assert.equal(result.grounded.coverageState, 'partial');
+  assert.equal(result.context.summary.totalValuedValue, '1125899906842624180.4320975');
+  const facts = result.context.facts.filter(
+    (fact) => fact.evidence.insight.asset?.symbol === 'USDC',
+  );
+  assert.ok(facts.some((fact) => fact.evidence.insight.asset.networkId === 'network-a'));
+  assert.ok(facts.some((fact) => fact.evidence.insight.asset.networkId === 'network-b'));
+  assert.ok(
+    result.context.facts.some(
+      (fact) => fact.evidence.insight.unavailableReason === 'missing_price',
+    ),
+  );
+  assert.ok(
+    result.context.facts.some(
+      (fact) => fact.evidence.insight.unavailableReason === 'missing_decimals',
+    ),
+  );
+  assert.equal(JSON.stringify({ source, prices, input }), before);
+  result.grounded.interpretations[0].factReferences[0].sectionIds[0] = 'detached-change';
+  assert.notEqual(input.candidates[0].factReferences[0].sectionIds[0], 'detached-change');
+  assert.deepEqual(registry.list(), [{ providerId: 'provider-a', supportedModels: ['model-a'] }]);
+
+  await assert.rejects(
+    () =>
+      pipeline.execute({
+        ...input,
+        candidates: [
+          {
+            ...candidates[0],
+            factReferences: [{ ...candidates[0].factReferences[0], factId: 'unknown-fact' }],
+          },
+        ],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.equal(
+    (await pipeline.execute(input)).grounded.authority,
+    'non_authoritative_interpretation',
+  );
 });

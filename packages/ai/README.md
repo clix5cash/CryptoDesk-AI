@@ -245,3 +245,26 @@ fact/section references and partial or unavailable coverage, and never creates
 Portfolio truth. Grounding remains structural rather than semantic: there is
 no parser, provider, prompt, model runtime, natural-language inference, or
 automatic authority promotion in Sprint 8C.
+
+Sprint 8D.1 adds an opt-in orchestration boundary over the completed public
+contracts:
+
+```text
+Canonical Portfolio payload
+        ↓
+Deterministic AI context
+        ↓
+Explicit provider-neutral execution
+        ↓
+Structured untrusted candidate assembly
+        ↓
+Deterministic grounding
+        ↓
+Non-authoritative interpretation
+```
+
+`PortfolioAiInterpretationPipeline` receives an explicitly injected existing
+execution service and explicit execution/provider/model input. It delegates to
+the existing context, execution, candidate, and grounding boundaries without
+parsing raw output, choosing a provider, reranking facts, or creating Portfolio
+truth. All trust-state artifacts remain visible in the returned result.
