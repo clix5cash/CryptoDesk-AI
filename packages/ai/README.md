@@ -349,3 +349,23 @@ task, constraint, and output-contract text fragments; context and evidence
 remain exact structured references. There is no caller-defined system prompt,
 provider request schema, model invocation, response parser, or execution
 integration. Portfolio evidence remains canonical and authoritative.
+
+Sprint 8E.4 closes deterministic model-input preparation:
+
+```text
+PortfolioAiBuiltContext
+        ↓
+PortfolioAiModelInput
+        ↓
+PortfolioAiMessagePlan
+        ↓
+PortfolioAiPromptDocument
+        ↓
+future provider-specific mapping/runtime
+```
+
+The completed preparation path is deterministic, detached, reference-preserving,
+and provider-neutral. Prompt documents use only static repository-owned text
+fragments; there is no arbitrary caller prompt path, provider mapping, model
+invocation, or execution integration. Canonical Portfolio evidence, coverage,
+provenance, ordering, and exact decimal strings remain authoritative.
