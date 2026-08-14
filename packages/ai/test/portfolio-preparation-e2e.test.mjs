@@ -9,9 +9,11 @@ import {
   createPortfolioAiMessagePlan,
   createPortfolioAiModelInput,
   createPortfolioAiPromptDocument,
+  createPortfolioAiProviderRequest,
   validatePortfolioAiMessagePlan,
   validatePortfolioAiModelInput,
   validatePortfolioAiPromptDocument,
+  validatePortfolioAiProviderRequest,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -205,4 +207,77 @@ test('isolates invalid preparation artifacts before later valid calls', () => {
     AiBoundaryValidationError,
   );
   assert.deepEqual(preparation(), valid);
+});
+
+test('creates a detached provider-neutral request envelope from the exact prompt document', () => {
+  const prepared = preparation();
+  const source = {
+    executionId: 'provider-request-e2e',
+    model: { providerId: 'provider-a', modelId: 'model-a' },
+    promptDocument: prepared.document,
+  };
+  const before = JSON.stringify(source);
+  const request = createPortfolioAiProviderRequest(source);
+
+  validatePortfolioAiProviderRequest(request);
+  assert.equal(request.executionId, source.executionId);
+  assert.deepEqual(request.model, source.model);
+  assert.deepEqual(request.promptDocument, prepared.document);
+  assert.deepEqual(request.promptDocument.blocks[2].sectionIds, prepared.modelInput.sectionIds);
+  assert.deepEqual(request.promptDocument.blocks[3].factIds, prepared.modelInput.factIds);
+  assert.equal(
+    request.promptDocument.plan.input.context.summary.totalValuedValue,
+    '900719925474099312345678.1234',
+  );
+  assert.equal(request.promptDocument.plan.input.context.summary.coverage.state, 'partial');
+  const networkFacts = request.promptDocument.plan.input.context.facts.filter(
+    (fact) => fact.evidence.insight.asset?.symbol === 'USDC',
+  );
+  assert.deepEqual(
+    networkFacts.map((fact) => fact.evidence.insight.asset.networkId),
+    ['network-a', 'network-b'],
+  );
+  assert.equal(JSON.stringify(source), before);
+  assert.deepEqual(createPortfolioAiProviderRequest(source), request);
+  request.promptDocument.plan.input.factIds[0] = 'detached-change';
+  assert.notEqual(source.promptDocument.plan.input.factIds[0], 'detached-change');
+
+  const withoutModelId = createPortfolioAiProviderRequest({
+    ...source,
+    executionId: 'provider-request-no-model',
+    model: { providerId: 'provider-a' },
+  });
+  assert.equal(withoutModelId.model.modelId, undefined);
+  assert.throws(
+    () => createPortfolioAiProviderRequest({ ...source, model: { providerId: '' } }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequest({
+        ...source,
+        promptDocument: { ...source.promptDocument, system: 'caller prompt' },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiProviderRequest({ ...source, messages: [] }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiProviderRequest({ ...source, temperature: 1 }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiProviderRequest({ ...source, measuredValue: '1' }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiProviderRequest({ ...source, authority: 'authoritative' }),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(
+    createPortfolioAiProviderRequest(source),
+    createPortfolioAiProviderRequest(source),
+  );
 });

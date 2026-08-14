@@ -369,3 +369,22 @@ and provider-neutral. Prompt documents use only static repository-owned text
 fragments; there is no arbitrary caller prompt path, provider mapping, model
 invocation, or execution integration. Canonical Portfolio evidence, coverage,
 provenance, ordering, and exact decimal strings remain authoritative.
+
+Sprint 8F.1 adds `PortfolioAiProviderRequest`, an opt-in provider-neutral
+request envelope between the portable prompt document and future concrete
+provider mapping:
+
+```text
+PortfolioAiPromptDocument
+        ↓
+PortfolioAiProviderRequest
+        ↓
+future provider-specific mapper/runtime
+```
+
+The envelope retains the validated prompt document unchanged alongside an
+explicit existing execution ID and opaque provider/model reference. It is not a
+provider request body: it has no provider roles, credentials, endpoint,
+generation parameters, automatic provider/model selection, or execution
+capability. Canonical evidence, provenance, partial coverage, and exact decimal
+strings remain reachable only through the authoritative preparation artifacts.
