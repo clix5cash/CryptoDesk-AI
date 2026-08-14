@@ -2,11 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   AiBoundaryValidationError,
+  AiExecutionStatus,
+  PortfolioAiCandidateInterpretationAuthority,
+  PortfolioAiCandidateInterpretationKind,
+  PortfolioAiRawExecutionAuthority,
   PortfolioAiResultAuthority,
   PortfolioAiTask,
   buildPortfolioAiContext,
   validatePortfolioAiBuiltContext,
+  validatePortfolioAiCandidateInterpretationResult,
   validatePortfolioAiGroundedInterpretationResult,
+  validatePortfolioAiModelExecutionResult,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -217,6 +223,128 @@ test('validates the canonical payload to context to grounded non-authoritative i
   assert.equal(JSON.stringify(output), outputBefore);
   assert.deepEqual(build(source), context);
   validatePortfolioAiGroundedInterpretationResult(context, output);
+});
+
+test('enforces trust markers and canonical authority without lower-trust promotion or mutation', () => {
+  const source = payload();
+  const context = build(source);
+  const request = {
+    executionId: 'authority-execution',
+    context,
+    model: { providerId: 'opaque-provider', modelId: 'opaque-model' },
+  };
+  const execution = {
+    executionId: request.executionId,
+    status: AiExecutionStatus.Completed,
+    authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+    output: 'Opaque raw output.',
+    model: request.model,
+  };
+  const candidate = {
+    executionId: request.executionId,
+    model: request.model,
+    authority: PortfolioAiCandidateInterpretationAuthority.UntrustedCandidateInterpretation,
+    candidates: [
+      {
+        id: 'authority-candidate',
+        authority: PortfolioAiCandidateInterpretationAuthority.UntrustedCandidateInterpretation,
+        kind: PortfolioAiCandidateInterpretationKind.Descriptive,
+        content: 'Opaque candidate content.',
+        factReferences: [reference(context.facts[0])],
+      },
+    ],
+  };
+  const grounded = result(context);
+  const before = JSON.stringify({ source, context, request, execution, candidate, grounded });
+
+  validatePortfolioAiModelExecutionResult(request, execution);
+  validatePortfolioAiCandidateInterpretationResult(context, request, execution, candidate);
+  validatePortfolioAiGroundedInterpretationResult(context, grounded);
+  assert.throws(
+    () => validatePortfolioAiCandidateInterpretationResult(context, request, execution, execution),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiGroundedInterpretationResult(context, candidate),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiModelExecutionResult(request, {
+        ...execution,
+        authority: PortfolioAiResultAuthority.NonAuthoritativeInterpretation,
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiCandidateInterpretationResult(context, request, execution, {
+        ...candidate,
+        authority: PortfolioAiResultAuthority.NonAuthoritativeInterpretation,
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiGroundedInterpretationResult(context, {
+        ...grounded,
+        authority: PortfolioAiCandidateInterpretationAuthority.UntrustedCandidateInterpretation,
+      }),
+    AiBoundaryValidationError,
+  );
+  for (const field of [
+    'portfolioId',
+    'assetId',
+    'positionId',
+    'networkId',
+    'sourceId',
+    'accountId',
+    'price',
+    'measuredValue',
+    'measuredPercentage',
+    'allocation',
+    'threshold',
+    'riskLevel',
+    'coverageState',
+    'capturedAt',
+    'provenance',
+  ]) {
+    assert.throws(
+      () =>
+        validatePortfolioAiCandidateInterpretationResult(context, request, execution, {
+          ...candidate,
+          candidates: [{ ...candidate.candidates[0], [field]: 'fabricated' }],
+        }),
+      AiBoundaryValidationError,
+    );
+  }
+  assert.throws(
+    () =>
+      validatePortfolioAiGroundedInterpretationResult(context, {
+        ...grounded,
+        coverageState: 'complete',
+      }),
+    AiBoundaryValidationError,
+  );
+  const unavailableContext = build(payload('unavailable'));
+  assert.throws(
+    () =>
+      validatePortfolioAiGroundedInterpretationResult(unavailableContext, {
+        ...result(unavailableContext),
+        coverageState: 'partial',
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.equal(context.facts[0].evidence.insight.asset.networkId, 'network-a');
+  assert.equal(context.facts[1].evidence.insight.asset.networkId, 'network-b');
+  assert.notEqual(context.facts[0].id, context.facts[1].id);
+  assert.equal(context.facts[0].evidence.insight.measuredValue, '900719925474099312345678.1234');
+  assert.equal(
+    JSON.stringify({ source, context, request, execution, candidate, grounded }),
+    before,
+  );
+  validatePortfolioAiCandidateInterpretationResult(context, request, execution, candidate);
+  validatePortfolioAiGroundedInterpretationResult(context, grounded);
 });
 
 test('keeps unavailable coverage explicit and rejects fabricated canonical fields without contaminating later validation', () => {

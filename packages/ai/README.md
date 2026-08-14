@@ -268,3 +268,22 @@ execution service and explicit execution/provider/model input. It delegates to
 the existing context, execution, candidate, and grounding boundaries without
 parsing raw output, choosing a provider, reranking facts, or creating Portfolio
 truth. All trust-state artifacts remain visible in the returned result.
+
+Sprint 8D.2 hardens the authority hierarchy enforced by those boundaries:
+
+```text
+Canonical Portfolio facts (authoritative)
+        ↓
+Deterministic AI context (canonical projection)
+        ↓
+untrusted_model_execution
+        ↓
+untrusted_candidate_interpretation
+        ↓
+non_authoritative_interpretation
+```
+
+Trust markers are owned by their respective validation or construction
+boundaries. AI-layer records can retain only exact canonical references; they
+cannot redefine Portfolio identities, values, coverage, timestamps, or
+provenance. Grounding validates references but never creates canonical truth.
