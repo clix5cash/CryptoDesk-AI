@@ -295,3 +295,32 @@ all provenance, exact decimal strings, and partial or unavailable facts
 traceable; registry, service, and pipeline instances remain explicitly scoped
 with no hidden mutable pipeline state. These repeatability guarantees apply to
 deterministic boundary work only, not future provider-produced model content.
+
+Sprint 8D.4 closes the AI interpretation architecture with an end-to-end
+regression of the complete established path:
+
+```text
+Canonical Portfolio
+        ↓
+Deterministic AI context
+        ↓
+Explicit provider-neutral execution
+        ↓
+untrusted_model_execution
+        ↓
+Structured candidate interpretation
+        ↓
+untrusted_candidate_interpretation
+        ↓
+Deterministic grounding
+        ↓
+non_authoritative_interpretation
+```
+
+Portfolio remains the owner of canonical truth. Each AI-stage trust marker is
+boundary-owned, and AI records retain exact references to canonical evidence
+rather than recreating financial facts. The closure guarantees preserve
+cross-network identity, canonical decimal strings, ordering, provenance, and
+partial or unavailable data through the complete path. Sprint 8D adds no
+concrete provider, network runtime, credentials, prompt or parser runtime,
+automatic grounding, retry/fallback/routing, or hidden global pipeline state.

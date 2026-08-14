@@ -562,3 +562,143 @@ test('keeps the composed pipeline deterministic, isolated, and traceable for equ
   assert.equal(JSON.stringify({ positions, prices, firstInput, secondInput }), before);
   assert.deepEqual(registryB.list(), []);
 });
+
+test('closes the public AI architecture path without collapsing trust or canonical evidence', async () => {
+  const networkA = asset('closure-network-a', 'network-a', 6);
+  const networkB = asset('closure-network-b', 'network-b', 0);
+  const unclassified = asset('closure-unclassified', undefined, 0);
+  const missingDecimals = asset('closure-missing-decimals', 'network-a', undefined);
+  const missingPrice = asset('closure-missing-price', 'network-b', 0);
+  const source = snapshot([
+    position('closure-large', '900719925474099312345678', networkA, 'source-a', 'account-a'),
+    position('closure-network-b', '20', networkB, 'source-b', 'account-b'),
+    position('closure-unclassified', '10', unclassified),
+    position('closure-missing-decimals', '1', missingDecimals, 'source-a', 'account-a'),
+    position('closure-missing-price', '1', missingPrice, 'source-b', 'account-b'),
+  ]);
+  const prices = [
+    price(networkA, '1.25'),
+    price(networkB, '2'),
+    price(unclassified, '1'),
+    price(missingDecimals, '1'),
+  ];
+  const payload = portfolioPayload(source, prices);
+  const context = buildPortfolioAiContext({
+    analysisId: 'closure-analysis',
+    task: PortfolioAiTask.Interpret,
+    payload,
+  });
+  const input = {
+    context: { analysisId: 'closure-analysis', task: PortfolioAiTask.Interpret, payload },
+    execution: {
+      executionId: 'closure-execution',
+      model: { providerId: 'provider-a', modelId: 'model-a' },
+    },
+    candidates: structuredCandidates(context, networkA.id),
+  };
+  const before = JSON.stringify({ source, prices, payload, context, input });
+  let malformedResult = false;
+  let calls = 0;
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register({
+    providerId: 'provider-a',
+    supportedModels: ['model-a'],
+    async execute(requestValue) {
+      calls += 1;
+      return malformedResult
+        ? rawResult(requestValue, { executionId: 'wrong-execution' })
+        : rawResult(requestValue);
+    },
+  });
+  const pipeline = new PortfolioAiInterpretationPipeline(
+    new PortfolioAiModelExecutionService(registry),
+  );
+  const result = await pipeline.execute(input);
+
+  assert.equal(result.context.source.portfolioId, payload.portfolioId);
+  assert.equal(result.context.summary.totalValuedValue, '1125899906842624190.4320975');
+  assert.equal(result.context.summary.coverage.state, 'partial');
+  assert.equal(result.execution.authority, 'untrusted_model_execution');
+  assert.equal(result.candidate.authority, 'untrusted_candidate_interpretation');
+  assert.equal(result.grounded.authority, 'non_authoritative_interpretation');
+  assert.equal(result.execution.executionId, input.execution.executionId);
+  assert.deepEqual(result.execution.model, input.execution.model);
+  assert.deepEqual(result.candidate.model, input.execution.model);
+
+  const networkAFact = result.context.facts.find(
+    (fact) => fact.evidence.insight.asset?.id === networkA.id,
+  );
+  const networkBFact = result.context.facts.find(
+    (fact) => fact.evidence.insight.asset?.id === networkB.id,
+  );
+  assert.ok(networkAFact);
+  assert.ok(networkBFact);
+  assert.notEqual(networkAFact.id, networkBFact.id);
+  assert.equal(networkAFact.evidence.insight.asset.networkId, 'network-a');
+  assert.equal(networkBFact.evidence.insight.asset.networkId, 'network-b');
+  assert.ok(
+    result.context.facts.some(
+      (fact) => fact.evidence.insight.unavailableReason === 'missing_price',
+    ),
+  );
+  assert.ok(
+    result.context.facts.some(
+      (fact) => fact.evidence.insight.unavailableReason === 'missing_decimals',
+    ),
+  );
+  assert.ok(
+    result.context.facts.some(
+      (fact) => fact.evidence.insight.unavailableReason === 'missing_network_provenance',
+    ),
+  );
+  const groundedFactReference = result.grounded.interpretations[0].factReferences.find(
+    (reference) => reference.factId === networkAFact.id,
+  );
+  assert.ok(groundedFactReference);
+  assert.equal(groundedFactReference.presentationItemId, networkAFact.presentationItemId);
+  assert.ok(
+    groundedFactReference.sectionIds.every((sectionId) =>
+      result.context.sections.some((section) => section.id === sectionId),
+    ),
+  );
+  assert.deepEqual(
+    result.grounded.interpretations.map((interpretation) => interpretation.id),
+    input.candidates.map((candidate) => candidate.id),
+  );
+  assert.equal(calls, 1);
+  assert.equal(JSON.stringify({ source, prices, payload, context, input }), before);
+
+  await assert.rejects(
+    () =>
+      pipeline.execute({
+        ...input,
+        execution: {
+          ...input.execution,
+          model: { providerId: 'unknown-provider', modelId: 'model-a' },
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.equal(calls, 1);
+  malformedResult = true;
+  await assert.rejects(() => pipeline.execute(input), AiBoundaryValidationError);
+  assert.equal(calls, 2);
+  malformedResult = false;
+  await assert.rejects(
+    () =>
+      pipeline.execute({
+        ...input,
+        candidates: [
+          {
+            ...input.candidates[0],
+            portfolioId: payload.portfolioId,
+          },
+        ],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.equal(calls, 3);
+  assert.deepEqual(await pipeline.execute(input), result);
+  assert.equal(calls, 4);
+  assert.deepEqual(registry.list(), [{ providerId: 'provider-a', supportedModels: ['model-a'] }]);
+});
