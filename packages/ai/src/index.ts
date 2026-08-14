@@ -11,6 +11,7 @@ export * from './portfolio-model-input.js';
 export * from './portfolio-message-plan.js';
 export * from './portfolio-prompt-document.js';
 export * from './portfolio-provider-request.js';
+export * from './portfolio-provider-request-descriptor.js';
 export * from './portfolio-model-adapters.js';
 export * from './portfolio-model-execution-service.js';
 export * from './portfolio-model-output-interpretation.js';

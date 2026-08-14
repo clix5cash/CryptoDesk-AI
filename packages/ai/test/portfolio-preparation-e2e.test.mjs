@@ -10,10 +10,12 @@ import {
   createPortfolioAiModelInput,
   createPortfolioAiPromptDocument,
   createPortfolioAiProviderRequest,
+  mapPortfolioAiProviderRequest,
   validatePortfolioAiMessagePlan,
   validatePortfolioAiModelInput,
   validatePortfolioAiPromptDocument,
   validatePortfolioAiProviderRequest,
+  validatePortfolioAiProviderRequestDescriptor,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -280,4 +282,125 @@ test('creates a detached provider-neutral request envelope from the exact prompt
     createPortfolioAiProviderRequest(source),
     createPortfolioAiProviderRequest(source),
   );
+});
+
+test('maps a provider request to detached ordered logical descriptor blocks without execution', () => {
+  const prepared = preparation();
+  const request = createPortfolioAiProviderRequest({
+    executionId: 'provider-descriptor-e2e',
+    model: { providerId: 'provider-a', modelId: 'model-a' },
+    promptDocument: prepared.document,
+  });
+  const before = JSON.stringify(request);
+  const descriptor = mapPortfolioAiProviderRequest(request);
+
+  validatePortfolioAiProviderRequestDescriptor(descriptor);
+  assert.equal(descriptor.executionId, request.executionId);
+  assert.deepEqual(descriptor.model, request.model);
+  assert.equal(descriptor.promptDocumentVersion, PortfolioAiPromptDocumentVersion);
+  assert.deepEqual(
+    descriptor.blocks.map((block) => block.kind),
+    ['instruction', 'task', 'context', 'evidence', 'constraints', 'output_contract'],
+  );
+  assert.deepEqual(descriptor.blocks[2].sectionIds, prepared.modelInput.sectionIds);
+  assert.deepEqual(descriptor.blocks[3].factIds, prepared.modelInput.factIds);
+  assert.equal(descriptor.blocks[5].outputContract, 'portfolio_ai_candidate_interpretation');
+  assert.equal(
+    descriptor.request.promptDocument.plan.input.context.summary.totalValuedValue,
+    '900719925474099312345678.1234',
+  );
+  assert.equal(
+    descriptor.request.promptDocument.plan.input.context.summary.coverage.state,
+    'partial',
+  );
+  const networkFacts = descriptor.request.promptDocument.plan.input.context.facts.filter(
+    (fact) => fact.evidence.insight.asset?.symbol === 'USDC',
+  );
+  assert.deepEqual(
+    networkFacts.map((fact) => fact.evidence.insight.asset.networkId),
+    ['network-a', 'network-b'],
+  );
+  assert.equal(JSON.stringify(request), before);
+  assert.deepEqual(mapPortfolioAiProviderRequest(request), descriptor);
+  descriptor.blocks[2].sectionIds[0] = 'detached-change';
+  assert.notEqual(request.promptDocument.blocks[2].sectionIds[0], 'detached-change');
+
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...descriptor,
+        executionId: 'different-execution',
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        model: { providerId: 'provider-b', modelId: 'model-a' },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        model: null,
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        blocks: mapPortfolioAiProviderRequest(request).blocks.slice(1),
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        blocks: [
+          ...mapPortfolioAiProviderRequest(request).blocks.slice(0, -1),
+          { kind: 'invalid_descriptor_block' },
+        ],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        blocks: mapPortfolioAiProviderRequest(request).blocks.map((block) =>
+          block.kind === 'context' ? { ...block, sectionIds: ['unknown-section'] } : block,
+        ),
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        messages: [],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        measuredValue: '1',
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiProviderRequestDescriptor({
+        ...mapPortfolioAiProviderRequest(request),
+        authority: 'authoritative',
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(mapPortfolioAiProviderRequest(request), mapPortfolioAiProviderRequest(request));
 });

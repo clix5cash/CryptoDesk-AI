@@ -388,3 +388,22 @@ provider request body: it has no provider roles, credentials, endpoint,
 generation parameters, automatic provider/model selection, or execution
 capability. Canonical evidence, provenance, partial coverage, and exact decimal
 strings remain reachable only through the authoritative preparation artifacts.
+
+Sprint 8F.2 adds `PortfolioAiProviderRequestDescriptor`, a deterministic,
+detached mapping of an envelope into ordered repository-owned logical blocks:
+
+```text
+PortfolioAiPromptDocument
+        ↓
+PortfolioAiProviderRequest
+        ↓
+PortfolioAiProviderRequestDescriptor
+        ↓
+future adapter/runtime bridge
+```
+
+The descriptor preserves the explicit execution and provider/model identities,
+prompt-document version, exact block order, rendered repository-owned fragments,
+and fact/section references. It is not a vendor request body: it has no vendor
+roles, HTTP payload, generation parameters, automatic selection, or execution
+behavior. Concrete provider mapping remains future work.
