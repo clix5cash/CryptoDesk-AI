@@ -333,3 +333,11 @@ and it carries no provider schema, model settings, tokenizer behavior, or
 execution capability. The Portfolio context and its evidence remain canonical;
 the model-input boundary preserves exact references, coverage limitations, and
 decimal strings without creating or changing Portfolio facts.
+
+Sprint 8E.2 adds `PortfolioAiMessagePlan`, a deterministic structured plan
+between `PortfolioAiModelInput` and any future renderer or provider runtime.
+Its fixed logical items preserve the task, selected context sections, selected
+evidence facts, and the existing candidate-interpretation output contract.
+The plan contains references and enums only: it renders no natural-language
+prompt, has no system/user/chat message schema, and performs no provider or
+model invocation. Canonical Portfolio evidence remains reference-based.

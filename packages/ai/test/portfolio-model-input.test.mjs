@@ -6,7 +6,11 @@ import {
   PortfolioAiTask,
   buildPortfolioAiContext,
   createPortfolioAiModelInput,
+  createPortfolioAiMessagePlan,
+  PortfolioAiMessagePlanItemKind,
+  PortfolioAiMessagePlanOutputContract,
   validatePortfolioAiModelInput,
+  validatePortfolioAiMessagePlan,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -295,4 +299,98 @@ test('rejects malformed, unknown, duplicate, contradictory, and authority-inject
     AiBoundaryValidationError,
   );
   assert.deepEqual(createPortfolioAiModelInput(valid), createPortfolioAiModelInput(valid));
+});
+
+test('builds a detached provider-neutral message plan with exact ordered references', () => {
+  const source = createPortfolioAiModelInput(input());
+  const before = JSON.stringify(source);
+  const plan = createPortfolioAiMessagePlan(source);
+
+  assert.equal(plan.task, source.task);
+  assert.deepEqual(
+    plan.items.map((itemValue) => itemValue.kind),
+    ['task', 'context', 'evidence', 'output_contract'],
+  );
+  assert.deepEqual(plan.items[1].sectionIds, source.sectionIds);
+  assert.deepEqual(plan.items[2].factIds, source.factIds);
+  assert.equal(
+    plan.items[3].outputContract,
+    PortfolioAiMessagePlanOutputContract.CandidateInterpretation,
+  );
+  assert.equal(plan.input.context.facts[0].evidence.insight.asset.networkId, 'network-a');
+  assert.equal(plan.input.context.facts[1].evidence.insight.asset.networkId, 'network-b');
+  assert.notEqual(plan.input.factIds[0], plan.input.factIds[1]);
+  assert.equal(plan.input.context.summary.totalValuedValue, '900719925474099312345678.1234');
+  assert.equal(JSON.stringify(source), before);
+  validatePortfolioAiMessagePlan(plan);
+  plan.input.factIds[0] = 'detached-change';
+  assert.notEqual(source.factIds[0], 'detached-change');
+});
+
+test('preserves missing-data and unavailable selections through the structured plan', () => {
+  const sourceContext = unavailableContext();
+  const source = createPortfolioAiModelInput({
+    task: PortfolioAiTask.Interpret,
+    context: sourceContext,
+    factIds: sourceContext.facts.map((fact) => fact.id),
+    sectionIds: [
+      sectionId(PortfolioPresentationSection.DataQuality),
+      sectionId(PortfolioPresentationSection.PrioritizedInsights),
+    ],
+  });
+  const plan = createPortfolioAiMessagePlan(source);
+
+  assert.equal(plan.input.context.summary.coverage.state, 'unavailable');
+  assert.deepEqual(plan.items[2].factIds, source.factIds);
+  assert.deepEqual(createPortfolioAiMessagePlan(source), plan);
+});
+
+test('rejects malformed, missing, duplicate, contradictory, and authority-injecting message-plan items', () => {
+  const valid = createPortfolioAiMessagePlan(createPortfolioAiModelInput(input()));
+  assert.throws(
+    () =>
+      validatePortfolioAiMessagePlan({
+        ...valid,
+        items: valid.items.filter((itemValue) => itemValue.kind !== 'task'),
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiMessagePlan({
+        ...valid,
+        items: [{ kind: 'instruction', task: valid.task }, ...valid.items.slice(1)],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiMessagePlan({
+        ...valid,
+        items: [valid.items[0], valid.items[1], valid.items[1], valid.items[3]],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiMessagePlan({
+        ...valid,
+        items: [
+          valid.items[0],
+          { ...valid.items[1], sectionIds: ['unknown-section'] },
+          valid.items[2],
+          valid.items[3],
+        ],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiMessagePlan({ ...valid, authority: 'authoritative' }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiMessagePlan({ ...valid, measuredValue: '1' }),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(createPortfolioAiMessagePlan(valid.input), valid);
 });
