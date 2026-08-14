@@ -9,8 +9,12 @@ import {
   createPortfolioAiMessagePlan,
   PortfolioAiMessagePlanItemKind,
   PortfolioAiMessagePlanOutputContract,
+  PortfolioAiPromptBlockKind,
+  PortfolioAiPromptDocumentVersion,
+  createPortfolioAiPromptDocument,
   validatePortfolioAiModelInput,
   validatePortfolioAiMessagePlan,
+  validatePortfolioAiPromptDocument,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -393,4 +397,101 @@ test('rejects malformed, missing, duplicate, contradictory, and authority-inject
     AiBoundaryValidationError,
   );
   assert.deepEqual(createPortfolioAiMessagePlan(valid.input), valid);
+});
+
+test('creates a detached static-versioned prompt document from exact message-plan references', () => {
+  const plan = createPortfolioAiMessagePlan(createPortfolioAiModelInput(input()));
+  const before = JSON.stringify(plan);
+  const document = createPortfolioAiPromptDocument(plan);
+
+  assert.equal(document.version, PortfolioAiPromptDocumentVersion);
+  assert.deepEqual(
+    document.blocks.map((block) => block.kind),
+    ['instruction', 'task', 'context', 'evidence', 'constraints', 'output_contract'],
+  );
+  assert.equal(document.blocks[0].text, 'Use only referenced canonical portfolio evidence.');
+  assert.equal(document.blocks[1].task, PortfolioAiTask.Interpret);
+  assert.equal(
+    document.blocks[1].text,
+    'Interpret referenced portfolio facts without creating canonical facts.',
+  );
+  assert.deepEqual(document.blocks[2].sectionIds, plan.input.sectionIds);
+  assert.deepEqual(document.blocks[3].factIds, plan.input.factIds);
+  assert.equal(
+    document.blocks[5].outputContract,
+    PortfolioAiMessagePlanOutputContract.CandidateInterpretation,
+  );
+  assert.equal(
+    document.plan.input.context.summary.totalValuedValue,
+    '900719925474099312345678.1234',
+  );
+  assert.equal(document.plan.input.context.facts[0].evidence.insight.asset.networkId, 'network-a');
+  assert.equal(document.plan.input.context.facts[1].evidence.insight.asset.networkId, 'network-b');
+  assert.equal(JSON.stringify(plan), before);
+  validatePortfolioAiPromptDocument(document);
+  document.plan.input.factIds[0] = 'detached-change';
+  assert.notEqual(plan.input.factIds[0], 'detached-change');
+});
+
+test('preserves unavailable missing-data references and has deterministic prompt documents', () => {
+  const sourceContext = unavailableContext();
+  const plan = createPortfolioAiMessagePlan(
+    createPortfolioAiModelInput({
+      task: PortfolioAiTask.Interpret,
+      context: sourceContext,
+      factIds: sourceContext.facts.map((fact) => fact.id),
+      sectionIds: [
+        sectionId(PortfolioPresentationSection.DataQuality),
+        sectionId(PortfolioPresentationSection.PrioritizedInsights),
+      ],
+    }),
+  );
+  const document = createPortfolioAiPromptDocument(plan);
+
+  assert.equal(document.plan.input.context.summary.coverage.state, 'unavailable');
+  assert.deepEqual(document.blocks[3].factIds, plan.input.factIds);
+  assert.deepEqual(createPortfolioAiPromptDocument(plan), document);
+});
+
+test('rejects malformed, incomplete, arbitrary, provider-shaped, and authority-injecting prompt documents', () => {
+  const valid = createPortfolioAiPromptDocument(
+    createPortfolioAiMessagePlan(createPortfolioAiModelInput(input())),
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiPromptDocument({
+        ...valid,
+        blocks: valid.blocks.filter((block) => block.kind !== 'instruction'),
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiPromptDocument({
+        ...valid,
+        blocks: [valid.blocks[0], valid.blocks[0], ...valid.blocks.slice(2)],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      validatePortfolioAiPromptDocument({
+        ...valid,
+        blocks: [{ kind: 'system', text: 'caller supplied' }, ...valid.blocks.slice(1)],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiPromptDocument({ ...valid, messages: [] }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiPromptDocument({ ...valid, authority: 'authoritative' }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () => validatePortfolioAiPromptDocument({ ...valid, measuredValue: '1' }),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(createPortfolioAiPromptDocument(valid.plan), valid);
 });

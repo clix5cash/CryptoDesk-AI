@@ -341,3 +341,11 @@ evidence facts, and the existing candidate-interpretation output contract.
 The plan contains references and enums only: it renders no natural-language
 prompt, has no system/user/chat message schema, and performs no provider or
 model invocation. Canonical Portfolio evidence remains reference-based.
+
+Sprint 8E.3 adds `PortfolioAiPromptDocument`, a portable provider-neutral
+document between the message plan and any future provider mapping/runtime. It
+uses a static document version and fixed repository-owned instruction,
+task, constraint, and output-contract text fragments; context and evidence
+remain exact structured references. There is no caller-defined system prompt,
+provider request schema, model invocation, response parser, or execution
+integration. Portfolio evidence remains canonical and authoritative.
