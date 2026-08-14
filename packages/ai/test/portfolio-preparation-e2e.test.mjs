@@ -516,3 +516,77 @@ test('bridges one exact descriptor through an explicit in-memory adapter without
     'untrusted_model_execution',
   );
 });
+
+test('closes the provider-request preparation and bridge path without provider runtime behavior', async () => {
+  const prepared = preparation();
+  const request = createPortfolioAiProviderRequest({
+    executionId: 'provider-bridge-closure',
+    model: { providerId: 'provider-a', modelId: 'model-a' },
+    promptDocument: prepared.document,
+  });
+  const descriptor = mapPortfolioAiProviderRequest(request);
+  const before = JSON.stringify({ prepared, request, descriptor });
+  let calls = 0;
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register({
+    providerId: 'provider-a',
+    supportedModels: ['model-a'],
+    async execute(input) {
+      calls += 1;
+      input.context.summary.totalValuedValue = '0';
+      return {
+        executionId: input.executionId,
+        status: AiExecutionStatus.Completed,
+        authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+        output: 'Opaque deterministic result.',
+        model: input.model,
+      };
+    },
+  });
+
+  const result = await invokePortfolioAiProviderAdapterBridge(registry, descriptor);
+  assert.equal(calls, 1);
+  assert.equal(result.executionId, 'provider-bridge-closure');
+  assert.deepEqual(result.model, { providerId: 'provider-a', modelId: 'model-a' });
+  assert.equal(result.authority, 'untrusted_model_execution');
+  assert.deepEqual(
+    descriptor.blocks.map((block) => block.kind),
+    ['instruction', 'task', 'context', 'evidence', 'constraints', 'output_contract'],
+  );
+  assert.equal(descriptor.promptDocumentVersion, PortfolioAiPromptDocumentVersion);
+  assert.deepEqual(descriptor.blocks[2].sectionIds, prepared.modelInput.sectionIds);
+  assert.deepEqual(descriptor.blocks[3].factIds, prepared.modelInput.factIds);
+  assert.equal(descriptor.blocks[5].outputContract, 'portfolio_ai_candidate_interpretation');
+  assert.equal(
+    descriptor.request.promptDocument.plan.input.context.summary.totalValuedValue,
+    '900719925474099312345678.1234',
+  );
+  assert.equal(
+    descriptor.request.promptDocument.plan.input.context.summary.coverage.state,
+    'partial',
+  );
+  assert.deepEqual(
+    descriptor.request.promptDocument.plan.input.context.facts
+      .filter((fact) => fact.evidence.insight.asset?.symbol === 'USDC')
+      .map((fact) => fact.evidence.insight.asset.networkId),
+    ['network-a', 'network-b'],
+  );
+  assert.equal(JSON.stringify({ prepared, request, descriptor }), before);
+  assert.deepEqual(registry.list(), [{ providerId: 'provider-a', supportedModels: ['model-a'] }]);
+
+  assert.throws(
+    () => invokePortfolioAiProviderAdapterBridge(registry, { ...descriptor, messages: [] }),
+    AiBoundaryValidationError,
+  );
+  await assert.rejects(
+    () =>
+      invokePortfolioAiProviderAdapterBridge(new PortfolioAiModelProviderRegistry(), descriptor),
+    AiBoundaryValidationError,
+  );
+  assert.equal(calls, 1);
+  assert.equal(
+    (await invokePortfolioAiProviderAdapterBridge(registry, descriptor)).authority,
+    'untrusted_model_execution',
+  );
+  assert.equal(calls, 2);
+});

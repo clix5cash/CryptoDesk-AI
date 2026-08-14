@@ -427,3 +427,25 @@ existing explicitly supplied registry and provider-neutral adapter boundary.
 Adapter output is still validated, detached `untrusted_model_execution`; the
 bridge does not parse, ground, or promote it. No concrete provider, network
 runtime, retry, fallback, or routing behavior is included.
+
+Sprint 8F.4 closes the provider-request preparation and bridge boundary:
+
+```text
+PortfolioAiPromptDocument
+        ↓
+PortfolioAiProviderRequest
+        ↓
+PortfolioAiProviderRequestDescriptor
+        ↓
+provider-neutral adapter bridge
+        ↓
+untrusted_model_execution
+```
+
+The complete path preserves explicit execution/provider/model identity,
+prompt-document block order and references, canonical evidence, partial and
+missing-data states, and exact decimal strings. It makes exactly one injected
+adapter invocation per bridge call; no concrete provider runtime, network,
+credentials, vendor request body, retry, fallback, or routing exists. Raw
+execution output remains untrusted and requires the existing separate candidate
+and grounding boundaries.
