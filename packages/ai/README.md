@@ -287,3 +287,11 @@ Trust markers are owned by their respective validation or construction
 boundaries. AI-layer records can retain only exact canonical references; they
 cannot redefine Portfolio identities, values, coverage, timestamps, or
 provenance. Grounding validates references but never creates canonical truth.
+
+Sprint 8D.3 hardens deterministic behavior across the composed pipeline.
+Equivalent canonical inputs retain equivalent context, reference, execution,
+candidate, and grounded-result identities and ordering. The AI boundary keeps
+all provenance, exact decimal strings, and partial or unavailable facts
+traceable; registry, service, and pipeline instances remain explicitly scoped
+with no hidden mutable pipeline state. These repeatability guarantees apply to
+deterministic boundary work only, not future provider-produced model content.

@@ -472,3 +472,93 @@ test('orchestrates the explicit Portfolio AI path without adding authority, pars
     'non_authoritative_interpretation',
   );
 });
+
+test('keeps the composed pipeline deterministic, isolated, and traceable for equivalent canonical orderings', async () => {
+  const networkA = asset('deterministic-network-a', 'network-a', 6);
+  const networkB = asset('deterministic-network-b', 'network-b', 0);
+  const missingPrice = asset('deterministic-missing-price', 'network-b', 0);
+  const positions = [
+    position('deterministic-large', '900719925474099312345678', networkA, 'source-a', 'account-a'),
+    position('deterministic-network-b', '20', networkB, 'source-b', 'account-b'),
+    position('deterministic-missing-price', '1', missingPrice, 'source-b', 'account-b'),
+  ];
+  const prices = [price(networkA, '1.25'), price(networkB, '2')];
+  const firstPayload = portfolioPayload(snapshot(positions), prices);
+  const secondPayload = portfolioPayload(snapshot([...positions].reverse()), [...prices].reverse());
+  assert.deepEqual(secondPayload, firstPayload);
+  const makeInput = (payloadValue) => {
+    const context = buildPortfolioAiContext({
+      analysisId: 'determinism-analysis',
+      task: PortfolioAiTask.Interpret,
+      payload: payloadValue,
+    });
+    return {
+      context: {
+        analysisId: 'determinism-analysis',
+        task: PortfolioAiTask.Interpret,
+        payload: payloadValue,
+      },
+      execution: {
+        executionId: 'determinism-execution',
+        model: { providerId: 'provider-a', modelId: 'model-a' },
+      },
+      candidates: structuredCandidates(context, networkA.id),
+    };
+  };
+  const firstInput = makeInput(firstPayload);
+  const secondInput = makeInput(secondPayload);
+  const before = JSON.stringify({ positions, prices, firstInput, secondInput });
+  const registryA = new PortfolioAiModelProviderRegistry();
+  let calls = 0;
+  registryA.register({
+    providerId: 'provider-a',
+    supportedModels: ['model-a'],
+    async execute(requestValue) {
+      calls += 1;
+      return rawResult(requestValue);
+    },
+  });
+  const pipelineA = new PortfolioAiInterpretationPipeline(
+    new PortfolioAiModelExecutionService(registryA),
+  );
+  const first = await pipelineA.execute(firstInput);
+  const second = await pipelineA.execute(secondInput);
+  assert.deepEqual(second, first);
+  assert.equal(calls, 2);
+  assert.equal(first.context.source.portfolioId, firstPayload.portfolioId);
+  const tracedNetworks = first.context.facts
+    .map((fact) => fact.evidence.insight.asset)
+    .filter((assetValue) => assetValue?.symbol === 'USDC')
+    .map((assetValue) => assetValue.networkId);
+  assert.ok(tracedNetworks.includes('network-a'));
+  assert.ok(tracedNetworks.includes('network-b'));
+  assert.ok(
+    first.context.facts.some((fact) => fact.evidence.insight.unavailableReason === 'missing_price'),
+  );
+  assert.equal(first.context.summary.totalValuedValue, '1125899906842624180.4320975');
+  assert.deepEqual(registryA.list(), [{ providerId: 'provider-a', supportedModels: ['model-a'] }]);
+
+  const registryB = new PortfolioAiModelProviderRegistry();
+  const pipelineB = new PortfolioAiInterpretationPipeline(
+    new PortfolioAiModelExecutionService(registryB),
+  );
+  await assert.rejects(() => pipelineB.execute(firstInput), AiBoundaryValidationError);
+  await assert.rejects(
+    () =>
+      pipelineA.execute({
+        ...firstInput,
+        candidates: [
+          {
+            ...firstInput.candidates[0],
+            factReferences: [
+              { ...firstInput.candidates[0].factReferences[0], factId: 'unknown-fact' },
+            ],
+          },
+        ],
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(await pipelineA.execute(firstInput), first);
+  assert.equal(JSON.stringify({ positions, prices, firstInput, secondInput }), before);
+  assert.deepEqual(registryB.list(), []);
+});
