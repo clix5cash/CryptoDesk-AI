@@ -520,3 +520,12 @@ and Failed paths retain exact identity, evidence references, missing-data and
 precision semantics. There is still no concrete provider runtime, parser,
 semantic interpretation, candidate generation, grounding, recommendation, or
 prediction capability.
+
+Sprint 8 closes with the complete provider-neutral architecture established as
+Portfolio → deterministic AI boundary and model preparation → provider request
+and descriptor → injected adapter bridge → raw `untrusted_model_execution` →
+validated and normalized provider response → provider exchange. Canonical
+Portfolio authority remains upstream, raw output remains opaque and untrusted,
+and the provider boundary performs no semantic interpretation or recommendation.
+Sprint 8 stops before live model or network invocation; concrete provider
+integration belongs to a later sprint.
