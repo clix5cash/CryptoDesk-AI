@@ -3,6 +3,9 @@
 Status: Sprint 9A.1 current-state inventory  
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
+Detailed dependency contract:
+[Sprint 9 MVP Component and Dependency Map](./sprint-9-mvp-component-map.md)
+
 ## Purpose and scope
 
 This document records the architecture implemented after Sprint 8 and defines
