@@ -3,6 +3,7 @@ import { AiBoundaryValidationError } from './errors.js';
 import {
   type PortfolioAiModelReference,
   PortfolioAiRawExecutionAuthority,
+  validatePortfolioAiModelExecutionRequest,
 } from './portfolio-model-execution.js';
 import {
   type PortfolioAiNormalizedProviderResponse,
@@ -63,6 +64,11 @@ export function validatePortfolioAiProviderExchange(exchange: PortfolioAiProvide
   }
   try {
     validatePortfolioAiProviderRequestDescriptor(exchange.descriptor);
+    validatePortfolioAiModelExecutionRequest({
+      executionId: exchange.executionId,
+      context: exchange.descriptor.request.promptDocument.plan.input.context,
+      model: exchange.model,
+    });
     validatePortfolioAiNormalizedProviderResponse(exchange.descriptor, exchange.response);
   } catch (error) {
     throw asBoundaryError(error, 'Portfolio AI provider exchange reference is invalid.');

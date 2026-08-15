@@ -505,3 +505,9 @@ exact execution/provider/model identity, terminal status, artifact traceability,
 and `untrusted_model_execution` without rebuilding canonical evidence or
 inspecting opaque model output. It adds no provider runtime, parsing, grounding,
 interpretation, routing, or canonical Portfolio authority.
+
+Sprint 8H.2 hardens exact exchange-owned identity, terminal status, trust, and
+the retained request/response source chain. Every nested artifact is validated
+through its existing boundary contract; canonical authority remains upstream,
+the exchange contains detached references only, and raw output is never parsed
+or semantically interpreted.

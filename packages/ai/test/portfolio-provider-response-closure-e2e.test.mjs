@@ -419,6 +419,7 @@ test('binds failed exchanges and rejects identity, trust, canonical, and referen
     { ...exchange, descriptor: { ...exchange.descriptor, executionId: 'wrong-execution' } },
     { ...exchange, response: { ...exchange.response, executionId: 'wrong-execution' } },
     { ...exchange, response: { ...exchange.response, authority: 'authoritative' } },
+    { ...exchange, response: { ...exchange.response, output: 'contradictory output' } },
   ]) {
     assert.throws(() => validatePortfolioAiProviderExchange(invalid), AiBoundaryValidationError);
   }
@@ -445,4 +446,117 @@ test('keeps provider exchanges repeatable and isolates failed calls', async () =
       expected,
     );
   }
+});
+
+test('rejects malformed exchange-owned identity even when identity values compare equally', async () => {
+  const { exchange } = await exchangeFixture('provider-exchange-owned-identity');
+  const inheritedModel = Object.create({
+    providerId: 'provider-closure',
+    modelId: 'model-closure',
+  });
+  for (const model of [
+    undefined,
+    null,
+    inheritedModel,
+    { providerId: '', modelId: 'model-closure' },
+    { providerId: 'provider-closure', modelId: '' },
+    { providerId: 'provider-closure', modelId: 'model-closure', assetId: 'fabricated' },
+    {
+      providerId: 'provider-closure',
+      modelId: 'model-closure',
+      authority: 'authoritative',
+    },
+  ]) {
+    assert.throws(
+      () => validatePortfolioAiProviderExchange({ ...exchange, model }),
+      AiBoundaryValidationError,
+    );
+    validatePortfolioAiProviderExchange(exchange);
+  }
+});
+
+test('rejects broken nested request, raw-result, and normalized-response ownership chains', async () => {
+  const { exchange } = await exchangeFixture('provider-exchange-chain-integrity');
+  const broken = [
+    {
+      ...exchange,
+      descriptor: {
+        ...exchange.descriptor,
+        request: { ...exchange.descriptor.request, executionId: 'wrong-execution' },
+      },
+    },
+    {
+      ...exchange,
+      descriptor: {
+        ...exchange.descriptor,
+        request: {
+          ...exchange.descriptor.request,
+          model: { providerId: 'other', modelId: 'model-closure' },
+        },
+      },
+    },
+    {
+      ...exchange,
+      response: {
+        ...exchange.response,
+        source: { ...exchange.response.source, executionId: 'wrong-execution' },
+      },
+    },
+    {
+      ...exchange,
+      response: {
+        ...exchange.response,
+        source: {
+          ...exchange.response.source,
+          result: { ...exchange.response.source.result, executionId: 'wrong-execution' },
+        },
+      },
+    },
+    {
+      ...exchange,
+      response: {
+        ...exchange.response,
+        source: {
+          ...exchange.response.source,
+          result: {
+            ...exchange.response.source.result,
+            failure: { message: 'contradictory failure' },
+          },
+        },
+      },
+    },
+    { ...exchange, status: AiExecutionStatus.Failed },
+    { ...exchange, status: AiExecutionStatus.Running },
+  ];
+  for (const invalid of broken) {
+    assert.throws(() => validatePortfolioAiProviderExchange(invalid), AiBoundaryValidationError);
+    validatePortfolioAiProviderExchange(exchange);
+  }
+});
+
+test('deeply detaches failed exchange failure and source artifacts', async () => {
+  const sourceDescriptor = descriptor('provider-exchange-failure-detachment');
+  const raw = await invokePortfolioAiProviderAdapterBridge(
+    registryFor((input) => ({
+      executionId: input.executionId,
+      status: AiExecutionStatus.Failed,
+      authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+      failure: { code: 'opaque_failure', message: 'Opaque failure text.' },
+      model: input.model,
+    })),
+    sourceDescriptor,
+  );
+  const providerResponse = createPortfolioAiProviderResponse(sourceDescriptor, raw);
+  const normalized = normalizePortfolioAiProviderResponse(sourceDescriptor, providerResponse);
+  const before = JSON.stringify({ sourceDescriptor, raw, providerResponse, normalized });
+  const exchange = createPortfolioAiProviderExchange(sourceDescriptor, normalized);
+
+  validatePortfolioAiProviderExchange(exchange);
+  assert.equal(JSON.stringify({ sourceDescriptor, raw, providerResponse, normalized }), before);
+  exchange.response.failure.message = 'detached';
+  exchange.response.source.result.failure.code = 'detached';
+  exchange.descriptor.model.providerId = 'detached';
+  assert.equal(normalized.failure.message, 'Opaque failure text.');
+  assert.equal(normalized.source.result.failure.code, 'opaque_failure');
+  assert.equal(sourceDescriptor.model.providerId, 'provider-closure');
 });
