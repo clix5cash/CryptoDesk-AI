@@ -8,3 +8,4 @@ Architecture documentation:
 - [Sprint 9 MVP Architecture Inventory](docs/architecture/sprint-9-mvp-architecture-inventory.md)
 - [Sprint 9 MVP Component and Dependency Map](docs/architecture/sprint-9-mvp-component-map.md)
 - [Sprint 9 MVP Integration Contract](docs/architecture/sprint-9-mvp-integration-contract.md)
+- [Sprint 9A MVP Architecture Closure](docs/architecture/sprint-9a-mvp-architecture-closure.md)

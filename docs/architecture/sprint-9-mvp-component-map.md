@@ -8,6 +8,9 @@ Inventory baseline:
 Runtime and integration contract:
 [Sprint 9 MVP Integration Contract](./sprint-9-mvp-integration-contract.md)
 
+Sprint 9A closure:
+[Sprint 9A MVP Architecture Closure](./sprint-9a-mvp-architecture-closure.md)
+
 ## Scope
 
 This map converts the implemented Sprint 8 inventory into the component,

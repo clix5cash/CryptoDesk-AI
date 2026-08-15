@@ -5,6 +5,9 @@ Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 Inventory: [Sprint 9 MVP Architecture Inventory](./sprint-9-mvp-architecture-inventory.md)  
 Component map: [Sprint 9 MVP Component and Dependency Map](./sprint-9-mvp-component-map.md)
 
+Sprint 9A closure:
+[Sprint 9A MVP Architecture Closure](./sprint-9a-mvp-architecture-closure.md)
+
 ## Scope
 
 This contract defines where later Sprint 9 integration may occur without

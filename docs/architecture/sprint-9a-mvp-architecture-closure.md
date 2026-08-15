@@ -1,0 +1,216 @@
+# Sprint 9A MVP Architecture Closure and Acceptance Gates
+
+Status: Sprint 9A.4 closed baseline  
+Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)  
+Sources:
+[inventory](./sprint-9-mvp-architecture-inventory.md),
+[component map](./sprint-9-mvp-component-map.md), and
+[integration contract](./sprint-9-mvp-integration-contract.md)
+
+## Frozen MVP architecture baseline
+
+The implemented baseline is:
+
+```text
+@cryptodesk-ai/portfolio — canonical authority
+snapshot → deterministic analytics/evidence → presentation/payload
+        ↓
+@cryptodesk-ai/ai — deterministic preparation
+context → model input → message plan → prompt document
+        ↓
+@cryptodesk-ai/ai — provider-neutral execution
+provider request → descriptor → bridge → explicit adapter invocation
+        ↓
+@cryptodesk-ai/ai — untrusted result
+raw execution → ProviderResponse → normalized response → ProviderExchange
+        ↓ future Gap B only
+structured untrusted candidate → deterministic grounding
+→ non_authoritative_interpretation
+        ↓ future Gap C only
+application-owned mapping → Morning Meeting/application consumer
+```
+
+Portfolio owns identities, financial values, allocation, risk, coverage,
+timestamps, and provenance. AI depends on Portfolio public contracts; Portfolio
+does not depend on AI. Morning Meeting currently depends on Market and News
+Intelligence and remains independent of Portfolio AI.
+
+Current APIs for presentation, preparation, neutral request/execution,
+responses/exchange, candidate validation, grounding, and existing orchestration
+are reusable unchanged. Provider output stays `untrusted_model_execution` through
+the exchange. Structured candidates are `untrusted_candidate_interpretation`;
+grounding produces only `non_authoritative_interpretation`.
+
+## Formal integration gates
+
+### Gap A — Sprint 9B owner
+
+Current: the neutral request, descriptor, bridge, registry, and adapter seam
+exist, but the adapter receives `PortfolioAiModelExecutionRequest`, not the
+newer prompt/request/descriptor chain. No runtime or vendor mapping exists.
+
+Required closure:
+
+- backward-compatible validated request-chain-to-runtime mapping;
+- concrete runtime adapter outside Portfolio/domain code;
+- runtime/infrastructure-owned configuration and credentials;
+- contained vendor request/response schemas and body construction;
+- exact provider-neutral raw-result mapping and identity preservation.
+
+### Gap B — Sprint 9C owner
+
+Current: response output is opaque and untrusted. Candidate assembly accepts
+only caller-supplied structured fields; no output-to-candidate mapper exists.
+
+Required closure:
+
+- explicit isolated structured-output parsing/mapping contract;
+- safe failure for malformed or unsupported output;
+- existing candidate and canonical-reference validation;
+- candidate validation before existing deterministic grounding;
+- trust progression only to `non_authoritative_interpretation`.
+
+Parsing in response normalization, inferred canonical facts/references, or raw
+output bypassing candidate validation is forbidden.
+
+### Gap C — Sprint 9D owner
+
+Current: grounded Portfolio interpretation and Morning Meeting exist
+independently. No composition contract exists.
+
+Required closure:
+
+- explicit application-owned interpretation mapping;
+- deliberate Morning Meeting consumption contract;
+- user-visible lifecycle and failure semantics;
+- preservation of partial/missing evidence and traceability;
+- no raw output as evidence and no AI mutation of canonical/analytical state.
+
+## Sprint 9 acceptance gates
+
+### Sprint 9B — concrete provider integration
+
+Complete only when:
+
+- a concrete runtime exists outside Portfolio/domain code and depends on AI
+  provider-neutral contracts;
+- vendor SDK/types do not leak into Portfolio or neutral public APIs;
+- Gap A is resolved minimally and backward-compatibly;
+- configuration/credentials and request-body construction stay inside the
+  runtime/infrastructure boundary and never enter neutral artifacts;
+- exactly one explicitly selected runtime path remains;
+- runtime errors map to existing neutral error/result semantics;
+- results re-enter the existing `untrusted_model_execution` boundary;
+- Portfolio still has no AI dependency and all existing/new runtime tests pass.
+
+### Sprint 9C — candidate and interpretation integration
+
+Complete only when:
+
+- raw output cannot bypass validated response/exchange boundaries;
+- output-to-candidate parsing/mapping is explicit and isolated;
+- response normalization remains structural only;
+- parsing cannot fabricate Portfolio facts or canonical references;
+- references resolve to existing context and candidate validation precedes
+  grounding;
+- grounding produces only `non_authoritative_interpretation`;
+- malformed/untrusted output fails safely and Portfolio authority is unchanged.
+
+### Sprint 9D — Morning Meeting AI integration
+
+Complete only when:
+
+- grounded non-authoritative interpretation maps explicitly into an
+  application/Morning Meeting contract;
+- Morning Meeting never treats raw output as canonical evidence;
+- AI narrative cannot mutate Portfolio or deterministic analytical state;
+- missing/partial evidence remains visible;
+- application composition owns lifecycle/failure presentation;
+- existing Morning Meeting behavior remains backward compatible.
+
+### Sprint 9E — MVP application/API surface
+
+Complete only when:
+
+- a clear validated application/API entry point drives the intended
+  Portfolio/AI/Morning Meeting flow;
+- external input and output contracts are validated;
+- runtime/configuration ownership remains outside canonical domain code;
+- deterministic failure semantics are exposed where appropriate;
+- no reverse or circular dependency is introduced.
+
+### Sprint 9F — MVP hardening and release candidate
+
+Complete only when:
+
+- production-like E2E coverage exercises the complete MVP path;
+- provider failures/outages and partial/missing data are exercised;
+- credential/configuration security and dependency/runtime boundaries are
+  audited;
+- a meaningful performance/latency baseline exists;
+- release documentation is coherent;
+- no critical architecture violation remains unresolved.
+
+### Sprint 9G — MVP v1.0 release closure
+
+Complete only when:
+
+- all Sprint 9B–9F gates pass and the user-relevant path works end-to-end;
+- Portfolio remains canonical and provider/model output remains non-canonical;
+- runtime isolation and grounded evidence traceability are verified;
+- application/Morning Meeting consumes only deliberately mapped
+  non-authoritative interpretation;
+- failure and missing-data states remain explicit;
+- release build, test, and smoke validation pass;
+- the repository is clean and architecture docs plus Project Bible/Roadmap are
+  synchronized.
+
+Release/tagging is not part of Sprint 9A.
+
+## Sprint 10 non-goals
+
+Sprint 9 is MVP Integration and Release. The following remain Sprint 10 work:
+
+- Ritual-specific autonomous runtime expansion;
+- on-chain or verifiable execution;
+- scheduled/autonomous recurring operation;
+- agent runtime and policy-controlled autonomous actions;
+- autonomous trading or execution;
+- advanced persistence/state lifecycle beyond MVP needs.
+
+## Backward-compatibility baseline
+
+Sprint 9 must preserve existing Portfolio contracts, AI context/preparation,
+neutral execution/request, response/normalization/exchange,
+candidate/grounding, and Morning Meeting behavior. Any later extension must be
+explicitly documented, additive or backward-compatible, and regression-tested.
+Silent breaking changes or repurposed trust markers are not permitted.
+
+## Enforcement baseline
+
+Already structurally or directly test enforced:
+
+- AI → Portfolio direction and absence of Portfolio → AI;
+- execution/provider/model identity and terminal status rules;
+- trust markers, supported fields, and reference integrity;
+- raw-output opacity through ProviderExchange;
+- same-symbol cross-network identity;
+- partial/unavailable/missing-data and exact-decimal preservation;
+- immutability, determinism, failure isolation, and exactly-one neutral adapter
+  invocation.
+
+Must become enforced later:
+
+- runtime placement, vendor-schema containment, credentials, and Gap A in 9B;
+- isolated parsing/mapping and Gap B in 9C;
+- deliberate Morning Meeting consumption and Gap C in 9D;
+- application lifecycle and API dependencies in 9E;
+- production runtime/security/performance hardening in 9F;
+- repository/release closure and synchronized documentation in 9G.
+
+## Sprint 9A closure decision
+
+The inventory, component/dependency/trust maps, and integration contract are
+consistent. Gap A/B/C ownership is fixed at Sprint 9B/9C/9D. Sprint 9B–9G gates
+and Sprint 10 non-goals are explicit. Sprint 9A introduces no production or
+runtime capability and is complete when repository validation passes.
