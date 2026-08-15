@@ -511,3 +511,12 @@ the retained request/response source chain. Every nested artifact is validated
 through its existing boundary contract; canonical authority remains upstream,
 the exchange contains detached references only, and raw output is never parsed
 or semantically interpreted.
+
+Sprint 8H.3 validates the full current provider-neutral exchange path from
+canonical Portfolio presentation through deterministic AI preparation,
+provider request mapping, one injected adapter call, raw untrusted execution,
+response validation/normalization, and `PortfolioAiProviderExchange`. Completed
+and Failed paths retain exact identity, evidence references, missing-data and
+precision semantics. There is still no concrete provider runtime, parser,
+semantic interpretation, candidate generation, grounding, recommendation, or
+prediction capability.
