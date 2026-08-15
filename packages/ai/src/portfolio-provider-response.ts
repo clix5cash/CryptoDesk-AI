@@ -4,6 +4,7 @@ import {
   type PortfolioAiModelExecutionResult,
   type PortfolioAiModelReference,
   PortfolioAiRawExecutionAuthority,
+  validatePortfolioAiModelExecutionRequest,
   validatePortfolioAiModelExecutionResult,
 } from './portfolio-model-execution.js';
 import {
@@ -11,7 +12,7 @@ import {
   validatePortfolioAiProviderRequestDescriptor,
 } from './portfolio-provider-request-descriptor.js';
 
-/** Provider-neutral envelope for one completed, still-untrusted raw execution. */
+/** Provider-neutral envelope for one terminal, still-untrusted raw execution. */
 export interface PortfolioAiProviderResponse {
   readonly executionId: AiExecutionId;
   readonly model: PortfolioAiModelReference;
@@ -19,7 +20,7 @@ export interface PortfolioAiProviderResponse {
   readonly result: PortfolioAiModelExecutionResult;
 }
 
-/** Creates a detached response envelope for an existing completed raw result. */
+/** Creates a detached response envelope for an existing terminal raw result. */
 export function createPortfolioAiProviderResponse(
   descriptor: PortfolioAiProviderRequestDescriptor,
   result: PortfolioAiModelExecutionResult,
@@ -53,6 +54,11 @@ export function validatePortfolioAiProviderResponse(
     throw new AiBoundaryValidationError('Portfolio AI provider response is malformed.');
   }
   try {
+    validatePortfolioAiModelExecutionRequest({
+      executionId: response.executionId,
+      context: descriptor.request.promptDocument.plan.input.context,
+      model: response.model,
+    });
     validatePortfolioAiModelExecutionResult(
       {
         executionId: descriptor.executionId,
@@ -65,7 +71,7 @@ export function validatePortfolioAiProviderResponse(
     throw asBoundaryError(error, 'Portfolio AI provider response result is invalid.');
   }
   if (
-    response.result.status !== AiExecutionStatus.Completed ||
+    !isTerminalStatus(response.result.status) ||
     response.executionId !== descriptor.executionId ||
     response.executionId !== response.result.executionId ||
     !sameModelReference(response.model, descriptor.model) ||
@@ -75,6 +81,10 @@ export function validatePortfolioAiProviderResponse(
   ) {
     throw new AiBoundaryValidationError('Portfolio AI provider response identity conflicts.');
   }
+}
+
+function isTerminalStatus(status: AiExecutionStatus): boolean {
+  return status === AiExecutionStatus.Completed || status === AiExecutionStatus.Failed;
 }
 
 function sameModelReference(

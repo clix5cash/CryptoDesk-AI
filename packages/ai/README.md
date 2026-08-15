@@ -456,3 +456,9 @@ the descriptor's explicit execution/provider/model identity and references a
 detached copy of the already validated raw result. The envelope accepts no
 canonical Portfolio fields and performs no parsing, interpretation, grounding,
 trust promotion, provider-specific mapping, or runtime invocation.
+
+Sprint 8G.2 hardens that provider-neutral response boundary with exact terminal
+success/failure status, execution/provider/model identity, raw-result ownership,
+trust, and unsupported-field validation. Raw output remains opaque and
+untrusted: validation does not parse model content, ground claims, create
+interpretations, or create canonical Portfolio facts.

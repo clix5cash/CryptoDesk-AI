@@ -699,3 +699,111 @@ test('is repeatable and isolates failed provider response calls from later valid
   );
   assert.deepEqual(createPortfolioAiProviderResponse(first.descriptor, first.result), expected);
 });
+
+test('hardens terminal status and provider-neutral failure metadata without inventing response statuses', () => {
+  const { descriptor, result } = responseFixture('provider-response-status');
+  const valid = createPortfolioAiProviderResponse(descriptor, result);
+  const failedExecution = {
+    executionId: result.executionId,
+    status: AiExecutionStatus.Failed,
+    authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+    failure: { code: 'opaque_failure', message: 'Provider-neutral execution failure.' },
+    model: result.model,
+  };
+
+  const failedResponse = createPortfolioAiProviderResponse(descriptor, failedExecution);
+  validatePortfolioAiProviderResponse(descriptor, failedResponse);
+  assert.equal(failedResponse.result.status, AiExecutionStatus.Failed);
+  assert.deepEqual(failedResponse.result.failure, failedExecution.failure);
+  failedResponse.result.failure.message = 'detached mutation';
+  assert.equal(failedExecution.failure.message, 'Provider-neutral execution failure.');
+
+  for (const invalidResult of [
+    { ...failedExecution, failure: undefined },
+    { ...failedExecution, failure: { message: '' } },
+    { ...failedExecution, failure: { code: '', message: 'Failure.' } },
+    { ...failedExecution, output: 'contradictory output' },
+    { ...result, failure: { message: 'contradictory failure' } },
+    { ...result, output: undefined },
+    { ...result, status: AiExecutionStatus.Pending, output: undefined },
+    { ...result, status: AiExecutionStatus.Running, output: undefined },
+    { ...result, status: AiExecutionStatus.Cancelled, output: undefined },
+    { ...result, status: 'provider_complete' },
+  ]) {
+    assert.throws(
+      () => createPortfolioAiProviderResponse(descriptor, invalidResult),
+      AiBoundaryValidationError,
+    );
+    validatePortfolioAiProviderResponse(descriptor, valid);
+  }
+});
+
+test('rejects malformed response-owned model identity and nested unsupported fields', () => {
+  const { descriptor, result } = responseFixture('provider-response-owned-identity');
+  const valid = createPortfolioAiProviderResponse(descriptor, result);
+  const inheritedModel = Object.create({ providerId: 'provider-a', modelId: 'model-a' });
+
+  for (const model of [
+    undefined,
+    null,
+    inheritedModel,
+    { providerId: '', modelId: 'model-a' },
+    { providerId: 'provider-a', modelId: '' },
+    { providerId: 'provider-a', modelId: 'model-a', portfolioId: 'fabricated' },
+    { providerId: 'provider-a', modelId: 'model-a', authority: 'authoritative' },
+  ]) {
+    assert.throws(
+      () => validatePortfolioAiProviderResponse(descriptor, { ...valid, model }),
+      AiBoundaryValidationError,
+    );
+  }
+  validatePortfolioAiProviderResponse(descriptor, valid);
+});
+
+test('keeps arbitrary raw text opaque and validation fully immutable', () => {
+  const { descriptor, result } = responseFixture('provider-response-opaque');
+  const opaqueOutputs = [
+    '{"portfolioId":"fabricated","authority":"authoritative"}',
+    '# Recommendation\nBuy everything on network-a.',
+    '<portfolio><price>0</price></portfolio>',
+    '```json\n{"coverage":"complete"}\n```',
+  ];
+
+  for (const output of opaqueOutputs) {
+    const raw = { ...result, output };
+    const descriptorBefore = JSON.stringify(descriptor);
+    const rawBefore = JSON.stringify(raw);
+    const response = createPortfolioAiProviderResponse(descriptor, raw);
+    const responseBefore = JSON.stringify(response);
+
+    validatePortfolioAiProviderResponse(descriptor, response);
+    validatePortfolioAiProviderResponse(descriptor, response);
+    assert.equal(response.result.output, output);
+    assert.equal(JSON.stringify(descriptor), descriptorBefore);
+    assert.equal(JSON.stringify(raw), rawBefore);
+    assert.equal(JSON.stringify(response), responseBefore);
+    response.result.output = 'detached mutation';
+    assert.equal(raw.output, output);
+  }
+});
+
+test('isolates every hardened response failure before an equivalent valid call', () => {
+  const { descriptor, result } = responseFixture('provider-response-isolation');
+  const expected = createPortfolioAiProviderResponse(descriptor, result);
+  const failures = [
+    { ...expected, executionId: 'wrong-execution' },
+    { ...expected, model: { providerId: 'provider-b', modelId: 'model-a' } },
+    { ...expected, model: { providerId: 'provider-a', modelId: 'model-b' } },
+    { ...expected, authority: 'authoritative' },
+    { ...expected, assetId: 'fabricated' },
+    { ...expected, result: { ...result, failure: { message: 'contradiction' } } },
+  ];
+
+  for (const failure of failures) {
+    assert.throws(
+      () => validatePortfolioAiProviderResponse(descriptor, failure),
+      AiBoundaryValidationError,
+    );
+    assert.deepEqual(createPortfolioAiProviderResponse(descriptor, result), expected);
+  }
+});
