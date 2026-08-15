@@ -462,3 +462,19 @@ success/failure status, execution/provider/model identity, raw-result ownership,
 trust, and unsupported-field validation. Raw output remains opaque and
 untrusted: validation does not parse model content, ground claims, create
 interpretations, or create canonical Portfolio facts.
+
+Sprint 8G.3 adds an opt-in structural normalization boundary:
+
+```text
+PortfolioAiProviderResponse
+        ↓
+PortfolioAiNormalizedProviderResponse
+        ↓
+future candidate/interpretation boundary
+```
+
+Normalization preserves terminal status, exact execution/provider/model
+identity, provider-neutral failure data, opaque raw output, source-response
+traceability, and `untrusted_model_execution`. It performs no JSON or prose
+parsing, semantic interpretation, grounding, candidate generation, or creation
+of canonical Portfolio facts.

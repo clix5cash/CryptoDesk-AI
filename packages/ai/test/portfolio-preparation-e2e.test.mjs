@@ -16,12 +16,14 @@ import {
   createPortfolioAiProviderResponse,
   invokePortfolioAiProviderAdapterBridge,
   mapPortfolioAiProviderRequest,
+  normalizePortfolioAiProviderResponse,
   validatePortfolioAiMessagePlan,
   validatePortfolioAiModelInput,
   validatePortfolioAiPromptDocument,
   validatePortfolioAiProviderRequest,
   validatePortfolioAiProviderRequestDescriptor,
   validatePortfolioAiProviderResponse,
+  validatePortfolioAiNormalizedProviderResponse,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -805,5 +807,157 @@ test('isolates every hardened response failure before an equivalent valid call',
       AiBoundaryValidationError,
     );
     assert.deepEqual(createPortfolioAiProviderResponse(descriptor, result), expected);
+  }
+});
+
+test('normalizes completed provider responses without changing opaque output or traceability', () => {
+  const { prepared, descriptor, result } = responseFixture('normalized-response-completed');
+  const response = createPortfolioAiProviderResponse(descriptor, {
+    ...result,
+    output: '```json\n{"recommendation":"buy","price":"1.234500"}\n```',
+  });
+  const before = JSON.stringify({ descriptor, response });
+  const normalized = normalizePortfolioAiProviderResponse(descriptor, response);
+
+  validatePortfolioAiNormalizedProviderResponse(descriptor, normalized);
+  assert.equal(normalized.executionId, response.executionId);
+  assert.deepEqual(normalized.model, response.model);
+  assert.equal(normalized.status, AiExecutionStatus.Completed);
+  assert.equal(normalized.authority, 'untrusted_model_execution');
+  assert.equal(normalized.output, response.result.output);
+  assert.equal(normalized.failure, undefined);
+  assert.deepEqual(normalized.source, response);
+  assert.equal(
+    descriptor.request.promptDocument.plan.input.context.summary.totalValuedValue,
+    '900719925474099312345678.1234',
+  );
+  assert.equal(prepared.context.summary.coverage.state, 'partial');
+  assert.deepEqual(
+    prepared.context.facts
+      .filter((fact) => fact.evidence.insight.asset?.symbol === 'USDC')
+      .map((fact) => [fact.evidence.insight.asset.id, fact.evidence.insight.asset.networkId]),
+    [
+      ['asset-a', 'network-a'],
+      ['asset-b', 'network-b'],
+    ],
+  );
+  assert.deepEqual(
+    prepared.context.facts
+      .map((fact) => fact.evidence.insight.unavailableReason)
+      .filter((reason) => reason !== undefined),
+    [
+      'missing_price',
+      'missing_decimals',
+      'missing_network_provenance',
+      'missing_source_provenance',
+      'missing_account_provenance',
+    ],
+  );
+  assert.equal(JSON.stringify({ descriptor, response }), before);
+  normalized.model.providerId = 'detached';
+  normalized.source.result.output = 'detached';
+  assert.equal(response.model.providerId, 'provider-a');
+  assert.notEqual(response.result.output, 'detached');
+});
+
+test('normalizes failed provider responses with detached provider-neutral failure data', () => {
+  const { descriptor, result } = responseFixture('normalized-response-failed');
+  const response = createPortfolioAiProviderResponse(descriptor, {
+    executionId: result.executionId,
+    status: AiExecutionStatus.Failed,
+    authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+    failure: { code: 'opaque_failure', message: '{"vendorCause":"unknown"}' },
+    model: result.model,
+  });
+  const responseBefore = JSON.stringify(response);
+  const normalized = normalizePortfolioAiProviderResponse(descriptor, response);
+
+  validatePortfolioAiNormalizedProviderResponse(descriptor, normalized);
+  assert.equal(normalized.status, AiExecutionStatus.Failed);
+  assert.equal(normalized.output, undefined);
+  assert.deepEqual(normalized.failure, response.result.failure);
+  assert.equal(normalized.authority, 'untrusted_model_execution');
+  assert.equal(JSON.stringify(response), responseBefore);
+  normalized.failure.message = 'detached';
+  normalized.source.result.failure.code = 'detached';
+  assert.equal(response.result.failure.message, '{"vendorCause":"unknown"}');
+  assert.equal(response.result.failure.code, 'opaque_failure');
+});
+
+test('rejects malformed, mismatched, injected, and unsupported normalized responses', () => {
+  const { descriptor, result } = responseFixture('normalized-response-invalid');
+  const response = createPortfolioAiProviderResponse(descriptor, result);
+  const valid = normalizePortfolioAiProviderResponse(descriptor, response);
+  const invalid = [
+    null,
+    { ...valid, status: AiExecutionStatus.Running, output: undefined },
+    { ...valid, status: AiExecutionStatus.Failed, output: undefined, failure: undefined },
+    { ...valid, executionId: 'wrong-execution' },
+    { ...valid, model: { providerId: 'provider-b', modelId: 'model-a' } },
+    { ...valid, model: { providerId: 'provider-a', modelId: 'model-b' } },
+    { ...valid, authority: 'untrusted_candidate_interpretation' },
+    { ...valid, portfolioId: 'fabricated' },
+    { ...valid, price: '1' },
+    { ...valid, provenance: {} },
+    { ...valid, semanticContent: {} },
+    { ...valid, failure: { portfolioId: 'fabricated' } },
+    { ...valid, source: null },
+    { ...valid, source: { ...response, executionId: 'wrong-execution' } },
+    { ...valid, source: { ...response, assetId: 'fabricated' } },
+    { ...valid, output: `${valid.output} altered` },
+  ];
+
+  for (const value of invalid) {
+    assert.throws(
+      () => validatePortfolioAiNormalizedProviderResponse(descriptor, value),
+      AiBoundaryValidationError,
+    );
+  }
+  const failed = createPortfolioAiProviderResponse(descriptor, {
+    executionId: result.executionId,
+    status: AiExecutionStatus.Failed,
+    authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+    failure: { message: 'Failure.' },
+    model: result.model,
+  });
+  const normalizedFailed = normalizePortfolioAiProviderResponse(descriptor, failed);
+  assert.throws(
+    () =>
+      validatePortfolioAiNormalizedProviderResponse(descriptor, {
+        ...normalizedFailed,
+        failure: { message: '', canonicalTimestamp: '2026-08-15T00:00:00.000Z' },
+      }),
+    AiBoundaryValidationError,
+  );
+  validatePortfolioAiNormalizedProviderResponse(descriptor, valid);
+});
+
+test('normalization is repeatable and isolates failed calls from later valid calls', () => {
+  const first = responseFixture('normalized-response-repeatable');
+  const second = responseFixture('normalized-response-repeatable');
+  const firstResponse = createPortfolioAiProviderResponse(first.descriptor, first.result);
+  const secondResponse = createPortfolioAiProviderResponse(second.descriptor, second.result);
+  const expected = normalizePortfolioAiProviderResponse(first.descriptor, firstResponse);
+  const failures = [
+    { ...firstResponse, result: { ...firstResponse.result, status: AiExecutionStatus.Running } },
+    { ...firstResponse, result: { ...firstResponse.result, failure: { message: '' } } },
+    { ...firstResponse, executionId: 'wrong-execution' },
+    { ...firstResponse, authority: 'authoritative' },
+    { ...firstResponse, coverage: 'complete' },
+  ];
+
+  assert.deepEqual(
+    normalizePortfolioAiProviderResponse(second.descriptor, secondResponse),
+    expected,
+  );
+  for (const failure of failures) {
+    assert.throws(
+      () => normalizePortfolioAiProviderResponse(first.descriptor, failure),
+      AiBoundaryValidationError,
+    );
+    assert.deepEqual(
+      normalizePortfolioAiProviderResponse(first.descriptor, firstResponse),
+      expected,
+    );
   }
 });
