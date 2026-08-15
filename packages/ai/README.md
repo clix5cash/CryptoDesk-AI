@@ -478,3 +478,22 @@ identity, provider-neutral failure data, opaque raw output, source-response
 traceability, and `untrusted_model_execution`. It performs no JSON or prose
 parsing, semantic interpretation, grounding, candidate generation, or creation
 of canonical Portfolio facts.
+
+Sprint 8G.4 closes the provider-response path:
+
+```text
+provider-neutral adapter bridge
+        ↓
+raw untrusted_model_execution
+        ↓
+PortfolioAiProviderResponse
+        ↓
+structural validation and normalization
+        ↓
+PortfolioAiNormalizedProviderResponse
+```
+
+Raw output remains opaque, normalization remains structural, and trust remains
+untrusted. Sprint 8G performs no candidate extraction, grounding,
+interpretation, recommendation, concrete provider integration, or provider
+runtime behavior.
