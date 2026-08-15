@@ -6,6 +6,9 @@ Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 Detailed dependency contract:
 [Sprint 9 MVP Component and Dependency Map](./sprint-9-mvp-component-map.md)
 
+Runtime and integration contract:
+[Sprint 9 MVP Integration Contract](./sprint-9-mvp-integration-contract.md)
+
 ## Purpose and scope
 
 This document records the architecture implemented after Sprint 8 and defines

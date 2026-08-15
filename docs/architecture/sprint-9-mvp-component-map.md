@@ -5,6 +5,9 @@ Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 Inventory baseline:
 [Sprint 9 MVP Architecture Inventory](./sprint-9-mvp-architecture-inventory.md)
 
+Runtime and integration contract:
+[Sprint 9 MVP Integration Contract](./sprint-9-mvp-integration-contract.md)
+
 ## Scope
 
 This map converts the implemented Sprint 8 inventory into the component,
