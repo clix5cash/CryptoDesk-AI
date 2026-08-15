@@ -449,3 +449,10 @@ adapter invocation per bridge call; no concrete provider runtime, network,
 credentials, vendor request body, retry, fallback, or routing exists. Raw
 execution output remains untrusted and requires the existing separate candidate
 and grounding boundaries.
+
+Sprint 8G.1 adds `PortfolioAiProviderResponse`, an opt-in provider-neutral
+envelope immediately after completed `untrusted_model_execution`. It preserves
+the descriptor's explicit execution/provider/model identity and references a
+detached copy of the already validated raw result. The envelope accepts no
+canonical Portfolio fields and performs no parsing, interpretation, grounding,
+trust promotion, provider-specific mapping, or runtime invocation.

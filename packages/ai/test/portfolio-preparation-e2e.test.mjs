@@ -13,6 +13,7 @@ import {
   createPortfolioAiModelInput,
   createPortfolioAiPromptDocument,
   createPortfolioAiProviderRequest,
+  createPortfolioAiProviderResponse,
   invokePortfolioAiProviderAdapterBridge,
   mapPortfolioAiProviderRequest,
   validatePortfolioAiMessagePlan,
@@ -20,6 +21,7 @@ import {
   validatePortfolioAiPromptDocument,
   validatePortfolioAiProviderRequest,
   validatePortfolioAiProviderRequestDescriptor,
+  validatePortfolioAiProviderResponse,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -589,4 +591,111 @@ test('closes the provider-request preparation and bridge path without provider r
     'untrusted_model_execution',
   );
   assert.equal(calls, 2);
+});
+
+function responseFixture(executionId = 'provider-response-1') {
+  const prepared = preparation();
+  const descriptor = mapPortfolioAiProviderRequest(
+    createPortfolioAiProviderRequest({
+      executionId,
+      model: { providerId: 'provider-a', modelId: 'model-a' },
+      promptDocument: prepared.document,
+    }),
+  );
+  const result = {
+    executionId,
+    status: AiExecutionStatus.Completed,
+    authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+    output: 'Opaque raw output: 900719925474099312345678.1234; missing_price.',
+    model: { providerId: 'provider-a', modelId: 'model-a' },
+    usage: { inputUnits: 9007199254740991, outputUnits: 0 },
+  };
+  return { prepared, descriptor, result };
+}
+
+test('creates a detached provider response with exact execution/provider/model identity and untrusted state', () => {
+  const { prepared, descriptor, result } = responseFixture();
+  const before = JSON.stringify({ descriptor, result });
+  const response = createPortfolioAiProviderResponse(descriptor, result);
+
+  validatePortfolioAiProviderResponse(descriptor, response);
+  assert.equal(response.executionId, descriptor.executionId);
+  assert.deepEqual(response.model, descriptor.model);
+  assert.equal(response.authority, 'untrusted_model_execution');
+  assert.deepEqual(response.result, result);
+  assert.equal(response.result.output, result.output);
+  assert.equal(response.result.usage.inputUnits, 9007199254740991);
+  assert.equal(prepared.context.summary.totalValuedValue, '900719925474099312345678.1234');
+  assert.equal(prepared.context.summary.coverage.state, 'partial');
+  assert.deepEqual(
+    prepared.context.facts
+      .filter((fact) => fact.evidence.insight.asset?.symbol === 'USDC')
+      .map((fact) => [fact.evidence.insight.asset.id, fact.evidence.insight.asset.networkId]),
+    [
+      ['asset-a', 'network-a'],
+      ['asset-b', 'network-b'],
+    ],
+  );
+  assert.ok(
+    prepared.context.facts.some(
+      (fact) => fact.evidence.insight.unavailableReason === 'missing_price',
+    ),
+  );
+  response.result.output = 'detached mutation';
+  response.model.providerId = 'detached mutation';
+  assert.equal(result.output, 'Opaque raw output: 900719925474099312345678.1234; missing_price.');
+  assert.equal(descriptor.model.providerId, 'provider-a');
+  assert.equal(JSON.stringify({ descriptor, result }), before);
+});
+
+test('rejects malformed, mismatched, injected, non-completed, and promoted provider responses', () => {
+  const { descriptor, result } = responseFixture('provider-response-invalid');
+  const valid = createPortfolioAiProviderResponse(descriptor, result);
+  const invalid = [
+    null,
+    { ...valid, executionId: 'wrong-execution' },
+    { ...valid, model: { providerId: 'provider-b', modelId: 'model-a' } },
+    { ...valid, model: { providerId: 'provider-a', modelId: 'model-b' } },
+    { ...valid, authority: 'untrusted_candidate_interpretation' },
+    { ...valid, authority: 'non_authoritative_interpretation' },
+    { ...valid, portfolioId: 'fabricated' },
+    { ...valid, price: '1.00' },
+    { ...valid, coverageState: 'complete' },
+    { ...valid, provenance: {} },
+    { ...valid, result: { ...result, executionId: 'wrong-execution' } },
+    { ...valid, result: { ...result, portfolioId: 'fabricated' } },
+    { ...valid, result: { ...result, authority: 'non_authoritative_interpretation' } },
+    {
+      ...valid,
+      result: { ...result, status: AiExecutionStatus.Running, output: undefined },
+    },
+  ];
+  for (const value of invalid) {
+    assert.throws(
+      () => validatePortfolioAiProviderResponse(descriptor, value),
+      AiBoundaryValidationError,
+    );
+  }
+  assert.throws(
+    () => createPortfolioAiProviderResponse(descriptor, { ...result, model: undefined }),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(createPortfolioAiProviderResponse(descriptor, result), valid);
+});
+
+test('is repeatable and isolates failed provider response calls from later valid calls', () => {
+  const first = responseFixture('provider-response-repeatable');
+  const second = responseFixture('provider-response-repeatable');
+  const expected = createPortfolioAiProviderResponse(first.descriptor, first.result);
+
+  assert.deepEqual(createPortfolioAiProviderResponse(second.descriptor, second.result), expected);
+  assert.throws(
+    () =>
+      createPortfolioAiProviderResponse(first.descriptor, {
+        ...first.result,
+        result: 'unsupported',
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.deepEqual(createPortfolioAiProviderResponse(first.descriptor, first.result), expected);
 });

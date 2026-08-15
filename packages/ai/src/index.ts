@@ -13,6 +13,7 @@ export * from './portfolio-prompt-document.js';
 export * from './portfolio-provider-request.js';
 export * from './portfolio-provider-request-descriptor.js';
 export * from './portfolio-provider-adapter-bridge.js';
+export * from './portfolio-provider-response.js';
 export * from './portfolio-model-adapters.js';
 export * from './portfolio-model-execution-service.js';
 export * from './portfolio-model-output-interpretation.js';
