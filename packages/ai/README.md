@@ -497,3 +497,11 @@ Raw output remains opaque, normalization remains structural, and trust remains
 untrusted. Sprint 8G performs no candidate extraction, grounding,
 interpretation, recommendation, concrete provider integration, or provider
 runtime behavior.
+
+Sprint 8H.1 adds `PortfolioAiProviderExchange`, an opt-in provider-neutral
+envelope binding one validated request descriptor (and its retained provider
+request) to one normalized terminal provider response. The exchange preserves
+exact execution/provider/model identity, terminal status, artifact traceability,
+and `untrusted_model_execution` without rebuilding canonical evidence or
+inspecting opaque model output. It adds no provider runtime, parsing, grounding,
+interpretation, routing, or canonical Portfolio authority.

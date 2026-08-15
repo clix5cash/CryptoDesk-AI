@@ -11,6 +11,7 @@ import {
   createPortfolioAiMessagePlan,
   createPortfolioAiModelInput,
   createPortfolioAiPromptDocument,
+  createPortfolioAiProviderExchange,
   createPortfolioAiProviderRequest,
   createPortfolioAiProviderResponse,
   invokePortfolioAiProviderAdapterBridge,
@@ -18,6 +19,7 @@ import {
   normalizePortfolioAiProviderResponse,
   validatePortfolioAiNormalizedProviderResponse,
   validatePortfolioAiProviderResponse,
+  validatePortfolioAiProviderExchange,
 } from '../dist/index.js';
 
 function sectionId(section) {
@@ -313,4 +315,134 @@ test('isolates bridge and response-boundary failures before later valid closure 
     AiBoundaryValidationError,
   );
   assert.deepEqual(await runValid(), expected);
+});
+
+async function exchangeFixture(executionId = 'provider-exchange') {
+  const sourceDescriptor = descriptor(executionId);
+  const raw = await invokePortfolioAiProviderAdapterBridge(
+    registryFor((input) => completed(input)),
+    sourceDescriptor,
+  );
+  const providerResponse = createPortfolioAiProviderResponse(sourceDescriptor, raw);
+  const normalized = normalizePortfolioAiProviderResponse(sourceDescriptor, providerResponse);
+  return {
+    sourceDescriptor,
+    raw,
+    providerResponse,
+    normalized,
+    exchange: createPortfolioAiProviderExchange(sourceDescriptor, normalized),
+  };
+}
+
+test('binds one detached provider-neutral request and completed response exchange', async () => {
+  const fixture = await exchangeFixture('provider-exchange-completed');
+  const before = JSON.stringify({
+    descriptor: fixture.sourceDescriptor,
+    normalized: fixture.normalized,
+  });
+
+  validatePortfolioAiProviderExchange(fixture.exchange);
+  assert.equal(fixture.exchange.executionId, fixture.sourceDescriptor.executionId);
+  assert.deepEqual(fixture.exchange.model, fixture.sourceDescriptor.model);
+  assert.equal(fixture.exchange.status, AiExecutionStatus.Completed);
+  assert.equal(fixture.exchange.authority, 'untrusted_model_execution');
+  assert.deepEqual(fixture.exchange.descriptor, fixture.sourceDescriptor);
+  assert.deepEqual(fixture.exchange.descriptor.request, fixture.sourceDescriptor.request);
+  assert.deepEqual(fixture.exchange.response, fixture.normalized);
+  assert.equal(fixture.exchange.response.output, fixture.raw.output);
+  const context = fixture.exchange.descriptor.request.promptDocument.plan.input.context;
+  assert.equal(context.summary.totalValuedValue, '900719925474099312345678.1234');
+  assert.equal(context.summary.coverage.state, 'partial');
+  assert.deepEqual(
+    context.facts
+      .filter((fact) => fact.evidence.insight.asset?.symbol === 'USDC')
+      .map((fact) => [fact.evidence.insight.asset.id, fact.evidence.insight.asset.networkId]),
+    [
+      ['asset-a', 'network-a'],
+      ['asset-b', 'network-b'],
+    ],
+  );
+  assert.ok(
+    context.facts.some((fact) => fact.evidence.insight.unavailableReason === 'missing_price'),
+  );
+  assert.ok(
+    context.facts.some((fact) => fact.evidence.insight.unavailableReason === 'missing_decimals'),
+  );
+  assert.equal(
+    JSON.stringify({ descriptor: fixture.sourceDescriptor, normalized: fixture.normalized }),
+    before,
+  );
+  fixture.exchange.model.providerId = 'detached';
+  fixture.exchange.descriptor.request.promptDocument.plan.input.factIds[0] = 'detached';
+  fixture.exchange.response.source.result.output = 'detached';
+  assert.equal(fixture.sourceDescriptor.model.providerId, 'provider-closure');
+  assert.notEqual(
+    fixture.sourceDescriptor.request.promptDocument.plan.input.factIds[0],
+    'detached',
+  );
+  assert.equal(fixture.normalized.output, fixture.raw.output);
+});
+
+test('binds failed exchanges and rejects identity, trust, canonical, and reference injection', async () => {
+  const sourceDescriptor = descriptor('provider-exchange-failed');
+  const raw = await invokePortfolioAiProviderAdapterBridge(
+    registryFor((input) => ({
+      executionId: input.executionId,
+      status: AiExecutionStatus.Failed,
+      authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+      failure: { code: 'opaque_failure', message: 'Provider-neutral failure.' },
+      model: input.model,
+    })),
+    sourceDescriptor,
+  );
+  const normalized = normalizePortfolioAiProviderResponse(
+    sourceDescriptor,
+    createPortfolioAiProviderResponse(sourceDescriptor, raw),
+  );
+  const exchange = createPortfolioAiProviderExchange(sourceDescriptor, normalized);
+
+  validatePortfolioAiProviderExchange(exchange);
+  assert.equal(exchange.status, AiExecutionStatus.Failed);
+  assert.deepEqual(exchange.response.failure, raw.failure);
+  assert.equal(exchange.response.output, undefined);
+  for (const invalid of [
+    null,
+    { ...exchange, executionId: 'wrong-execution' },
+    { ...exchange, model: { providerId: 'other', modelId: 'model-closure' } },
+    { ...exchange, model: { providerId: 'provider-closure', modelId: 'other' } },
+    { ...exchange, status: AiExecutionStatus.Completed },
+    { ...exchange, authority: 'non_authoritative_interpretation' },
+    { ...exchange, portfolioId: 'fabricated' },
+    { ...exchange, price: '1' },
+    { ...exchange, coverage: 'complete' },
+    { ...exchange, provenance: {} },
+    { ...exchange, descriptor: { ...exchange.descriptor, executionId: 'wrong-execution' } },
+    { ...exchange, response: { ...exchange.response, executionId: 'wrong-execution' } },
+    { ...exchange, response: { ...exchange.response, authority: 'authoritative' } },
+  ]) {
+    assert.throws(() => validatePortfolioAiProviderExchange(invalid), AiBoundaryValidationError);
+  }
+  validatePortfolioAiProviderExchange(exchange);
+});
+
+test('keeps provider exchanges repeatable and isolates failed calls', async () => {
+  const first = await exchangeFixture('provider-exchange-repeatable');
+  const second = await exchangeFixture('provider-exchange-repeatable');
+  const expected = first.exchange;
+  assert.deepEqual(second.exchange, expected);
+
+  const failures = [
+    { ...expected, executionId: 'wrong-execution' },
+    { ...expected, authority: 'untrusted_candidate_interpretation' },
+    { ...expected, assetId: 'fabricated' },
+    { ...expected, response: null },
+    { ...expected, descriptor: { ...expected.descriptor, messages: [] } },
+  ];
+  for (const failure of failures) {
+    assert.throws(() => validatePortfolioAiProviderExchange(failure), AiBoundaryValidationError);
+    assert.deepEqual(
+      createPortfolioAiProviderExchange(first.sourceDescriptor, first.normalized),
+      expected,
+    );
+  }
 });
