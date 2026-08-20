@@ -4,6 +4,8 @@ import {
   type PortfolioAiModelExecutionResult,
   type PortfolioAiModelProviderAdapter,
   PortfolioAiRawExecutionAuthority,
+  type PortfolioAiProviderRequestDescriptor,
+  validatePortfolioAiProviderRequestDescriptor,
 } from '@cryptodesk-ai/ai';
 
 const OPENAI_PROVIDER_ID = 'openai';
@@ -47,31 +49,60 @@ export function createOpenAiPortfolioModelProviderAdapter(
   return {
     providerId: OPENAI_PROVIDER_ID,
     async execute(request) {
-      if (request.model?.providerId !== OPENAI_PROVIDER_ID) {
-        return failed(request, 'provider_identity_mismatch', 'Provider identity is not supported.');
-      }
-      if (request.model.modelId === undefined) {
-        return failed(request, 'model_required', 'An explicit model identity is required.');
-      }
-
-      try {
-        const response = await transport({
-          endpoint: runtime.endpoint,
-          authorization: `Bearer ${runtime.apiKey}`,
-          body: {
-            model: request.model.modelId,
-            input: JSON.stringify(request.context),
-          },
-        });
-        const payload = await response.json();
-        if (!response.ok) {
-          return failed(request, 'provider_request_failed', 'The provider request failed.');
-        }
-        return mapCompletedResponse(request, payload);
-      } catch {
-        return failed(request, 'provider_transport_failed', 'The provider transport failed.');
-      }
+      return executeOpenAiRequest(request, JSON.stringify(request.context), runtime, transport);
     },
+    async executeProviderRequest(descriptor) {
+      validatePortfolioAiProviderRequestDescriptor(descriptor);
+      const request = executionRequestFromDescriptor(descriptor);
+      return executeOpenAiRequest(
+        request,
+        JSON.stringify(descriptor.request.promptDocument),
+        runtime,
+        transport,
+      );
+    },
+  };
+}
+
+async function executeOpenAiRequest(
+  request: PortfolioAiModelExecutionRequest,
+  input: string,
+  runtime: OpenAiPortfolioRuntimeConfiguration,
+  transport: OpenAiRuntimeTransport,
+): Promise<PortfolioAiModelExecutionResult> {
+  if (request.model?.providerId !== OPENAI_PROVIDER_ID) {
+    return failed(request, 'provider_identity_mismatch', 'Provider identity is not supported.');
+  }
+  if (request.model.modelId === undefined) {
+    return failed(request, 'model_required', 'An explicit model identity is required.');
+  }
+
+  try {
+    const response = await transport({
+      endpoint: runtime.endpoint,
+      authorization: `Bearer ${runtime.apiKey}`,
+      body: {
+        model: request.model.modelId,
+        input,
+      },
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      return failed(request, 'provider_request_failed', 'The provider request failed.');
+    }
+    return mapCompletedResponse(request, payload);
+  } catch {
+    return failed(request, 'provider_transport_failed', 'The provider transport failed.');
+  }
+}
+
+function executionRequestFromDescriptor(
+  descriptor: PortfolioAiProviderRequestDescriptor,
+): PortfolioAiModelExecutionRequest {
+  return {
+    executionId: descriptor.executionId,
+    context: descriptor.request.promptDocument.plan.input.context,
+    model: descriptor.model,
   };
 }
 

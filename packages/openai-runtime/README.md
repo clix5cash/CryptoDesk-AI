@@ -1,7 +1,9 @@
 # `@cryptodesk-ai/openai-runtime`
 
-Sprint 9B.1 introduces a minimal concrete OpenAI Responses runtime behind the
-existing `PortfolioAiModelProviderAdapter` interface. The package depends
+Sprint 9B.1 introduced a minimal concrete OpenAI Responses runtime behind the
+existing `PortfolioAiModelProviderAdapter` interface. Sprint 9B.2 adds the
+optional provider-request invocation seam so the same adapter can consume the
+complete validated `PortfolioAiProviderRequestDescriptor`. The package depends
 inward on `@cryptodesk-ai/ai`; neither AI nor Portfolio depends on this package.
 
 The factory requires an explicit HTTPS endpoint and API key. Both remain in a
@@ -12,8 +14,12 @@ the existing provider-neutral `Completed` or `Failed` result with
 provider/model defaulting, candidate parsing, grounding, recommendation, or
 application integration.
 
-Current limitation: the frozen adapter seam receives the established model
-execution request (canonical context and explicit identity), not the newer
-prompt document or descriptor. The runtime therefore serializes that validated
-context as the Responses API input. Exposing the complete repository-owned
-prompt document to a concrete runtime remains outside Sprint 9B.1.
+Descriptor-aware invocation serializes the exact validated repository-owned
+prompt document into the vendor `input` field. Vendor body construction remains
+inside this package. The original `execute(PortfolioAiModelExecutionRequest)`
+path remains supported and continues to serialize its validated context for
+legacy callers.
+
+The runtime still performs no candidate parsing or grounding. Gap B, Gap C,
+Morning Meeting composition, retry/fallback/routing, and application lifecycle
+remain outside Sprint 9B.2.

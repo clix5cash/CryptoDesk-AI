@@ -230,3 +230,19 @@ descriptor, so the runtime currently serializes validated canonical context as
 vendor input. Sprint 9B.1 adds no candidate parsing, grounding, Morning Meeting
 composition, retry, fallback, routing, application lifecycle, or Sprint 10
 capability.
+
+## Sprint 9B.2 implementation note
+
+Sprint 9B.2 adds an optional descriptor-aware method to the existing
+provider-neutral adapter contract and a validated one-adapter invocation
+helper. The established execution-request API, registry, execution service, and
+legacy bridge fallback remain compatible. Descriptor-aware runtimes now receive
+the exact detached `PortfolioAiProviderRequestDescriptor`, including its source
+request and prompt document.
+
+The OpenAI runtime maps the validated repository-owned prompt document into its
+vendor request body inside the runtime boundary. Execution/provider/model
+identity remains exact, credentials remain runtime-owned, and terminal output
+re-enters AI only as `untrusted_model_execution`. Gap B, Gap C, Morning Meeting
+composition, retry/fallback/routing, and Sprint 10 capabilities remain
+unimplemented. Sprint 9B is not declared complete by this request-side change.

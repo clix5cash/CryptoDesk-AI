@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  AiBoundaryValidationError,
   AiExecutionStatus,
   PortfolioAiModelProviderRegistry,
   PortfolioAiRawExecutionAuthority,
@@ -47,7 +48,7 @@ function executionRequest(model = { providerId: 'openai', modelId: 'explicit-mod
   return { executionId: 'runtime-execution', context: context(), model };
 }
 
-function descriptor() {
+function descriptor(model = { providerId: 'openai', modelId: 'explicit-model' }) {
   const builtContext = context();
   const input = createPortfolioAiModelInput({
     task: PortfolioAiTask.Interpret,
@@ -59,7 +60,7 @@ function descriptor() {
   return mapPortfolioAiProviderRequest(
     createPortfolioAiProviderRequest({
       executionId: 'runtime-execution',
-      model: { providerId: 'openai', modelId: 'explicit-model' },
+      model,
       promptDocument,
     }),
   );
@@ -92,14 +93,20 @@ test('implements the existing adapter seam and maps one Completed response neutr
   );
   const registry = new PortfolioAiModelProviderRegistry();
   registry.register(adapter);
+  const sourceDescriptor = descriptor();
+  const before = JSON.stringify(sourceDescriptor);
 
-  const result = await invokePortfolioAiProviderAdapterBridge(registry, descriptor());
+  const result = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
 
   assert.equal(calls.length, 1);
-  assert.deepEqual(Object.keys(adapter).sort(), ['execute', 'providerId']);
+  assert.deepEqual(Object.keys(adapter).sort(), [
+    'execute',
+    'executeProviderRequest',
+    'providerId',
+  ]);
   assert.deepEqual(registry.list(), [{ providerId: 'openai' }]);
   assert.equal(calls[0].body.model, 'explicit-model');
-  assert.equal(JSON.parse(calls[0].body.input).summary.totalValuedValue, '9007199254740993.123456');
+  assert.deepEqual(JSON.parse(calls[0].body.input), sourceDescriptor.request.promptDocument);
   assert.equal(calls[0].authorization, `Bearer ${secret}`);
   assert.deepEqual(result, {
     executionId: 'runtime-execution',
@@ -112,6 +119,105 @@ test('implements the existing adapter seam and maps one Completed response neutr
   assert.equal(JSON.stringify(adapter).includes(secret), false);
   assert.equal(JSON.stringify(registry.list()).includes(secret), false);
   assert.equal(JSON.stringify(result).includes(secret), false);
+  assert.equal(JSON.stringify(sourceDescriptor), before);
+});
+
+test('maps request-chain failures once and isolates the next descriptor invocation', async () => {
+  let calls = 0;
+  const secret = 'request-chain-secret';
+  const adapter = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: secret, endpoint: 'https://api.openai.test/v1/responses' },
+    async () => {
+      calls += 1;
+      if (calls === 1) return response(false, { error: { message: secret } }, 503);
+      return response(true, {
+        status: 'completed',
+        model: 'explicit-model',
+        output: [{ content: [{ type: 'output_text', text: 'Recovered opaque output.' }] }],
+      });
+    },
+  );
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register(adapter);
+  const sourceDescriptor = descriptor();
+
+  const failed = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
+  const completed = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
+
+  assert.equal(calls, 2);
+  assert.equal(failed.status, AiExecutionStatus.Failed);
+  assert.equal(failed.failure.code, 'provider_request_failed');
+  assert.deepEqual(failed.model, sourceDescriptor.model);
+  assert.equal(JSON.stringify(failed).includes(secret), false);
+  assert.equal(completed.status, AiExecutionStatus.Completed);
+});
+
+test('rejects malformed request-chain identity and arbitrary prompt bypass before transport', async () => {
+  let calls = 0;
+  const adapter = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: 'secret', endpoint: 'https://api.openai.test/v1/responses' },
+    async () => {
+      calls += 1;
+      return response(true, {});
+    },
+  );
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register(adapter);
+  const valid = descriptor();
+
+  assert.throws(
+    () =>
+      invokePortfolioAiProviderAdapterBridge(registry, {
+        ...valid,
+        model: { providerId: 'openai', modelId: 'different-model' },
+      }),
+    AiBoundaryValidationError,
+  );
+  assert.throws(
+    () =>
+      invokePortfolioAiProviderAdapterBridge(registry, {
+        ...valid,
+        request: {
+          ...valid.request,
+          promptDocument: { ...valid.request.promptDocument, prompt: 'caller bypass' },
+        },
+      }),
+    AiBoundaryValidationError,
+  );
+  const otherProvider = {
+    ...valid,
+    model: { providerId: 'other-provider', modelId: 'explicit-model' },
+    request: {
+      ...valid.request,
+      model: { providerId: 'other-provider', modelId: 'explicit-model' },
+    },
+  };
+  await assert.rejects(
+    () => invokePortfolioAiProviderAdapterBridge(registry, otherProvider),
+    AiBoundaryValidationError,
+  );
+  assert.equal(calls, 0);
+});
+
+test('keeps direct legacy execution-request callers compatible', async () => {
+  const calls = [];
+  const adapter = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: 'secret', endpoint: 'https://api.openai.test/v1/responses' },
+    async (request) => {
+      calls.push(request);
+      return response(true, {
+        status: 'completed',
+        model: 'explicit-model',
+        output: [{ content: [{ type: 'output_text', text: 'Legacy opaque output.' }] }],
+      });
+    },
+  );
+  const request = executionRequest();
+  const result = await adapter.execute(request);
+
+  assert.equal(calls.length, 1);
+  assert.deepEqual(JSON.parse(calls[0].body.input), request.context);
+  assert.equal(result.status, AiExecutionStatus.Completed);
 });
 
 test('maps HTTP, malformed response, and thrown transport failures without credential leakage', async () => {
@@ -165,6 +271,16 @@ test('preserves optional model identity and never defaults or repairs identity',
     modelId: 'explicit-model',
   });
   assert.equal(wrongProvider.failure.code, 'provider_identity_mismatch');
+
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register(adapter);
+  const missingDescriptorModel = await invokePortfolioAiProviderAdapterBridge(
+    registry,
+    descriptor({ providerId: 'openai' }),
+  );
+  assert.equal(calls, 0);
+  assert.deepEqual(missingDescriptorModel.model, { providerId: 'openai' });
+  assert.equal(missingDescriptorModel.failure.code, 'model_required');
 });
 
 test('is deterministic across equivalent calls and isolates a failed call from the next call', async () => {

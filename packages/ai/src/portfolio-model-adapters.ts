@@ -8,6 +8,10 @@ import {
   validatePortfolioAiModelExecutionRequest,
   validatePortfolioAiModelExecutionResult,
 } from './portfolio-model-execution.js';
+import {
+  type PortfolioAiProviderRequestDescriptor,
+  validatePortfolioAiProviderRequestDescriptor,
+} from './portfolio-provider-request-descriptor.js';
 
 /** A provider-neutral async adapter for one explicitly selected opaque provider identity. */
 export interface PortfolioAiModelProviderAdapter {
@@ -15,6 +19,13 @@ export interface PortfolioAiModelProviderAdapter {
   /** Omitted means this adapter places no contract-level restriction on opaque model IDs. */
   readonly supportedModels?: ReadonlyArray<ModelId>;
   execute(request: PortfolioAiModelExecutionRequest): Promise<PortfolioAiModelExecutionResult>;
+  /**
+   * Optional additive request-chain seam. Implementations receive the complete
+   * validated provider-neutral descriptor without replacing legacy execution.
+   */
+  executeProviderRequest?(
+    descriptor: PortfolioAiProviderRequestDescriptor,
+  ): Promise<PortfolioAiModelExecutionResult>;
 }
 
 /** Detached registry view; functions are deliberately not exposed through deterministic listing. */
@@ -105,12 +116,52 @@ export async function invokePortfolioAiModelAdapter(
   return clone(result);
 }
 
+/**
+ * Resolves one explicit adapter and invokes its descriptor-aware runtime seam.
+ * No legacy fallback is performed here; callers choose that compatibility path
+ * explicitly through the established model-adapter invocation.
+ */
+export async function invokePortfolioAiProviderRequestAdapter(
+  registry: PortfolioAiModelProviderRegistry,
+  descriptor: PortfolioAiProviderRequestDescriptor,
+): Promise<PortfolioAiModelExecutionResult> {
+  if (!(registry instanceof PortfolioAiModelProviderRegistry)) {
+    throw new AiBoundaryValidationError('Portfolio AI model provider registry is invalid.');
+  }
+  validatePortfolioAiProviderRequestDescriptor(descriptor);
+  const adapter = registry.resolve(descriptor.model);
+  if (adapter.executeProviderRequest === undefined) {
+    throw new AiBoundaryValidationError(
+      'Portfolio AI model provider does not support provider request descriptors.',
+    );
+  }
+  const executionRequest = {
+    executionId: descriptor.executionId,
+    context: descriptor.request.promptDocument.plan.input.context,
+    model: descriptor.model,
+  };
+  let result: PortfolioAiModelExecutionResult;
+  try {
+    result = await adapter.executeProviderRequest(clone(descriptor));
+  } catch {
+    throw new AiBoundaryValidationError('Portfolio AI model adapter invocation failed.');
+  }
+  validatePortfolioAiModelExecutionResult(executionRequest, result);
+  return clone(result);
+}
+
 function validateAdapter(adapter: PortfolioAiModelProviderAdapter): void {
   if (
     !isPlainRecord(adapter) ||
-    !hasOnlyKeys(adapter, ['providerId', 'supportedModels', 'execute']) ||
+    !hasOnlyKeys(adapter, ['providerId', 'supportedModels', 'execute', 'executeProviderRequest']) ||
     !isNonEmptyString(adapter.providerId) ||
     typeof adapter.execute !== 'function'
+  ) {
+    throw new AiBoundaryValidationError('Portfolio AI model provider adapter is malformed.');
+  }
+  if (
+    adapter.executeProviderRequest !== undefined &&
+    typeof adapter.executeProviderRequest !== 'function'
   ) {
     throw new AiBoundaryValidationError('Portfolio AI model provider adapter is malformed.');
   }
