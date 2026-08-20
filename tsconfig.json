@@ -7,6 +7,7 @@
     { "path": "./packages/portfolio" },
     { "path": "./packages/morning-meeting" },
     { "path": "./packages/data" },
-    { "path": "./packages/integrations" }
+    { "path": "./packages/integrations" },
+    { "path": "./packages/openai-runtime" }
   ]
 }

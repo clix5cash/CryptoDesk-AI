@@ -214,3 +214,19 @@ The inventory, component/dependency/trust maps, and integration contract are
 consistent. Gap A/B/C ownership is fixed at Sprint 9B/9C/9D. Sprint 9B–9G gates
 and Sprint 10 non-goals are explicit. Sprint 9A introduces no production or
 runtime capability and is complete when repository validation passes.
+
+## Sprint 9B.1 implementation note
+
+Sprint 9B.1 adds `@cryptodesk-ai/openai-runtime` as the first concrete runtime
+outside Portfolio and AI. It depends inward on the existing AI-owned
+`PortfolioAiModelProviderAdapter`, owns OpenAI configuration, credentials,
+Responses request construction, HTTP transport, and terminal vendor-response
+mapping, and returns only the existing provider-neutral
+`untrusted_model_execution` result.
+
+This is a foundation, not full Gap A closure. The frozen bridge still supplies
+the established execution request rather than the newer prompt document or
+descriptor, so the runtime currently serializes validated canonical context as
+vendor input. Sprint 9B.1 adds no candidate parsing, grounding, Morning Meeting
+composition, retry, fallback, routing, application lifecycle, or Sprint 10
+capability.
