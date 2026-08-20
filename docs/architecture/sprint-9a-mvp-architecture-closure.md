@@ -263,3 +263,30 @@ contracts and is intentionally not added. Vendor bodies, exceptions, endpoint
 details, authorization, and credentials remain contained. Gap B/Sprint 9C, Gap
 C, Morning Meeting integration, retry/fallback/routing, and Sprint 10
 capabilities have not started. Sprint 9B is not declared complete here.
+
+## Sprint 9B.4 closure decision
+
+Sprint 9B is complete and Gap A is closed. The Sprint 9A acceptance gate is
+satisfied:
+
+| Sprint 9B criterion                                                                  | Result |
+| ------------------------------------------------------------------------------------ | ------ |
+| Concrete runtime outside Portfolio/domain                                            | PASS   |
+| Runtime depends inward on provider-neutral AI contracts                              | PASS   |
+| Vendor types and schemas remain outside Portfolio and AI                             | PASS   |
+| Validated request chain reaches the concrete runtime backward-compatibly             | PASS   |
+| Configuration, credentials, request construction, and transport remain runtime-owned | PASS   |
+| One explicitly selected invocation performs at most one transport attempt            | PASS   |
+| Completed and Failed results preserve exact execution/provider/model identity        | PASS   |
+| Operational failures are sanitized and provider-neutral                              | PASS   |
+| Output remains opaque `untrusted_model_execution` through ProviderExchange           | PASS   |
+| Legacy execution, service, registry, and bridge APIs remain valid                    | PASS   |
+| Portfolio has no AI/runtime dependency                                               | PASS   |
+| Deterministic repository validation passes without live credentials/network          | PASS   |
+
+Closure tests use deterministic fake transports to bind the concrete runtime to
+the existing response, normalization, and exchange validators for both terminal
+states. Adversarial output receives no semantic parsing, candidate mapping,
+grounding, or trust promotion. Live-provider smoke remains later
+release/hardening work. Sprint 9C/Gap B has not started; Morning Meeting
+integration remains Sprint 9D.

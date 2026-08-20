@@ -35,3 +35,16 @@ response-body operation, aborts the default fetch through a runtime-local
 unbounded behavior. External caller cancellation was not added because the
 provider-neutral execution contracts carry no cancellation signal; adding one
 would exceed this sprint's additive runtime boundary.
+
+## Sprint 9B closure
+
+Sprint 9B.4 closes Gap A. Deterministic closure coverage proves the validated
+prompt/request/descriptor path reaches this concrete runtime once, vendor
+mapping remains runtime-owned, Completed and Failed results pass the existing
+response/normalization/exchange boundaries, and adversarial JSON-, Markdown-,
+recommendation-, trade-, symbol-, value-, and identifier-looking output remains
+opaque `untrusted_model_execution` text.
+
+No live credential or network call is part of repository tests. A live-provider
+smoke test remains explicit later release/hardening work. Gap B output mapping
+belongs to Sprint 9C, and Morning Meeting integration remains Sprint 9D.

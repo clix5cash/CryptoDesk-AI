@@ -10,9 +10,13 @@ import {
   createPortfolioAiMessagePlan,
   createPortfolioAiModelInput,
   createPortfolioAiPromptDocument,
+  createPortfolioAiProviderExchange,
   createPortfolioAiProviderRequest,
+  createPortfolioAiProviderResponse,
   invokePortfolioAiProviderAdapterBridge,
   mapPortfolioAiProviderRequest,
+  normalizePortfolioAiProviderResponse,
+  validatePortfolioAiProviderExchange,
 } from '@cryptodesk-ai/ai';
 import { createOpenAiPortfolioModelProviderAdapter } from '../dist/index.js';
 
@@ -75,6 +79,64 @@ function response(ok, payload, status = ok ? 200 : 500) {
     },
   };
 }
+
+function exchange(sourceDescriptor, result) {
+  const providerResponse = createPortfolioAiProviderResponse(sourceDescriptor, result);
+  const normalized = normalizePortfolioAiProviderResponse(sourceDescriptor, providerResponse);
+  const providerExchange = createPortfolioAiProviderExchange(sourceDescriptor, normalized);
+  validatePortfolioAiProviderExchange(providerExchange);
+  return providerExchange;
+}
+
+test('closes concrete Completed and Failed exchanges with opaque output and contained credentials', async () => {
+  const adversarial =
+    '```json\n{"recommendation":"BUY BTC","trade":"SELL ETH","value":"900719925474099312345678.1234","candidateId":"candidate-looking"}\n```';
+  const secret = 'closure-secret-never-exposed';
+  const privateEndpoint = 'https://private-runtime.openai.test/v1/responses';
+  let calls = 0;
+  const adapter = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: secret, endpoint: privateEndpoint, timeoutMs: 50 },
+    async () => {
+      calls += 1;
+      if (calls === 2) {
+        return response(false, { error: { type: 'vendor_error', message: secret } }, 503);
+      }
+      return response(true, {
+        status: 'completed',
+        model: 'explicit-model',
+        output: [{ content: [{ type: 'output_text', text: adversarial }] }],
+      });
+    },
+  );
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register(adapter);
+  const sourceDescriptor = descriptor();
+  const before = JSON.stringify(sourceDescriptor);
+
+  const completedRaw = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
+  const completed = exchange(sourceDescriptor, completedRaw);
+  const failedRaw = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
+  const failed = exchange(sourceDescriptor, failedRaw);
+  const laterRaw = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
+
+  assert.equal(calls, 3);
+  assert.equal(completed.status, AiExecutionStatus.Completed);
+  assert.equal(completed.authority, 'untrusted_model_execution');
+  assert.equal(completed.response.output, adversarial);
+  assert.equal(completed.response.source.result.output, adversarial);
+  assert.deepEqual(completed.model, sourceDescriptor.model);
+  assert.equal(failed.status, AiExecutionStatus.Failed);
+  assert.equal(failed.response.failure.code, 'provider_request_failed');
+  assert.equal(failed.response.output, undefined);
+  assert.deepEqual(failed.model, sourceDescriptor.model);
+  assert.equal(laterRaw.output, adversarial);
+  assert.equal(JSON.stringify(sourceDescriptor), before);
+  for (const artifact of [completedRaw, completed, failedRaw, failed, laterRaw, registry.list()]) {
+    const serialized = JSON.stringify(artifact);
+    assert.equal(serialized.includes(secret), false);
+    assert.equal(serialized.includes(privateEndpoint), false);
+  }
+});
 
 test('implements the existing adapter seam and maps one Completed response neutrally', async () => {
   const calls = [];

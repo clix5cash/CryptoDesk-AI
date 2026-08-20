@@ -215,3 +215,17 @@ This assigns boundary ownership, not implementation design.
 Existing Sprint 8 APIs remain additive and opt-in. Later stages must compose
 around them or introduce an explicitly reviewed backward-compatible boundary;
 they cannot silently repurpose existing contracts.
+
+## Sprint 9B closure status
+
+Sprint 9B.4 closes Gap A against this contract. The concrete OpenAI runtime is
+outside Portfolio and AI, depends inward on neutral AI contracts, consumes the
+validated request descriptor, owns vendor request/response mapping and
+configuration, contains credentials and operational failures, performs one
+explicit transport attempt, and returns only exact-identity provider-neutral
+Completed or Failed results with `untrusted_model_execution` authority.
+
+Legacy execution requests remain supported. Deterministic fake transports—not
+live credentials or network calls—enforce closure. Live-provider smoke remains
+later release/hardening work. Gap B remains unimplemented for Sprint 9C and Gap
+C remains unimplemented for Sprint 9D.
