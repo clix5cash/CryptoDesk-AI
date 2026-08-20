@@ -14,6 +14,8 @@ const OPENAI_PROVIDER_ID = 'openai';
 export interface OpenAiPortfolioRuntimeConfiguration {
   readonly apiKey: string;
   readonly endpoint: string;
+  /** Omitted preserves the existing unbounded runtime behavior. */
+  readonly timeoutMs?: number;
 }
 
 /** Runtime-local transport input. The authorization value is intentionally not an AI contract. */
@@ -21,6 +23,7 @@ export interface OpenAiRuntimeTransportRequest {
   readonly endpoint: string;
   readonly authorization: string;
   readonly body: Readonly<Record<string, unknown>>;
+  readonly signal: AbortSignal;
 }
 
 /** Minimal runtime-local HTTP response needed by the vendor mapper. */
@@ -77,23 +80,49 @@ async function executeOpenAiRequest(
     return failed(request, 'model_required', 'An explicit model identity is required.');
   }
 
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
-    const response = await transport({
+    const operation = invokeTransport(transport, {
       endpoint: runtime.endpoint,
       authorization: `Bearer ${runtime.apiKey}`,
-      body: {
-        model: request.model.modelId,
-        input,
-      },
+      body: { model: request.model.modelId, input },
+      signal: controller.signal,
     });
-    const payload = await response.json();
+    const { response, payload } =
+      runtime.timeoutMs === undefined
+        ? await operation
+        : await Promise.race([
+            operation,
+            new Promise<never>((_, reject) => {
+              timeout = setTimeout(() => {
+                controller.abort();
+                reject(RUNTIME_TIMEOUT);
+              }, runtime.timeoutMs);
+            }),
+          ]);
     if (!response.ok) {
       return failed(request, 'provider_request_failed', 'The provider request failed.');
     }
     return mapCompletedResponse(request, payload);
-  } catch {
+  } catch (error) {
+    if (error === RUNTIME_TIMEOUT) {
+      return failed(request, 'provider_timeout', 'The provider request timed out.');
+    }
     return failed(request, 'provider_transport_failed', 'The provider transport failed.');
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
   }
+}
+
+const RUNTIME_TIMEOUT = Symbol('openai-runtime-timeout');
+
+async function invokeTransport(
+  transport: OpenAiRuntimeTransport,
+  request: OpenAiRuntimeTransportRequest,
+): Promise<{ response: OpenAiRuntimeTransportResponse; payload: unknown }> {
+  const response = await transport(request);
+  return { response, payload: await response.json() };
 }
 
 function executionRequestFromDescriptor(
@@ -116,6 +145,7 @@ async function fetchTransport(
       'content-type': 'application/json',
     },
     body: JSON.stringify(request.body),
+    signal: request.signal,
   });
 }
 
@@ -207,9 +237,11 @@ function validateAndDetachConfiguration(
 ): OpenAiPortfolioRuntimeConfiguration {
   if (
     !isRecord(value) ||
-    Object.keys(value).some((key) => !['apiKey', 'endpoint'].includes(key)) ||
+    Object.keys(value).some((key) => !['apiKey', 'endpoint', 'timeoutMs'].includes(key)) ||
     !isNonEmptyString(value.apiKey) ||
-    !isNonEmptyString(value.endpoint)
+    !isNonEmptyString(value.endpoint) ||
+    (value.timeoutMs !== undefined &&
+      (!Number.isSafeInteger(value.timeoutMs) || value.timeoutMs <= 0))
   ) {
     throw new TypeError('OpenAI runtime configuration is invalid.');
   }
@@ -222,7 +254,11 @@ function validateAndDetachConfiguration(
   if (endpoint.protocol !== 'https:') {
     throw new TypeError('OpenAI runtime configuration is invalid.');
   }
-  return { apiKey: value.apiKey, endpoint: endpoint.toString() };
+  return {
+    apiKey: value.apiKey,
+    endpoint: endpoint.toString(),
+    ...(value.timeoutMs === undefined ? {} : { timeoutMs: value.timeoutMs }),
+  };
 }
 
 function safeUnit(value: unknown): number | undefined {

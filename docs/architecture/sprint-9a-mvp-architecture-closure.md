@@ -246,3 +246,20 @@ identity remains exact, credentials remain runtime-owned, and terminal output
 re-enters AI only as `untrusted_model_execution`. Gap B, Gap C, Morning Meeting
 composition, retry/fallback/routing, and Sprint 10 capabilities remain
 unimplemented. Sprint 9B is not declared complete by this request-side change.
+
+## Sprint 9B.3 implementation note
+
+Sprint 9B.3 hardens the existing OpenAI adapter factory as the explicit
+runtime-owned composition boundary. HTTPS endpoint, API key, and optional
+positive-integer timeout configuration are validated and captured per adapter
+instance. No environment lookup, global runtime state, implicit provider/model
+selection, or credential getter is introduced.
+
+An explicitly configured timeout bounds one transport plus response-body
+operation, aborts the runtime-local fetch signal, and maps to a sanitized
+provider-neutral Failed result. Omitted timeout preserves Sprint 9B.1/9B.2
+behavior. External caller cancellation would require changing provider-neutral
+contracts and is intentionally not added. Vendor bodies, exceptions, endpoint
+details, authorization, and credentials remain contained. Gap B/Sprint 9C, Gap
+C, Morning Meeting integration, retry/fallback/routing, and Sprint 10
+capabilities have not started. Sprint 9B is not declared complete here.

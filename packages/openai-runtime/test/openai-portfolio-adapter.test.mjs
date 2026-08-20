@@ -310,6 +310,45 @@ test('is deterministic across equivalent calls and isolates a failed call from t
   assert.equal(JSON.stringify(request), before);
 });
 
+test('times out and aborts one attempt without retry or contamination', async () => {
+  let calls = 0;
+  let firstSignal;
+  const secret = 'timeout-secret';
+  const endpoint = 'https://private-endpoint.openai.test/v1/responses';
+  const adapter = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: secret, endpoint, timeoutMs: 5 },
+    async (request) => {
+      calls += 1;
+      if (calls === 1) {
+        firstSignal = request.signal;
+        return new Promise(() => {});
+      }
+      return response(true, {
+        status: 'completed',
+        model: 'explicit-model',
+        output: [{ content: [{ type: 'output_text', text: 'Later opaque output.' }] }],
+      });
+    },
+  );
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register(adapter);
+  const sourceDescriptor = descriptor();
+  const before = JSON.stringify(sourceDescriptor);
+
+  const timedOut = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
+  const completed = await invokePortfolioAiProviderAdapterBridge(registry, sourceDescriptor);
+
+  assert.equal(calls, 2);
+  assert.equal(firstSignal.aborted, true);
+  assert.equal(timedOut.status, AiExecutionStatus.Failed);
+  assert.equal(timedOut.failure.code, 'provider_timeout');
+  assert.deepEqual(timedOut.model, sourceDescriptor.model);
+  assert.equal(JSON.stringify(timedOut).includes(secret), false);
+  assert.equal(JSON.stringify(timedOut).includes(endpoint), false);
+  assert.equal(completed.status, AiExecutionStatus.Completed);
+  assert.equal(JSON.stringify(sourceDescriptor), before);
+});
+
 test('fails closed on incomplete or conflicting vendor model identity', async () => {
   for (const [payload, code] of [
     [{ status: 'incomplete', model: 'explicit-model' }, 'provider_response_incomplete'],
@@ -335,6 +374,8 @@ test('rejects invalid runtime configuration without echoing credentials', () => 
     { apiKey: secret, endpoint: 'http://api.openai.test/v1/responses' },
     { apiKey: '', endpoint: 'https://api.openai.test/v1/responses' },
     { apiKey: secret, endpoint: 'not-a-url' },
+    { apiKey: secret, endpoint: 'https://api.openai.test/v1/responses', timeoutMs: 0 },
+    { apiKey: secret, endpoint: 'https://api.openai.test/v1/responses', timeoutMs: 1.5 },
   ]) {
     assert.throws(
       () => createOpenAiPortfolioModelProviderAdapter(configuration),

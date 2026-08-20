@@ -6,13 +6,18 @@ optional provider-request invocation seam so the same adapter can consume the
 complete validated `PortfolioAiProviderRequestDescriptor`. The package depends
 inward on `@cryptodesk-ai/ai`; neither AI nor Portfolio depends on this package.
 
-The factory requires an explicit HTTPS endpoint and API key. Both remain in a
-runtime closure. The adapter exposes only its opaque `openai` provider identity
-and `execute` function, makes one request, and maps terminal vendor responses to
-the existing provider-neutral `Completed` or `Failed` result with
-`untrusted_model_execution` authority. It performs no retry, fallback, routing,
-provider/model defaulting, candidate parsing, grounding, recommendation, or
-application integration.
+The adapter factory is the runtime composition boundary. It requires an
+explicit HTTPS endpoint and API key and accepts an optional positive integer
+`timeoutMs`. Configuration is validated once and retained in a runtime closure;
+there is no environment lookup, global registry, singleton, credential getter,
+provider discovery, or model default. Callers explicitly register each returned
+adapter instance in the AI-owned registry.
+
+Each execution makes one request and maps the terminal vendor response to the
+existing provider-neutral `Completed` or `Failed` result with
+`untrusted_model_execution` authority. Transport, HTTP, response-body, and
+timeout failures are sanitized without returning endpoint, authorization,
+credential, response-body, or vendor exception details.
 
 Descriptor-aware invocation serializes the exact validated repository-owned
 prompt document into the vendor `input` field. Vendor body construction remains
@@ -22,4 +27,11 @@ legacy callers.
 
 The runtime still performs no candidate parsing or grounding. Gap B, Gap C,
 Morning Meeting composition, retry/fallback/routing, and application lifecycle
-remain outside Sprint 9B.2.
+remain outside Sprint 9B.3.
+
+When `timeoutMs` is supplied, the runtime bounds the complete transport and
+response-body operation, aborts the default fetch through a runtime-local
+`AbortSignal`, and returns `provider_timeout`. Omission preserves the 9B.1/9B.2
+unbounded behavior. External caller cancellation was not added because the
+provider-neutral execution contracts carry no cancellation signal; adding one
+would exceed this sprint's additive runtime boundary.

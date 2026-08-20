@@ -38,10 +38,11 @@ Portfolio facts, deterministic analytics, presentation, trust markers, or
 provider-neutral validation.
 
 The current seam is an explicitly registered `PortfolioAiModelProviderAdapter`.
-Its `execute(...)` method accepts `PortfolioAiModelExecutionRequest`; registry
-and bridge code validate its `PortfolioAiModelExecutionResult`. Registration
-and model selection are explicit and instance-scoped, and one bridge call makes
-one adapter attempt.
+Its legacy `execute(...)` method accepts `PortfolioAiModelExecutionRequest`; an
+optional descriptor-aware method accepts the validated provider request chain.
+Registry and bridge code validate its `PortfolioAiModelExecutionResult`.
+Registration and model selection are explicit and instance-scoped, and one
+bridge call makes one adapter attempt.
 
 ## Request-side contract
 
@@ -56,16 +57,14 @@ one adapter attempt.
 These contracts must carry the same execution, provider, and optional model
 identity. A runtime cannot generate, default, repair, or silently select them.
 
-### Known request mismatch
+### Request-chain status after Sprint 9B.2
 
 `invokePortfolioAiProviderAdapterBridge(...)` validates the complete descriptor
-but constructs the older execution request for the adapter. That request keeps
-canonical context and model identity but does not expose the newer prompt
-document, provider request, descriptor blocks, or descriptor itself.
-
-Sprint 9B therefore requires the smallest explicit, backward-compatible bridge
-or mapping capability that makes the validated neutral prompt/request available
-to a runtime adapter. This document does not choose or implement that shape.
+and invokes the selected adapter's optional descriptor-aware seam when present.
+Adapters without that additive method retain the older execution-request path.
+The concrete OpenAI runtime therefore receives the prompt document, provider
+request, descriptor blocks, and exact descriptor identity without breaking
+legacy execution callers.
 
 Prompt documents, neutral requests/descriptors, execution identity, and raw
 result contracts stay provider-neutral. Vendor roles, endpoints, headers,
