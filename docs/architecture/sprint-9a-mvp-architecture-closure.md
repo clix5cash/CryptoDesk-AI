@@ -318,3 +318,18 @@ No raw-string shortcut, semantic matching, canonical authority, candidate
 ranking, grounding, or trust promotion is introduced. Sprint 9C.3 owns
 grounding and `non_authoritative_interpretation`; Morning Meeting remains Sprint
 9D.
+
+## Sprint 9C.3 implementation note
+
+An additive explicit grounding API now requires the matching Sprint 9C.1 parsed
+artifact and Sprint 9C.2 candidate-validation result before delegating to the
+existing deterministic grounding boundary. Its detached result retains both
+source artifacts and the complete ProviderExchange chain while preserving exact
+identity, candidate order, fact/section references, partial or missing evidence,
+and decimal strings.
+
+Grounding is the only Sprint 9C trust-promotion step and produces only
+`non_authoritative_interpretation`; it creates no canonical authority. There is
+no raw-output shortcut, fuzzy/symbol matching, ranking, recommendation logic, or
+Morning Meeting integration. Sprint 9C.4 owns Gap B E2E closure; Sprint 9D owns
+Morning Meeting composition.

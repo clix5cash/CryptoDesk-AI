@@ -570,3 +570,30 @@ exact decimal strings remain unchanged and traceable. There is no semantic
 matching, ranking, canonical authority, grounding, or trust promotion. Sprint
 9C.3 owns grounding and progression to `non_authoritative_interpretation`;
 Morning Meeting remains Sprint 9D.
+
+Sprint 9C.3 adds `groundPortfolioAiParsedCandidates(...)`, the explicit bridge
+from the validated 9C.2 envelope into the unchanged deterministic grounding
+boundary:
+
+```text
+PortfolioAiProviderExchange (untrusted_model_execution)
+        ↓
+closed-schema parser
+        ↓
+parsed candidate material
+        ↓
+candidate/reference validation (untrusted_candidate_interpretation)
+        ↓
+explicit deterministic grounding
+        ↓
+non_authoritative_interpretation
+```
+
+The grounding input requires both the validated parsed artifact and its exact
+candidate-validation result, preventing either stage from being substituted or
+bypassed. The detached result retains both artifacts and their source exchange.
+Grounding is the only Sprint 9C trust-promotion step; it copies exact validated
+fact/section references without prose inference, symbol matching, numeric work,
+ranking, or canonical fact creation. Portfolio remains canonical, and grounded
+prose remains non-authoritative. Sprint 9C.4 owns Gap B end-to-end closure;
+Morning Meeting composition remains Sprint 9D.

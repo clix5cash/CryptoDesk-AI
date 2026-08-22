@@ -208,3 +208,18 @@ result retains the source exchange and remains
 No raw-text shortcut, semantic reference matching, candidate ranking, canonical
 field ownership, grounding, or trust promotion is added. Sprint 9C.3 owns
 grounding; Morning Meeting remains Sprint 9D.
+
+## Sprint 9C.3 explicit grounding status
+
+`groundPortfolioAiParsedCandidates(...)` explicitly connects the validated
+9C.2 candidate envelope to the existing deterministic grounding contract. Its
+closed input requires the matching parsed artifact and candidate-validation
+result. The output retains both plus the originating ProviderExchange, preserving
+execution/provider/model identity, candidate order, and exact fact/section
+references through the complete chain.
+
+This is the only Sprint 9C trust transition to
+`non_authoritative_interpretation`. It creates no Portfolio authority, performs
+no semantic or symbol matching, and does not reinterpret partial, unavailable,
+missing, or precision-sensitive canonical evidence. Sprint 9C.4 owns Gap B E2E
+closure; Morning Meeting remains Sprint 9D.

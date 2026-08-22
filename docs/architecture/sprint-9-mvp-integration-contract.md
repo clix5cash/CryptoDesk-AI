@@ -259,3 +259,18 @@ The result retains exact exchange traceability and remains
 ranking, arithmetic, grounding, or promotion to
 `non_authoritative_interpretation`. Sprint 9C.3 owns grounding; Morning Meeting
 remains Sprint 9D.
+
+## Sprint 9C.3 explicit grounding integration
+
+Validated parsed candidates now enter the existing deterministic grounding
+boundary through one explicit opt-in API. The API requires both the validated
+parsed artifact and its exact 9C.2 candidate-validation envelope, rejects
+substituted identity/trust/references, and returns detached grounded output with
+complete parsed, candidate, and ProviderExchange traceability.
+
+Grounding alone performs the permitted trust transition from
+`untrusted_candidate_interpretation` to
+`non_authoritative_interpretation`. It copies validated references and ordering;
+it performs no raw parsing, semantic matching, ranking, arithmetic, missing-data
+repair, or canonical fact creation. Sprint 9C.4 owns Gap B E2E closure, and
+Morning Meeting composition remains Sprint 9D.

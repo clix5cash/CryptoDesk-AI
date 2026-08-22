@@ -196,3 +196,13 @@ candidate/context-reference validators. It accepts no raw text and retains a
 detached source exchange in `PortfolioAiParsedCandidateValidationResult`.
 Identity, candidate order, and explicit references remain exact; trust stops at
 `untrusted_candidate_interpretation`. Grounding remains Sprint 9C.3.
+
+## Sprint 9C.3 component-map note
+
+`groundPortfolioAiParsedCandidates` is the additive AI-owned integration from
+the 9C.2 validation envelope to the unchanged
+`groundPortfolioAiCandidateInterpretation` boundary. It requires the matching
+parsed artifact, retains parsed/candidate/exchange traceability, and permits only
+`untrusted_candidate_interpretation` → `non_authoritative_interpretation`.
+References remain exact and canonical data remains upstream. Sprint 9C.4 owns
+Gap B E2E closure; Morning Meeting remains Sprint 9D.

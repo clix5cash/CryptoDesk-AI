@@ -12,10 +12,12 @@ import {
   createPortfolioAiProviderExchange,
   createPortfolioAiProviderRequest,
   createPortfolioAiProviderResponse,
+  groundPortfolioAiParsedCandidates,
   mapPortfolioAiProviderRequest,
   normalizePortfolioAiProviderResponse,
   parsePortfolioAiStructuredOutput,
   validatePortfolioAiParsedCandidateValidationResult,
+  validatePortfolioAiParsedCandidateGroundingResult,
   validatePortfolioAiParsedCandidates,
   validatePortfolioAiParsedStructuredOutput,
 } from '../dist/index.js';
@@ -544,5 +546,220 @@ test('isolates each failed integration before an equivalent valid candidate call
   for (const failure of failures) {
     assert.throws(() => validatePortfolioAiParsedCandidates(failure), AiBoundaryValidationError);
     assert.deepEqual(validatePortfolioAiParsedCandidates(parsed), expected);
+  }
+});
+
+function groundingFixture(candidateFactory = validCandidateItems) {
+  const { parsed } = parsedCandidates(candidateFactory);
+  return {
+    parsed,
+    candidateValidation: validatePortfolioAiParsedCandidates(parsed),
+  };
+}
+
+function groundingContext(fixture) {
+  return fixture.parsed.sourceExchange.descriptor.request.promptDocument.plan.input.context;
+}
+
+test('explicitly grounds validated parsed candidates with complete traceability and trust progression', () => {
+  const fixture = groundingFixture();
+  const result = groundPortfolioAiParsedCandidates(fixture);
+
+  validatePortfolioAiParsedCandidateGroundingResult(result);
+  assert.equal(result.executionId, executionId);
+  assert.equal(result.providerId, model.providerId);
+  assert.equal(result.modelId, model.modelId);
+  assert.equal(result.authority, 'non_authoritative_interpretation');
+  assert.equal(result.grounded.authority, 'non_authoritative_interpretation');
+  assert.deepEqual(result.sourceParsedOutput, fixture.parsed);
+  assert.deepEqual(result.sourceCandidateValidation, fixture.candidateValidation);
+  assert.deepEqual(result.sourceCandidateValidation.sourceExchange, fixture.parsed.sourceExchange);
+  assert.equal(fixture.candidateValidation.authority, 'untrusted_candidate_interpretation');
+});
+
+test('preserves multiple candidate IDs and exact validated ordering through grounding', () => {
+  const fixture = groundingFixture();
+  const result = groundPortfolioAiParsedCandidates(fixture);
+
+  assert.deepEqual(
+    result.grounded.interpretations.map((interpretation) => interpretation.id),
+    fixture.candidateValidation.candidate.candidates.map((candidate) => candidate.id),
+  );
+  assert.deepEqual(
+    result.grounded.interpretations.map((interpretation) => interpretation.content),
+    fixture.candidateValidation.candidate.candidates.map((candidate) => candidate.content),
+  );
+});
+
+test('grounds exact fact, section, and combined fact-section references without inference', () => {
+  const fixture = groundingFixture((context) => {
+    const fact = context.facts.find((candidate) => candidate.presentationItemId === 'item-a');
+    const reference = factReference(fact);
+    return [
+      {
+        id: 'fact-only',
+        kind: 'descriptive',
+        content: 'Fact-only reference.',
+        factReferences: [reference],
+      },
+      {
+        id: 'section-only',
+        kind: 'descriptive',
+        content: 'Section-only reference.',
+        sectionIds: [sectionId('concentration')],
+      },
+      {
+        id: 'fact-and-section',
+        kind: 'descriptive',
+        content: 'Matching fact and section references.',
+        factReferences: [reference],
+        sectionIds: [...reference.sectionIds],
+      },
+    ];
+  });
+  const result = groundPortfolioAiParsedCandidates(fixture);
+
+  assert.deepEqual(result.grounded.interpretations[0].factReferences, [
+    factReference(
+      groundingContext(fixture).facts.find(
+        (candidate) => candidate.presentationItemId === 'item-a',
+      ),
+    ),
+  ]);
+  assert.deepEqual(result.grounded.interpretations[1].sectionIds, [sectionId('concentration')]);
+  assert.deepEqual(
+    result.grounded.interpretations[2].sectionIds,
+    result.grounded.interpretations[2].factReferences[0].sectionIds,
+  );
+});
+
+test('keeps same-symbol cross-network facts distinct after grounding by canonical identity', () => {
+  const fixture = groundingFixture((context) => {
+    const networkB = context.facts.find((fact) => fact.presentationItemId === 'item-b');
+    const networkA = context.facts.find((fact) => fact.presentationItemId === 'item-a');
+    return [
+      {
+        id: 'network-b-first',
+        kind: 'descriptive',
+        content: 'Explicit network B evidence.',
+        factReferences: [factReference(networkB)],
+      },
+      {
+        id: 'network-a-second',
+        kind: 'descriptive',
+        content: 'Explicit network A evidence.',
+        factReferences: [factReference(networkA)],
+      },
+    ];
+  });
+  const result = groundPortfolioAiParsedCandidates(fixture);
+  const context = groundingContext(fixture);
+  const referencedFacts = result.grounded.interpretations.map((interpretation) =>
+    context.facts.find((fact) => fact.id === interpretation.factReferences[0].factId),
+  );
+
+  assert.deepEqual(
+    referencedFacts.map((fact) => [
+      fact.evidence.insight.asset.symbol,
+      fact.evidence.insight.asset.networkId,
+    ]),
+    [
+      ['AAA', 'network-b'],
+      ['AAA', 'network-a'],
+    ],
+  );
+});
+
+test('preserves partial missing-data coverage and exact canonical decimal evidence', () => {
+  const fixture = groundingFixture();
+  const result = groundPortfolioAiParsedCandidates(fixture);
+  const context =
+    result.sourceCandidateValidation.sourceExchange.descriptor.request.promptDocument.plan.input
+      .context;
+
+  assert.equal(result.grounded.coverageState, 'partial');
+  assert.equal(
+    result.grounded.interpretations.find((item) => item.id === 'candidate-missing-price')
+      .coverageState,
+    'partial',
+  );
+  assert.equal(context.summary.totalValuedValue, '900719925474099312345678.123456');
+  assert.equal(
+    context.facts.find((fact) => fact.presentationItemId === 'missing-price').evidence.insight
+      .unavailableReason,
+    'missing_price',
+  );
+  assert.equal('totalValuedValue' in result.grounded, false);
+  assert.equal('portfolioId' in result.grounded, false);
+});
+
+test('returns deterministic detached grounding without mutating any source artifact', () => {
+  const fixture = groundingFixture();
+  const before = JSON.stringify(fixture);
+  const expected = groundPortfolioAiParsedCandidates(fixture);
+  const mutated = groundPortfolioAiParsedCandidates(fixture);
+  mutated.grounded.interpretations[0].factReferences[0].sectionIds.push('local-only');
+  mutated.sourceParsedOutput.sourceExchange.response.source.result.output = 'local-only';
+  mutated.sourceCandidateValidation.candidate.candidates[0].content = 'local-only';
+
+  assert.equal(JSON.stringify(fixture), before);
+  assert.deepEqual(groundPortfolioAiParsedCandidates(fixture), expected);
+});
+
+test('fails closed and isolates invalid grounding sources before the next valid call', () => {
+  const fixture = groundingFixture();
+  const expected = groundPortfolioAiParsedCandidates(fixture);
+  const first = fixture.candidateValidation.candidate.candidates[0];
+  const failures = [
+    {
+      ...fixture,
+      candidateValidation: {
+        ...fixture.candidateValidation,
+        candidate: {
+          ...fixture.candidateValidation.candidate,
+          candidates: [
+            {
+              ...first,
+              factReferences: [{ ...first.factReferences[0], factId: 'unknown-fact' }],
+            },
+          ],
+        },
+      },
+    },
+    {
+      ...fixture,
+      candidateValidation: {
+        ...fixture.candidateValidation,
+        candidate: {
+          ...fixture.candidateValidation.candidate,
+          candidates: [
+            {
+              ...first,
+              sectionIds: [sectionId('data_quality')],
+            },
+          ],
+        },
+      },
+    },
+    {
+      ...fixture,
+      candidateValidation: {
+        ...fixture.candidateValidation,
+        executionId: 'mismatched-execution',
+      },
+    },
+    {
+      ...fixture,
+      candidateValidation: {
+        ...fixture.candidateValidation,
+        authority: 'non_authoritative_interpretation',
+      },
+    },
+    { parsed: fixture.parsed, candidateValidation: fixture.candidateValidation, extra: true },
+  ];
+
+  for (const failure of failures) {
+    assert.throws(() => groundPortfolioAiParsedCandidates(failure), AiBoundaryValidationError);
+    assert.deepEqual(groundPortfolioAiParsedCandidates(fixture), expected);
   }
 });
