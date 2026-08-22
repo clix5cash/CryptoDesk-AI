@@ -178,3 +178,12 @@ No existing transition promotes model output to canonical Portfolio authority.
 
 The convention-only items are later Sprint 9 architecture gates. Their absence
 does not justify implementing the missing capabilities in Sprint 9A.2.
+
+## Sprint 9C.1 component-map note
+
+`parsePortfolioAiStructuredOutput` is an AI-owned component downstream only of
+validated completed `PortfolioAiProviderExchange`. It maps the closed JSON
+schema to detached `untrusted_candidate_interpretation` material and retains the
+source exchange. Runtime, response normalization, and exchange validation stay
+structural and unchanged. Candidate/context-reference validation and grounding
+are not invoked; their integration remains Sprint 9C.2.

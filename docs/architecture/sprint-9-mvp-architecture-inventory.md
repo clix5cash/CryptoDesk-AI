@@ -177,6 +177,20 @@ Meeting analytical state.
 - Interpretation remains non-authoritative and explicitly grounded only against
   existing references.
 - Existing Sprint 8 public APIs remain independently usable and opt-in.
-- No current component supplies a live provider, network transport, provider
-  discovery, parser, recommendation, prediction, persistence, scheduler, or
-  global orchestration runtime.
+- No current component supplies provider discovery, fuzzy/heuristic parsing,
+  recommendation, prediction, persistence, scheduler, or global orchestration
+  runtime. The Sprint 9C.1 parser accepts only its explicit JSON schema.
+
+## Sprint 9C.1 parser boundary status
+
+Gap B now begins explicitly after `PortfolioAiProviderExchange`. The opt-in
+parser accepts only a closed provider-neutral JSON schema and rejects malformed,
+unknown, canonical, nested, duplicate-ID, and prototype-shaped input with
+`AiBoundaryValidationError`. Exact execution/provider/optional-model identity
+and a detached source-exchange copy provide traceability. Raw exchange output
+remains unchanged `untrusted_model_execution`; parsed descriptive fields and
+opaque references remain unvalidated `untrusted_candidate_interpretation`.
+
+No candidate validator or grounding boundary is duplicated or invoked.
+Candidate validation/integration remains Sprint 9C.2, and Morning Meeting
+integration remains Sprint 9D.

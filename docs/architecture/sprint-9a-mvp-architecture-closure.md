@@ -290,3 +290,17 @@ states. Adversarial output receives no semantic parsing, candidate mapping,
 grounding, or trust promotion. Live-provider smoke remains later
 release/hardening work. Sprint 9C/Gap B has not started; Morning Meeting
 integration remains Sprint 9D.
+
+## Sprint 9C.1 implementation note
+
+An additive AI-owned parser now begins Gap B strictly after a validated
+completed `PortfolioAiProviderExchange`. It accepts only a closed
+provider-neutral JSON schema, preserves exact execution/provider/optional-model
+identity, retains a detached source exchange, and produces only
+`untrusted_candidate_interpretation` material. Raw output remains unchanged
+`untrusted_model_execution` in the source exchange.
+
+The parser performs structural rejection only. It does not infer references,
+validate references against canonical context, invoke candidate assembly or
+grounding, or promote trust. Sprint 9C.2 owns candidate validation/integration;
+Morning Meeting remains Sprint 9D.

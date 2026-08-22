@@ -529,3 +529,19 @@ Portfolio authority remains upstream, raw output remains opaque and untrusted,
 and the provider boundary performs no semantic interpretation or recommendation.
 Sprint 8 stops before live model or network invocation; concrete provider
 integration belongs to a later sprint.
+
+Sprint 9C.1 begins Gap B only after a validated completed
+`PortfolioAiProviderExchange`. `parsePortfolioAiStructuredOutput(...)` accepts
+one closed provider-neutral JSON schema containing exact execution/provider/
+optional-model identity and descriptive candidate assembly fields. Malformed,
+extra, canonical, nested, duplicate-ID, and prototype-shaped data fails with
+`AiBoundaryValidationError`; no prose, Markdown, symbol, or recommendation
+heuristics are used.
+
+Parsing changes structure, not authority. Raw output remains unchanged
+`untrusted_model_execution` in the retained source exchange, and parsed output
+is detached `untrusted_candidate_interpretation` material. References remain
+opaque assertions: Sprint 9C.1 does not validate them against canonical context,
+assemble validated candidates, ground content, or produce
+`non_authoritative_interpretation`. Sprint 9C.2 owns that validation and
+integration; Morning Meeting remains Sprint 9D.

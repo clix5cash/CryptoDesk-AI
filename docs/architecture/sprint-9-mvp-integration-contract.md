@@ -229,3 +229,18 @@ Legacy execution requests remain supported. Deterministic fake transports—not
 live credentials or network calls—enforce closure. Live-provider smoke remains
 later release/hardening work. Gap B remains unimplemented for Sprint 9C and Gap
 C remains unimplemented for Sprint 9D.
+
+## Sprint 9C.1 structured-output boundary
+
+Gap B begins after the validated `PortfolioAiProviderExchange`, never inside
+runtime, ProviderResponse, normalization, or exchange validation. The additive
+parser accepts only a closed JSON document with exact execution/provider/
+optional-model identity plus descriptive candidate assembly fields and opaque
+fact/section references. Unsupported, canonical, malformed, duplicate-ID, and
+prototype-shaped structures fail closed with `AiBoundaryValidationError`.
+
+The source exchange remains the audit artifact and its raw output remains
+unchanged `untrusted_model_execution`. Parsed output is detached but still
+untrusted candidate material; there is no grounding or promotion to
+`non_authoritative_interpretation`. Existing candidate/context-reference
+validation and integration are Sprint 9C.2. Morning Meeting remains Sprint 9D.
