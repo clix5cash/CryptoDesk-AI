@@ -187,3 +187,12 @@ schema to detached `untrusted_candidate_interpretation` material and retains the
 source exchange. Runtime, response normalization, and exchange validation stay
 structural and unchanged. Candidate/context-reference validation and grounding
 are not invoked; their integration remains Sprint 9C.2.
+
+## Sprint 9C.2 component-map note
+
+`validatePortfolioAiParsedCandidates` is the additive AI-owned connection from
+`PortfolioAiParsedStructuredOutput` to the unchanged candidate assembly and
+candidate/context-reference validators. It accepts no raw text and retains a
+detached source exchange in `PortfolioAiParsedCandidateValidationResult`.
+Identity, candidate order, and explicit references remain exact; trust stops at
+`untrusted_candidate_interpretation`. Grounding remains Sprint 9C.3.

@@ -17,6 +17,7 @@ export * from './portfolio-provider-response.js';
 export * from './portfolio-normalized-provider-response.js';
 export * from './portfolio-provider-exchange.js';
 export * from './portfolio-structured-output-parser.js';
+export * from './portfolio-parsed-candidate-integration.js';
 export * from './portfolio-model-adapters.js';
 export * from './portfolio-model-execution-service.js';
 export * from './portfolio-model-output-interpretation.js';

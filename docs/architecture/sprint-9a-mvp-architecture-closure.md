@@ -304,3 +304,17 @@ The parser performs structural rejection only. It does not infer references,
 validate references against canonical context, invoke candidate assembly or
 grounding, or promote trust. Sprint 9C.2 owns candidate validation/integration;
 Morning Meeting remains Sprint 9D.
+
+## Sprint 9C.2 implementation note
+
+The parsed-output boundary now integrates additively with the unchanged
+candidate assembly and candidate/context-reference validators. Only a validated
+Sprint 9C.1 parsed artifact is accepted; canonical context and execution are
+obtained from its retained source exchange. The validated result preserves exact
+identity, candidate order, explicit references, partial/missing evidence, and
+source traceability while remaining `untrusted_candidate_interpretation`.
+
+No raw-string shortcut, semantic matching, canonical authority, candidate
+ranking, grounding, or trust promotion is introduced. Sprint 9C.3 owns
+grounding and `non_authoritative_interpretation`; Morning Meeting remains Sprint
+9D.

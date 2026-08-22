@@ -244,3 +244,18 @@ unchanged `untrusted_model_execution`. Parsed output is detached but still
 untrusted candidate material; there is no grounding or promotion to
 `non_authoritative_interpretation`. Existing candidate/context-reference
 validation and integration are Sprint 9C.2. Morning Meeting remains Sprint 9D.
+
+## Sprint 9C.2 candidate-validation integration
+
+Parsed output now reaches the existing candidate-validation boundary through
+one explicit opt-in API. The API accepts only `PortfolioAiParsedStructuredOutput`,
+derives canonical context and raw execution from its retained validated exchange,
+and delegates candidate construction plus fact/section reference checks to the
+existing validators. Unknown, contradictory, malformed, duplicate, injected,
+or identity-mutated material fails with `AiBoundaryValidationError`.
+
+The result retains exact exchange traceability and remains
+`untrusted_candidate_interpretation`. It performs no semantic inference,
+ranking, arithmetic, grounding, or promotion to
+`non_authoritative_interpretation`. Sprint 9C.3 owns grounding; Morning Meeting
+remains Sprint 9D.

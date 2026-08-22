@@ -545,3 +545,28 @@ opaque assertions: Sprint 9C.1 does not validate them against canonical context,
 assemble validated candidates, ground content, or produce
 `non_authoritative_interpretation`. Sprint 9C.2 owns that validation and
 integration; Morning Meeting remains Sprint 9D.
+
+Sprint 9C.2 adds `validatePortfolioAiParsedCandidates(...)` as the explicit
+integration from parsed material into the existing candidate assembly and
+validation boundary:
+
+```text
+PortfolioAiProviderExchange
+        ↓
+closed-schema structured-output parser
+        ↓
+parsed untrusted candidate material
+        ↓
+existing candidate and canonical-reference validation
+        ↓
+validated untrusted_candidate_interpretation
+```
+
+The integration accepts no raw string. It recovers the exact canonical context,
+request identity, and completed raw execution from the retained source exchange,
+then delegates to existing validators. Candidate IDs, order, fact/section
+references, execution/provider/model identity, partial or missing evidence, and
+exact decimal strings remain unchanged and traceable. There is no semantic
+matching, ranking, canonical authority, grounding, or trust promotion. Sprint
+9C.3 owns grounding and progression to `non_authoritative_interpretation`;
+Morning Meeting remains Sprint 9D.

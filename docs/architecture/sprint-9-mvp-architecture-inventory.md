@@ -194,3 +194,17 @@ opaque references remain unvalidated `untrusted_candidate_interpretation`.
 No candidate validator or grounding boundary is duplicated or invoked.
 Candidate validation/integration remains Sprint 9C.2, and Morning Meeting
 integration remains Sprint 9D.
+
+## Sprint 9C.2 candidate-validation integration status
+
+`validatePortfolioAiParsedCandidates(...)` now maps only a validated Sprint
+9C.1 parsed artifact into the existing candidate assembly and reference
+validation boundary. Context and completed execution are recovered from its
+retained exchange chain, so execution/provider/model identity and canonical
+reference ownership cannot be supplied or repaired separately. The detached
+result retains the source exchange and remains
+`untrusted_candidate_interpretation`.
+
+No raw-text shortcut, semantic reference matching, candidate ranking, canonical
+field ownership, grounding, or trust promotion is added. Sprint 9C.3 owns
+grounding; Morning Meeting remains Sprint 9D.

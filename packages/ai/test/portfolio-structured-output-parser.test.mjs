@@ -15,6 +15,8 @@ import {
   mapPortfolioAiProviderRequest,
   normalizePortfolioAiProviderResponse,
   parsePortfolioAiStructuredOutput,
+  validatePortfolioAiParsedCandidateValidationResult,
+  validatePortfolioAiParsedCandidates,
   validatePortfolioAiParsedStructuredOutput,
 } from '../dist/index.js';
 
@@ -26,23 +28,56 @@ function sectionId(section) {
 }
 
 function descriptor() {
-  const item = {
-    id: 'item-a',
-    category: 'concentration',
-    priority: 'high',
-    priorityReasons: ['canonical_identity'],
-    targetIdentity: 'asset-a',
-    evidence: {
-      insight: {
-        portfolioId: 'structured-output-portfolio',
-        asset: { id: 'asset-a', symbol: 'AAA', networkId: 'network-a', decimals: 6 },
-        measuredValue: '10',
-        measuredPercentage: '100',
-        coverageState: 'complete',
+  const items = [
+    {
+      id: 'item-a',
+      category: 'concentration',
+      priority: 'high',
+      priorityReasons: ['canonical_identity'],
+      targetIdentity: 'asset-a',
+      evidence: {
+        insight: {
+          portfolioId: 'structured-output-portfolio',
+          asset: { id: 'asset-a', symbol: 'AAA', networkId: 'network-a', decimals: 6 },
+          measuredValue: '900719925474099312345678.123456',
+          measuredPercentage: '66.6667',
+          coverageState: 'partial',
+        },
+        valuationPositions: [],
       },
-      valuationPositions: [],
     },
-  };
+    {
+      id: 'item-b',
+      category: 'concentration',
+      priority: 'normal',
+      priorityReasons: ['canonical_identity'],
+      targetIdentity: 'asset-b',
+      evidence: {
+        insight: {
+          portfolioId: 'structured-output-portfolio',
+          asset: { id: 'asset-b', symbol: 'AAA', networkId: 'network-b', decimals: 6 },
+          measuredPercentage: '33.3333',
+          coverageState: 'partial',
+        },
+        valuationPositions: [],
+      },
+    },
+    {
+      id: 'missing-price',
+      category: 'data_quality',
+      priority: 'high',
+      priorityReasons: ['data_quality_limitation', 'canonical_identity'],
+      targetIdentity: 'missing_price',
+      evidence: {
+        insight: {
+          portfolioId: 'structured-output-portfolio',
+          unavailableReason: 'missing_price',
+          coverageState: 'partial',
+        },
+        valuationPositions: [],
+      },
+    },
+  ];
   const context = buildPortfolioAiContext({
     analysisId: 'structured-output-analysis',
     task: PortfolioAiTask.Interpret,
@@ -52,28 +87,36 @@ function descriptor() {
       capturedAt: '2026-08-22T00:00:00.000Z',
       asOf: '2026-08-22T00:00:00.000Z',
       currency: 'USD',
-      totalValuedValue: '10',
+      totalValuedValue: '900719925474099312345678.123456',
       coverage: {
-        state: 'complete',
+        state: 'partial',
         valuation: {
-          totalPositionCount: 1,
-          valuedPositionCount: 1,
-          unvaluedPositionCount: 0,
-          valuedPositionCoveragePercentage: '100',
-          unvaluedReasons: [],
+          totalPositionCount: 3,
+          valuedPositionCount: 2,
+          unvaluedPositionCount: 1,
+          valuedPositionCoveragePercentage: '66.6667',
+          unvaluedReasons: [{ reason: 'missing_price', positionCount: 1 }],
         },
       },
-      items: [item],
+      items,
       sections: [
         { id: sectionId('overview'), section: 'overview', itemIds: [] },
         { id: sectionId('valuation'), section: 'valuation', itemIds: [] },
         { id: sectionId('coverage'), section: 'coverage', itemIds: [] },
-        { id: sectionId('concentration'), section: 'concentration', itemIds: ['item-a'] },
-        { id: sectionId('data_quality'), section: 'data_quality', itemIds: [] },
+        {
+          id: sectionId('concentration'),
+          section: 'concentration',
+          itemIds: ['item-a', 'item-b'],
+        },
+        {
+          id: sectionId('data_quality'),
+          section: 'data_quality',
+          itemIds: ['missing-price'],
+        },
         {
           id: sectionId('prioritized_insights'),
           section: 'prioritized_insights',
-          itemIds: ['item-a'],
+          itemIds: items.map((item) => item.id),
         },
       ],
     },
@@ -82,7 +125,7 @@ function descriptor() {
     task: PortfolioAiTask.Interpret,
     context,
     factIds: context.facts.map((fact) => fact.id),
-    sectionIds: [sectionId('concentration')],
+    sectionIds: [sectionId('concentration'), sectionId('data_quality')],
   });
   const document = createPortfolioAiPromptDocument(createPortfolioAiMessagePlan(input));
   return mapPortfolioAiProviderRequest(
@@ -295,4 +338,211 @@ test('isolates failed calls and rejects failed exchanges without parsing failure
     parsePortfolioAiStructuredOutput(validExchange),
     parsePortfolioAiStructuredOutput(validExchange),
   );
+});
+
+function factReference(fact) {
+  return {
+    factId: fact.id,
+    presentationItemId: fact.presentationItemId,
+    sectionIds: fact.grounding.map((reference) => reference.sectionIds[0]),
+  };
+}
+
+function parsedCandidates(candidateFactory) {
+  const sourceDescriptor = descriptor();
+  const context = sourceDescriptor.request.promptDocument.plan.input.context;
+  const candidates = candidateFactory(context);
+  const output = JSON.stringify(structuredDocument({ candidates }));
+  return { context, parsed: parsePortfolioAiStructuredOutput(exchangeFor(output)) };
+}
+
+function validCandidateItems(context) {
+  const networkA = context.facts.find((fact) => fact.presentationItemId === 'item-a');
+  const missingPrice = context.facts.find((fact) => fact.presentationItemId === 'missing-price');
+  return [
+    {
+      id: 'candidate-network-a',
+      kind: 'descriptive',
+      content: 'Describes the explicitly referenced network A evidence.',
+      factReferences: [factReference(networkA)],
+    },
+    {
+      id: 'candidate-missing-price',
+      kind: 'descriptive',
+      content: 'Describes the explicit missing-price evidence.',
+      factReferences: [factReference(missingPrice)],
+    },
+    {
+      id: 'candidate-section',
+      kind: 'descriptive',
+      content: 'Describes only the explicitly referenced concentration section.',
+      sectionIds: [sectionId('concentration')],
+    },
+  ];
+}
+
+test('maps parsed output through existing candidate and reference validation without grounding', () => {
+  const { parsed } = parsedCandidates(validCandidateItems);
+  const result = validatePortfolioAiParsedCandidates(parsed);
+
+  validatePortfolioAiParsedCandidateValidationResult(result);
+  assert.equal(result.executionId, executionId);
+  assert.deepEqual(result.model, model);
+  assert.equal(result.authority, 'untrusted_candidate_interpretation');
+  assert.equal(result.candidate.authority, 'untrusted_candidate_interpretation');
+  assert.deepEqual(result.sourceExchange, parsed.sourceExchange);
+  assert.notEqual(result.sourceExchange, parsed.sourceExchange);
+  assert.deepEqual(
+    result.candidate.candidates.map((candidate) => candidate.id),
+    ['candidate-network-a', 'candidate-missing-price', 'candidate-section'],
+  );
+  assert.equal('interpretations' in result, false);
+  assert.equal('grounded' in result, false);
+});
+
+test('preserves exact candidate order, IDs, references, and same-symbol cross-network identity', () => {
+  const { context, parsed } = parsedCandidates((sourceContext) => {
+    const networkB = sourceContext.facts.find((fact) => fact.presentationItemId === 'item-b');
+    const networkA = sourceContext.facts.find((fact) => fact.presentationItemId === 'item-a');
+    return [
+      {
+        id: 'candidate-b-first',
+        kind: 'descriptive',
+        content: 'Network B remains first.',
+        factReferences: [factReference(networkB)],
+      },
+      {
+        id: 'candidate-a-second',
+        kind: 'descriptive',
+        content: 'Network A remains second.',
+        factReferences: [factReference(networkA)],
+      },
+    ];
+  });
+  const result = validatePortfolioAiParsedCandidates(parsed);
+
+  assert.deepEqual(
+    result.candidate.candidates.map((candidate) => candidate.id),
+    ['candidate-b-first', 'candidate-a-second'],
+  );
+  const referencedFacts = result.candidate.candidates.map((candidate) =>
+    context.facts.find((fact) => fact.id === candidate.factReferences[0].factId),
+  );
+  assert.deepEqual(
+    referencedFacts.map((fact) => [
+      fact.evidence.insight.asset.symbol,
+      fact.evidence.insight.asset.networkId,
+    ]),
+    [
+      ['AAA', 'network-b'],
+      ['AAA', 'network-a'],
+    ],
+  );
+});
+
+test('preserves partial missing-data state and exact large decimals only in canonical context', () => {
+  const { parsed } = parsedCandidates(validCandidateItems);
+  const result = validatePortfolioAiParsedCandidates(parsed);
+  const context = result.sourceExchange.descriptor.request.promptDocument.plan.input.context;
+
+  assert.equal(context.summary.coverage.state, 'partial');
+  assert.equal(context.summary.totalValuedValue, '900719925474099312345678.123456');
+  assert.equal(
+    context.facts.find((fact) => fact.presentationItemId === 'item-a').evidence.insight
+      .measuredValue,
+    '900719925474099312345678.123456',
+  );
+  assert.equal(
+    context.facts.find((fact) => fact.presentationItemId === 'missing-price').evidence.insight
+      .unavailableReason,
+    'missing_price',
+  );
+  assert.equal('coverageState' in result.candidate.candidates[0], false);
+  assert.equal('measuredValue' in result.candidate.candidates[0], false);
+});
+
+test('rejects unknown, contradictory, and malformed explicit references', () => {
+  const sourceContext = descriptor().request.promptDocument.plan.input.context;
+  const networkA = sourceContext.facts.find((fact) => fact.presentationItemId === 'item-a');
+  const invalidCandidates = [
+    [
+      {
+        id: 'unknown-reference',
+        kind: 'descriptive',
+        content: 'Unknown reference.',
+        factReferences: [{ ...factReference(networkA), factId: 'unknown-fact' }],
+      },
+    ],
+    [
+      {
+        id: 'contradictory-reference',
+        kind: 'descriptive',
+        content: 'Contradictory reference.',
+        factReferences: [{ ...factReference(networkA), presentationItemId: 'item-b' }],
+      },
+    ],
+    [
+      {
+        id: 'contradictory-sections',
+        kind: 'descriptive',
+        content: 'Contradictory sections.',
+        factReferences: [factReference(networkA)],
+        sectionIds: [sectionId('data_quality')],
+      },
+    ],
+  ];
+  for (const candidates of invalidCandidates) {
+    const { parsed } = parsedCandidates(() => candidates);
+    assert.throws(() => validatePortfolioAiParsedCandidates(parsed), AiBoundaryValidationError);
+  }
+});
+
+test('rejects malformed, duplicate, identity-mutated, and canonical-injected parsed candidates', () => {
+  const { parsed } = parsedCandidates(validCandidateItems);
+  const first = parsed.candidates[0];
+  const invalid = [
+    { ...parsed, candidates: [{ ...first, content: '' }] },
+    { ...parsed, candidates: [first, first] },
+    { ...parsed, executionId: 'mismatched-execution' },
+    { ...parsed, candidates: [{ ...first, canonicalPrice: '1' }] },
+  ];
+  for (const candidate of invalid) {
+    assert.throws(() => validatePortfolioAiParsedCandidates(candidate), AiBoundaryValidationError);
+  }
+});
+
+test('is deterministic and detached without mutating parsed output or canonical references', () => {
+  const { parsed } = parsedCandidates(validCandidateItems);
+  const before = JSON.stringify(parsed);
+  const expected = validatePortfolioAiParsedCandidates(parsed);
+  const mutated = validatePortfolioAiParsedCandidates(parsed);
+  mutated.candidate.candidates[0].factReferences[0].sectionIds.push('local-only');
+  mutated.sourceExchange.response.source.result.output = 'local-only';
+
+  assert.equal(JSON.stringify(parsed), before);
+  assert.deepEqual(validatePortfolioAiParsedCandidates(parsed), expected);
+});
+
+test('isolates each failed integration before an equivalent valid candidate call', () => {
+  const { parsed } = parsedCandidates(validCandidateItems);
+  const expected = validatePortfolioAiParsedCandidates(parsed);
+  const first = parsed.candidates[0];
+  const failures = [
+    {
+      ...parsed,
+      candidates: [
+        {
+          ...first,
+          factReferences: [{ ...first.factReferences[0], factId: 'unknown' }],
+        },
+      ],
+    },
+    { ...parsed, candidates: [first, first] },
+    { ...parsed, model: { ...parsed.model, providerId: 'mismatch' } },
+    { ...parsed, candidates: [{ ...first, portfolioId: 'injected' }] },
+  ];
+  for (const failure of failures) {
+    assert.throws(() => validatePortfolioAiParsedCandidates(failure), AiBoundaryValidationError);
+    assert.deepEqual(validatePortfolioAiParsedCandidates(parsed), expected);
+  }
 });
