@@ -206,3 +206,13 @@ parsed artifact, retains parsed/candidate/exchange traceability, and permits onl
 `untrusted_candidate_interpretation` → `non_authoritative_interpretation`.
 References remain exact and canonical data remains upstream. Sprint 9C.4 owns
 Gap B E2E closure; Morning Meeting remains Sprint 9D.
+
+## Sprint 9C.4 component-map closure
+
+Gap B is CLOSED with no production component changes in 9C.4. The existing
+public components compose only in this order: ProviderExchange → parser →
+candidate validation → deterministic grounding. Tests audit that parser logic
+does not move into runtime/normalization, grounding cannot bypass parsed and
+validated artifacts, dependency direction stays AI → Portfolio, and Morning
+Meeting remains outside the path. The terminal Gap B artifact is only
+`non_authoritative_interpretation`; Sprint 9D owns Gap C.

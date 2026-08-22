@@ -223,3 +223,19 @@ This is the only Sprint 9C trust transition to
 no semantic or symbol matching, and does not reinterpret partial, unavailable,
 missing, or precision-sensitive canonical evidence. Sprint 9C.4 owns Gap B E2E
 closure; Morning Meeting remains Sprint 9D.
+
+## Sprint 9C.4 Gap B closure status
+
+Gap B is CLOSED. Public-API E2E coverage proves the legal path from validated
+ProviderExchange through closed-schema parsing, exact candidate/reference
+validation, and explicit deterministic grounding to only
+`non_authoritative_interpretation`. Complete exchange, raw execution, parsed,
+candidate, execution/provider/model, candidate-ID, and fact/section traceability
+is retained without canonical authority movement.
+
+Closure tests and source audits cover adversarial descriptive content,
+malformed/injected structures, same-symbol cross-network identity, partial and
+missing evidence, exact large decimals, ordering, detachment, failure isolation,
+public API compatibility, dependency direction, and absence of runtime or
+Morning Meeting coupling. Gap C has not started; Sprint 9D owns application and
+Morning Meeting composition.

@@ -333,3 +333,19 @@ Grounding is the only Sprint 9C trust-promotion step and produces only
 no raw-output shortcut, fuzzy/symbol matching, ranking, recommendation logic, or
 Morning Meeting integration. Sprint 9C.4 owns Gap B E2E closure; Sprint 9D owns
 Morning Meeting composition.
+
+## Sprint 9C.4 closure decision
+
+Sprint 9C and Gap B are COMPLETE. End-to-end public-API tests prove validated
+ProviderExchange → closed-schema parser → untrusted candidate material → exact
+candidate/reference validation → explicit deterministic grounding → only
+`non_authoritative_interpretation`. The complete source chain remains detached
+and traceable, while Portfolio retains all canonical identity, numeric,
+coverage, timestamp, and provenance authority.
+
+All Gap B acceptance gates pass, including malformed/adversarial failure,
+same-symbol network separation, partial/unavailable/missing evidence, precision,
+ordering, isolation, backward compatibility, and dependency audits. Sprint
+9C.4 adds closure tests and documentation only; no production acceptance fix was
+required. Gap C and Morning Meeting composition remain unimplemented and owned
+by Sprint 9D.

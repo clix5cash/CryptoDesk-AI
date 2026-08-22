@@ -597,3 +597,27 @@ fact/section references without prose inference, symbol matching, numeric work,
 ranking, or canonical fact creation. Portfolio remains canonical, and grounded
 prose remains non-authoritative. Sprint 9C.4 owns Gap B end-to-end closure;
 Morning Meeting composition remains Sprint 9D.
+
+Sprint 9C.4 closes Gap B end to end. Focused closure coverage composes the
+public ProviderExchange, parser, candidate-validation, and grounding APIs and
+proves the complete trust path:
+
+```text
+untrusted_model_execution
+        ↓ explicit closed-schema parsing
+untrusted_candidate_interpretation
+        ↓ exact candidate/context-reference validation
+untrusted_candidate_interpretation
+        ↓ explicit deterministic grounding only
+non_authoritative_interpretation
+```
+
+The closure verifies adversarial descriptive content remains opaque, malformed
+or injected structures fail closed, exact same-symbol cross-network references
+remain distinct, partial and missing evidence stays explicit, large decimals
+remain unchanged in canonical context, ordering and complete source traceability
+survive, and failed calls do not contaminate later calls. Existing Sprint 8,
+Sprint 9B, direct parser/candidate/grounding, and interpretation-pipeline APIs
+remain available. Portfolio remains the sole canonical authority. Gap B is
+CLOSED; Gap C begins only with later application-owned composition from
+`non_authoritative_interpretation` into Morning Meeting, owned by Sprint 9D.

@@ -274,3 +274,34 @@ Grounding alone performs the permitted trust transition from
 it performs no raw parsing, semantic matching, ranking, arithmetic, missing-data
 repair, or canonical fact creation. Sprint 9C.4 owns Gap B E2E closure, and
 Morning Meeting composition remains Sprint 9D.
+
+## Sprint 9C.4 Gap B closure decision
+
+Gap B is CLOSED. The acceptance matrix is:
+
+| Gap B criterion                                                                            | Result |
+| ------------------------------------------------------------------------------------------ | ------ |
+| Parsing begins only after validated ProviderExchange                                       | PASS   |
+| Raw output remains `untrusted_model_execution`                                             | PASS   |
+| Parser accepts only its explicit structured schema                                         | PASS   |
+| Malformed, unknown, and canonical-field injection fails closed                             | PASS   |
+| No raw-string-to-candidate or raw-output-to-grounding shortcut exists                      | PASS   |
+| Candidate validation and exact fact/section reference checks precede grounding             | PASS   |
+| No fuzzy, symbol, prose, or semantic reference matching exists                             | PASS   |
+| Trust remains `untrusted_candidate_interpretation` before grounding                        | PASS   |
+| Grounding is explicit, deterministic, and produces only `non_authoritative_interpretation` | PASS   |
+| Portfolio remains the sole canonical authority                                             | PASS   |
+| Exchange/execution/provider/model/candidate/reference identity remains traceable           | PASS   |
+| Same-symbol cross-network identity remains distinct                                        | PASS   |
+| Partial, unavailable, insufficient, and missing-data states remain explicit                | PASS   |
+| Canonical decimal strings remain exact                                                     | PASS   |
+| Candidate order is preserved                                                               | PASS   |
+| Failed calls remain isolated                                                               | PASS   |
+| Sprint 8 and Sprint 9B public APIs remain compatible                                       | PASS   |
+| Full repository validation passes                                                          | PASS   |
+
+Focused closure tests compose the public APIs and audit dependency/source
+boundaries. No production acceptance defect or new production capability was
+needed in 9C.4. Gap B ends at `non_authoritative_interpretation`. Gap C begins
+only at later application-owned composition into Morning Meeting; Sprint 9D
+owns that boundary and has not started.
