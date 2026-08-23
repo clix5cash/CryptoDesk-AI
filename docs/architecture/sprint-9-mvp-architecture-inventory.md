@@ -239,3 +239,17 @@ missing evidence, exact large decimals, ordering, detachment, failure isolation,
 public API compatibility, dependency direction, and absence of runtime or
 Morning Meeting coupling. Gap C has not started; Sprint 9D owns application and
 Morning Meeting composition.
+
+## Sprint 9D.1 Gap C composition inventory
+
+Gap C now starts at the additive Morning Meeting-owned
+`MorningMeetingPortfolioAiComposition` boundary. Its canonical component holds
+the already-validated application report/request and Portfolio AI context; its
+AI component accepts only complete Sprint 9C
+`non_authoritative_interpretation` artifacts. The components remain separate,
+detached, and authority-distinct.
+
+Morning Meeting depends on provider-neutral AI contracts. AI does not depend on
+Morning Meeting, Portfolio does not depend on AI, and the concrete provider
+runtime remains outside this composition. Sprint 9D.1 adds no orchestration or
+presentation generation; Gap C is not closed.

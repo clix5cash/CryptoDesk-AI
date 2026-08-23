@@ -305,3 +305,22 @@ boundaries. No production acceptance defect or new production capability was
 needed in 9C.4. Gap B ends at `non_authoritative_interpretation`. Gap C begins
 only at later application-owned composition into Morning Meeting; Sprint 9D
 owns that boundary and has not started.
+
+## Sprint 9D.1 composition contract
+
+The legal Gap C entry is now:
+
+`non_authoritative_interpretation` → application-owned validated composition
+envelope → Morning Meeting.
+
+The composition input contains canonical Morning Meeting report/request and
+Portfolio AI context plus an ordered list of already-grounded Sprint 9C results.
+Validation replays the existing canonical and grounding validators, requires
+the exact retained source context, and rejects duplicate identity, unknown or
+contradictory references, injected fields, and every pre-grounding trust state.
+
+The output keeps canonical state and non-authoritative AI material separate.
+Canonical context wins by construction: the boundary performs no reconciliation,
+semantic matching, missing-data repair, numeric conversion, ranking, trust
+promotion, or prose generation. Sprint 9D.1 is contract-only; Gap C and full
+Morning Meeting integration are not complete.

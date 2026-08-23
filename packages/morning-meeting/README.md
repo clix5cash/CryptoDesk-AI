@@ -47,3 +47,25 @@ fallback provider or model substitution. Empty selected briefs return an empty
 narration without resolving a provider or invoking a completion client.
 Provider-generated IDs and unsupported metadata are not authoritative; narration
 cannot modify Morning Meeting analytical state.
+
+## Sprint 9D.1 Portfolio AI composition boundary
+
+Gap C now begins through the opt-in application-owned contract
+`composeMorningMeetingPortfolioAi`: `non_authoritative_interpretation` →
+validated composition envelope → Morning Meeting. The envelope keeps the
+canonical Morning Meeting report and Portfolio AI context separate from an
+ordered collection of already-grounded AI interpretations. Canonical identity,
+values, coverage, timestamps, and provenance remain authoritative application
+state; AI prose remains non-authoritative descriptive material.
+
+The boundary accepts zero or more complete Sprint 9C grounding results only. It
+validates their exact source context and retained execution/provider/model,
+candidate, fact, section, and ProviderExchange traceability. Raw execution,
+parsed output, candidates, unknown references, injected fields, duplicate
+identity, and mismatched source contexts fail closed. It performs no matching,
+inference, arithmetic, ranking, reconciliation, trust promotion, or prose
+generation.
+
+Sprint 9D.1 establishes the composition contract only. Full Morning Meeting
+orchestration remains later Sprint 9D work, and no recommendation, trading, or
+prediction authority is introduced.

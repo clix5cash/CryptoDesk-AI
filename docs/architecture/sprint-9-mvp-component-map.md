@@ -216,3 +216,15 @@ does not move into runtime/normalization, grounding cannot bypass parsed and
 validated artifacts, dependency direction stays AI → Portfolio, and Morning
 Meeting remains outside the path. The terminal Gap B artifact is only
 `non_authoritative_interpretation`; Sprint 9D owns Gap C.
+
+## Sprint 9D.1 component-map note
+
+`composeMorningMeetingPortfolioAi` is the application-owned entry into Gap C.
+It validates an existing canonical Morning Meeting report/request and Portfolio
+AI context alongside zero or more complete grounded results. It preserves the
+two sources as distinct envelope components and accepts no raw execution,
+parsed, candidate, runtime, or vendor contract.
+
+The dependency direction is Morning Meeting → provider-neutral AI → Portfolio.
+There is no reverse AI → Morning Meeting or Portfolio → AI edge. Full Morning
+Meeting orchestration remains Sprint 9D.2 or later.

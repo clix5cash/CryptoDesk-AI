@@ -349,3 +349,17 @@ ordering, isolation, backward compatibility, and dependency audits. Sprint
 9C.4 adds closure tests and documentation only; no production acceptance fix was
 required. Gap C and Morning Meeting composition remain unimplemented and owned
 by Sprint 9D.
+
+## Sprint 9D.1 implementation note
+
+An additive Morning Meeting-owned composition contract now accepts canonical
+application context together with zero or more fully grounded Sprint 9C results.
+Only `non_authoritative_interpretation` enters the AI side; exact retained
+source-context and identity/reference validation prevents raw, parsed,
+candidate, mismatched, or injected material from crossing the boundary.
+
+The validated output is a detached envelope with separate canonical and
+non-authoritative components. It creates no new trust level or canonical
+authority and performs no orchestration, inference, ranking, calculation, or
+presentation generation. Sprint 9D.1 only establishes the contract; Gap C is
+not closed and Sprint 9D.2 or later owns broader Morning Meeting integration.

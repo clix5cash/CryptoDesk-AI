@@ -50,6 +50,9 @@ importers:
 
   packages/morning-meeting:
     dependencies:
+      '@cryptodesk-ai/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@cryptodesk-ai/market-intelligence':
         specifier: workspace:*
         version: link:../market-intelligence
