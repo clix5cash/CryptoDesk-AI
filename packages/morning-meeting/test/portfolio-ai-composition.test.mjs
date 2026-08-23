@@ -20,10 +20,12 @@ import {
 } from '@cryptodesk-ai/ai';
 import {
   MorningMeetingBias,
+  MorningMeetingPortfolioAiFailurePolicy,
   MorningMeetingReportError,
   MorningMeetingReportValidator,
   MorningMeetingRiskLevel,
   composeMorningMeetingPortfolioAi,
+  composeMorningMeetingPortfolioAiApplicationOutput,
   validateMorningMeetingPortfolioAiComposition,
 } from '../dist/index.js';
 
@@ -362,4 +364,117 @@ test('keeps dependency direction and existing Morning Meeting report validation 
   assert.doesNotThrow(() =>
     new MorningMeetingReportValidator().validate(canonical.report, canonical.request),
   );
+});
+
+test('orchestrates the canonical report unchanged when optional AI is absent', () => {
+  const canonical = meetingCanonical();
+  const result = composeMorningMeetingPortfolioAiApplicationOutput(canonical);
+
+  assert.deepEqual(result, { canonicalReport: canonical.report });
+  assert.notEqual(result.canonicalReport, canonical.report);
+  assert.equal('aiNarrative' in result, false);
+});
+
+test('includes validated AI prose separately with exact traceability and canonical authority', () => {
+  const fixture = portfolioFixture();
+  const composition = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const result = composeMorningMeetingPortfolioAiApplicationOutput({
+    request: composition.canonical.request,
+    report: composition.canonical.report,
+    composition,
+  });
+
+  assert.deepEqual(result.canonicalReport, composition.canonical.report);
+  assert.equal(result.canonicalReport.marketViews[0].riskLevel, MorningMeetingRiskLevel.Low);
+  assert.equal(result.aiNarrative.authority, 'non_authoritative_interpretation');
+  assert.equal(result.aiNarrative.items[0].authority, 'non_authoritative_interpretation');
+  assert.deepEqual(result.aiNarrative.items[0].trace, {
+    executionId: 'composition-execution-one',
+    providerId: 'composition-provider',
+    modelId: 'composition-model',
+    candidateId: 'candidate-one-network-a',
+    factReferences: fixture.grounded.grounded.interpretations[0].factReferences,
+    sectionIds: fixture.grounded.grounded.interpretations[0].sectionIds ?? [],
+  });
+  assert.equal('riskLevel' in result.aiNarrative.items[0], false);
+  assert.equal('rawOutput' in result.aiNarrative.items[0].trace, false);
+});
+
+test('preserves interpretation and candidate order through application presentation', () => {
+  const first = portfolioFixture('first');
+  const second = portfolioFixture('second');
+  const composition = composeMorningMeetingPortfolioAi(
+    input([second.grounded, first.grounded], first.context),
+  );
+  const result = composeMorningMeetingPortfolioAiApplicationOutput({
+    request: composition.canonical.request,
+    report: composition.canonical.report,
+    composition,
+  });
+
+  assert.deepEqual(
+    result.aiNarrative.items.map((item) => item.id),
+    [
+      'candidate-second-network-a',
+      'candidate-second-network-b',
+      'candidate-second-missing',
+      'candidate-first-network-a',
+      'candidate-first-network-b',
+      'candidate-first-missing',
+    ],
+  );
+});
+
+test('rejects invalid AI by default or explicitly omits it without affecting canonical output', () => {
+  const fixture = portfolioFixture();
+  const composition = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const invalid = {
+    ...composition,
+    interpretations: [{ ...fixture.grounded, authority: 'untrusted_candidate_interpretation' }],
+  };
+  const canonicalInput = {
+    request: composition.canonical.request,
+    report: composition.canonical.report,
+  };
+
+  assert.throws(
+    () =>
+      composeMorningMeetingPortfolioAiApplicationOutput({
+        ...canonicalInput,
+        composition: invalid,
+      }),
+    MorningMeetingReportError,
+  );
+  assert.deepEqual(
+    composeMorningMeetingPortfolioAiApplicationOutput({
+      ...canonicalInput,
+      composition: invalid,
+      aiFailurePolicy: MorningMeetingPortfolioAiFailurePolicy.Omit,
+    }),
+    { canonicalReport: composition.canonical.report },
+  );
+  assert.equal(composition.canonical.report.marketViews[0].riskLevel, MorningMeetingRiskLevel.Low);
+});
+
+test('keeps AI-aware application calls deterministic, detached, and isolated after failure', () => {
+  const fixture = portfolioFixture();
+  const composition = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const source = {
+    request: composition.canonical.request,
+    report: composition.canonical.report,
+    composition,
+  };
+  const before = JSON.stringify(source);
+  const expected = composeMorningMeetingPortfolioAiApplicationOutput(source);
+  const mutable = composeMorningMeetingPortfolioAiApplicationOutput(source);
+  mutable.canonicalReport.marketViews[0].riskLevel = MorningMeetingRiskLevel.High;
+  mutable.aiNarrative.items[0].content = 'local only';
+
+  assert.equal(JSON.stringify(source), before);
+  assert.deepEqual(composeMorningMeetingPortfolioAiApplicationOutput(source), expected);
+  assert.throws(
+    () => composeMorningMeetingPortfolioAiApplicationOutput({ ...source, extra: true }),
+    MorningMeetingReportError,
+  );
+  assert.deepEqual(composeMorningMeetingPortfolioAiApplicationOutput(source), expected);
 });

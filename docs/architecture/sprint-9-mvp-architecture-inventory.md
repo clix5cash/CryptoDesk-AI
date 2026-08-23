@@ -253,3 +253,15 @@ Morning Meeting depends on provider-neutral AI contracts. AI does not depend on
 Morning Meeting, Portfolio does not depend on AI, and the concrete provider
 runtime remains outside this composition. Sprint 9D.1 adds no orchestration or
 presentation generation; Gap C is not closed.
+
+## Sprint 9D.2 application-flow inventory
+
+Morning Meeting now owns an additive application presentation orchestrator:
+validated canonical report plus optional 9D.1 composition → canonical report
+plus a separate non-authoritative AI narrative. The existing deterministic
+report service and all provider/runtime components remain unchanged.
+
+The application explicitly selects reject-or-omit behavior for invalid AI.
+Omission preserves canonical output, while inclusion retains provider-neutral
+identity and reference trace locators without exposing raw execution or runtime
+configuration. Gap C remains open for Sprint 9D.3 or later lifecycle hardening.

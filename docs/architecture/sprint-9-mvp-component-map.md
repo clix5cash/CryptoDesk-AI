@@ -228,3 +228,15 @@ parsed, candidate, runtime, or vendor contract.
 The dependency direction is Morning Meeting → provider-neutral AI → Portfolio.
 There is no reverse AI → Morning Meeting or Portfolio → AI edge. Full Morning
 Meeting orchestration remains Sprint 9D.2 or later.
+
+## Sprint 9D.2 component-map note
+
+`composeMorningMeetingPortfolioAiApplicationOutput` is downstream of the 9D.1
+validator and alongside, not inside, `DefaultMorningMeetingService`. It maps
+already-grounded interpretation prose into an authority-labeled presentation
+field while returning a detached copy of the unchanged canonical report.
+
+There is no raw-output, parser, candidate, grounding, provider-runtime, or
+vendor dependency in the application API. Missing AI is a normal path; invalid
+AI follows the caller-selected reject or omit policy. Sprint 9D.3 or later owns
+remaining lifecycle and closure work.

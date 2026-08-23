@@ -69,3 +69,20 @@ generation.
 Sprint 9D.1 establishes the composition contract only. Full Morning Meeting
 orchestration remains later Sprint 9D work, and no recommendation, trading, or
 prediction authority is introduced.
+
+## Sprint 9D.2 application composition flow
+
+`composeMorningMeetingPortfolioAiApplicationOutput` is the opt-in
+application-owned presentation flow after the 9D.1 envelope. It returns the
+validated canonical report unchanged and, when AI is supplied, a separate
+`aiNarrative` whose authority remains `non_authoritative_interpretation`.
+Narrative items expose descriptive content plus provider-neutral execution,
+provider, optional model, candidate, fact, and section trace locators; they do
+not expose raw output or runtime configuration.
+
+AI remains optional. Missing or intentionally omitted AI produces the canonical
+report alone. Invalid AI is rejected by default, while the explicit `omit`
+failure policy preserves the canonical report without leaking lower-level
+provider errors into output. Neither policy changes report facts, identity,
+risk, coverage, ordering, timestamps, or provenance. Sprint 9D remains open;
+9D.3 or later owns lifecycle hardening and closure work.

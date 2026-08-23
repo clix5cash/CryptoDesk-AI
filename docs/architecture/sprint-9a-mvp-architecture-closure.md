@@ -363,3 +363,17 @@ non-authoritative components. It creates no new trust level or canonical
 authority and performs no orchestration, inference, ranking, calculation, or
 presentation generation. Sprint 9D.1 only establishes the contract; Gap C is
 not closed and Sprint 9D.2 or later owns broader Morning Meeting integration.
+
+## Sprint 9D.2 implementation note
+
+The Morning Meeting application package now exposes an opt-in presentation
+orchestrator over the 9D.1 composition envelope. Its output retains the
+canonical report as one component and renders validated interpretation text in
+a separate `non_authoritative_interpretation` component with exact
+provider-neutral identity and reference trace locators.
+
+No-AI behavior remains valid. Invalid AI is either rejected or explicitly
+omitted according to application policy, and cannot alter canonical analytical
+state. Existing report generation, narration, runtime, parser, candidate, and
+grounding behavior remains unchanged. Sprint 9D.2 does not close Gap C; 9D.3 or
+later owns remaining lifecycle hardening.

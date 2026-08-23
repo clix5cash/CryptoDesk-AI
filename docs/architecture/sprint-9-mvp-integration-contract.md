@@ -324,3 +324,22 @@ Canonical context wins by construction: the boundary performs no reconciliation,
 semantic matching, missing-data repair, numeric conversion, ranking, trust
 promotion, or prose generation. Sprint 9D.1 is contract-only; Gap C and full
 Morning Meeting integration are not complete.
+
+## Sprint 9D.2 application integration
+
+The current Gap C path is:
+
+`non_authoritative_interpretation` →
+`MorningMeetingPortfolioAiComposition` → application-owned presentation
+orchestration → canonical report plus separate non-authoritative AI narrative.
+
+The application validates that the composition's request and report are exact
+matches for its canonical inputs. It preserves interpretation and candidate
+order and emits only descriptive prose with provider-neutral trace locators.
+Canonical conflicts cannot overwrite the report because AI content is never
+merged into its analytical fields.
+
+AI is optional. Invalid AI fails closed by default or may be deliberately
+omitted under an explicit application policy; either outcome leaves canonical
+state unchanged. Gap C and Sprint 9D are not complete. Sprint 9D.3 or later owns
+remaining lifecycle and hardening work.
