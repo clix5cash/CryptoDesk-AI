@@ -390,3 +390,16 @@ prove exact traceability, cross-network identity, missing-data and decimal
 preservation, ordering, detachment, repeatability, sanitized failure, and
 isolation across trust/reference/injection/duplicate/malformed failures. Gap C
 is not closed; Sprint 9D.4 owns final closure.
+
+## Sprint 9D.4 closure decision
+
+Sprint 9D and Gap C are COMPLETE. Public-API closure evidence proves validated
+`non_authoritative_interpretation` → Morning Meeting composition →
+application-owned presentation/lifecycle → authoritative canonical report plus
+optional separate non-authoritative narrative.
+
+All authority, lifecycle, no-AI, invalid-AI, traceability, cross-network,
+missing-data, precision, ordering, detachment, isolation, backward-compatibility,
+dependency, and security gates pass. Sprint 9D.4 adds tests and documentation
+only; no production acceptance fix was required. Sprint 9E owns later MVP
+application/API lifecycle and has not started.

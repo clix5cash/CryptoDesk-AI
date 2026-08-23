@@ -103,3 +103,22 @@ execution/model/candidate/fact/section trace locators remain validated. No prose
 conflict, missing-data claim, numeric claim, recommendation, or trading language
 can modify canonical identity, values, risk, coverage, timestamps, provenance,
 or ordering. Gap C remains open; Sprint 9D.4 owns final closure.
+
+## Sprint 9D.4 Gap C closure
+
+Gap C is CLOSED. Public-API closure coverage proves the legal path:
+
+`non_authoritative_interpretation` →
+`MorningMeetingPortfolioAiComposition` → application-owned lifecycle and
+presentation → authoritative `canonicalReport` plus optional, separately
+labeled `aiNarrative` → user-visible application output.
+
+Portfolio and deterministic Morning Meeting state remain canonical authority.
+Morning Meeting owns composition, inclusion/omission policy, lifecycle, and
+presentation. AI prose remains only `non_authoritative_interpretation`; it
+cannot create or reconcile canonical truth. No-AI, unavailable, empty,
+omitted-invalid, and fail-closed rejected-invalid paths preserve deterministic
+canonical behavior. Exact provider-neutral traceability, cross-network identity,
+missing-data states, decimal strings, ordering, detachment, isolation, and
+legacy APIs are covered. Sprint 9E owns MVP application/API lifecycle beyond
+this closed boundary and has not started.

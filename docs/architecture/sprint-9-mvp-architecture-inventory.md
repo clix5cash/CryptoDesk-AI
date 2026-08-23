@@ -277,3 +277,15 @@ The lifecycle wrapper delegates to the unchanged 9D.2 flow. Canonical report
 state remains detached and independently usable, while traceability remains
 exact and provider-neutral. No persistence, cache, scheduler, retry, fallback,
 or global lifecycle state exists. Gap C is not closed; Sprint 9D.4 owns closure.
+
+## Sprint 9D.4 Gap C closure inventory
+
+Gap C is CLOSED with no production component change in 9D.4. Focused public-API
+coverage composes the retained grounded source chain through the 9D.1 envelope,
+9D.2 presentation flow, and 9D.3 lifecycle contract into detached canonical and
+non-authoritative application output.
+
+All authority, optionality, traceability, failure-isolation, compatibility, and
+dependency gates pass. Morning Meeting remains the application owner; AI and
+Portfolio dependency direction remains one-way. Sprint 9E owns later MVP
+application/API lifecycle and has not started.

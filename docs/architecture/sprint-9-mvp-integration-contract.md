@@ -361,3 +361,33 @@ trust level. Included narrative still carries only
 canonical report without AI prose. Exact trace validation, deterministic order,
 detachment, and failed-call isolation remain enforced. Gap C remains open for
 the Sprint 9D.4 closure gate.
+
+## Sprint 9D.4 Gap C closure decision
+
+Gap C is CLOSED. The acceptance matrix is:
+
+| Gap C criterion                                                                          | Result |
+| ---------------------------------------------------------------------------------------- | ------ |
+| Morning Meeting owns composition, lifecycle, inclusion policy, and presentation          | PASS   |
+| Dependency direction remains Morning Meeting → AI → Portfolio with no reverse edge       | PASS   |
+| Only `non_authoritative_interpretation` enters application composition                   | PASS   |
+| Raw execution and untrusted candidates cannot enter Morning Meeting                      | PASS   |
+| Canonical report and AI narrative remain structurally and authoritatively separate       | PASS   |
+| No-AI behavior remains valid and AI inclusion remains optional                           | PASS   |
+| Invalid AI fails closed; explicit omission remains application-owned                     | PASS   |
+| AI failure or prose conflict cannot mutate canonical state                               | PASS   |
+| Exact execution/provider/model/candidate/fact/presentation/section traceability survives | PASS   |
+| Same-symbol cross-network identity remains distinct                                      | PASS   |
+| Partial, unavailable, insufficient, and missing-data states remain explicit              | PASS   |
+| Canonical decimal strings remain exact                                                   | PASS   |
+| Canonical and AI ordering remain deterministic without ranking or merging                | PASS   |
+| Lifecycle outcomes remain application-only, outside canonical state and AI trust         | PASS   |
+| Outputs are detached, calls repeatable, and failures isolated                            | PASS   |
+| Sprint 8/9B/9C and Morning Meeting public APIs remain compatible                         | PASS   |
+| No provider/runtime/vendor/secret leakage or forbidden capability exists                 | PASS   |
+| Full repository validation passes                                                        | PASS   |
+
+Focused closure coverage reuses the lower-level 9D.1–9D.3 and Sprint 9C tests
+and adds one complete public-API success path. No production acceptance defect
+was found. Sprint 9E owns MVP application/API lifecycle beyond Gap C and has not
+started.

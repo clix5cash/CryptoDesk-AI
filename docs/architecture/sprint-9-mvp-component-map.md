@@ -252,3 +252,15 @@ Default invalid-AI behavior remains fail-closed through a sanitized typed error;
 explicit omission and upstream absence return the canonical report without AI.
 No new dependency edge or stateful component is introduced. Sprint 9D.4 owns
 the final Gap C closure gate.
+
+## Sprint 9D.4 component-map closure
+
+Gap C is CLOSED without adding a component. The existing public path is:
+grounded AI result → Morning Meeting composition → application presentation →
+application lifecycle result. Canonical report and optional AI narrative remain
+separate terminal components with distinct authority.
+
+Source and dependency audits confirm no raw-output shortcut, reverse package
+edge, provider/runtime coupling, vendor contract, stateful lifecycle component,
+or canonical mutation. Sprint 9E owns lifecycle beyond this boundary and is not
+implemented.

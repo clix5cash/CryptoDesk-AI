@@ -630,3 +630,70 @@ test('sanitizes and isolates every invalid lifecycle composition before a valid 
     assert.deepEqual(composeMorningMeetingPortfolioAiLifecycle(lifecycleInput), expected);
   }
 });
+
+test('closes Gap C through the legal public application path with complete authority separation', () => {
+  const first = portfolioFixture('closure-first');
+  const second = portfolioFixture('closure-second');
+  const compositionInput = input([second.grounded, first.grounded], first.context);
+  const compositionBefore = JSON.stringify(compositionInput);
+  const composition = composeMorningMeetingPortfolioAi(compositionInput);
+  const lifecycleInput = {
+    request: composition.canonical.request,
+    report: composition.canonical.report,
+    composition,
+    aiRequested: true,
+  };
+  const lifecycleBefore = JSON.stringify(lifecycleInput);
+  const firstResult = composeMorningMeetingPortfolioAiLifecycle(lifecycleInput);
+  const secondResult = composeMorningMeetingPortfolioAiLifecycle(lifecycleInput);
+
+  assert.deepEqual(firstResult, secondResult);
+  assert.equal(firstResult.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Included);
+  assert.deepEqual(firstResult.output.canonicalReport, composition.canonical.report);
+  assert.equal('aiNarrative' in firstResult.output.canonicalReport, false);
+  assert.equal(firstResult.output.aiNarrative.authority, 'non_authoritative_interpretation');
+  assert.deepEqual(
+    firstResult.output.aiNarrative.items.map((item) => [
+      item.trace.executionId,
+      item.trace.candidateId,
+      item.trace.factReferences[0].factId,
+    ]),
+    [second.grounded, first.grounded].flatMap((grounded) =>
+      grounded.grounded.interpretations.map((interpretation) => [
+        grounded.executionId,
+        interpretation.id,
+        interpretation.factReferences[0].factId,
+      ]),
+    ),
+  );
+
+  const source = second.grounded.sourceCandidateValidation.sourceExchange;
+  assert.equal(source.response.source.result.authority, 'untrusted_model_execution');
+  assert.equal(source.descriptor.executionId, second.grounded.executionId);
+  assert.equal(source.descriptor.request.model.providerId, second.grounded.providerId);
+  assert.equal(source.descriptor.request.model.modelId, second.grounded.modelId);
+  assert.equal(
+    composition.canonical.portfolioContext.summary.totalValuedValue,
+    '900719925474099312345678.123456',
+  );
+  assert.equal(composition.canonical.portfolioContext.summary.coverage.state, 'partial');
+  assert.deepEqual(
+    composition.canonical.portfolioContext.facts
+      .slice(0, 2)
+      .map((fact) => [fact.evidence.insight.asset.symbol, fact.evidence.insight.asset.networkId]),
+    [
+      ['USDC', 'network-a'],
+      ['USDC', 'network-b'],
+    ],
+  );
+  assert.equal(
+    composition.canonical.portfolioContext.facts[2].evidence.insight.unavailableReason,
+    'missing_price',
+  );
+  assert.equal(JSON.stringify(compositionInput), compositionBefore);
+  assert.equal(JSON.stringify(lifecycleInput), lifecycleBefore);
+
+  firstResult.output.canonicalReport.marketViews[0].riskLevel = MorningMeetingRiskLevel.High;
+  firstResult.output.aiNarrative.items[0].trace.factReferences[0].factId = 'local-only';
+  assert.deepEqual(composeMorningMeetingPortfolioAiLifecycle(lifecycleInput), secondResult);
+});
