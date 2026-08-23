@@ -377,3 +377,16 @@ omitted according to application policy, and cannot alter canonical analytical
 state. Existing report generation, narration, runtime, parser, candidate, and
 grounding behavior remains unchanged. Sprint 9D.2 does not close Gap C; 9D.3 or
 later owns remaining lifecycle hardening.
+
+## Sprint 9D.3 implementation note
+
+Morning Meeting now exposes an additive application lifecycle result over the
+unchanged 9D.2 presentation API. It distinguishes not-requested, unavailable,
+included, explicitly omitted-invalid, and fail-closed rejected-invalid outcomes
+without placing status inside canonical report state or the AI trust model.
+
+Adversarial descriptive claims remain non-authoritative prose. Hardened tests
+prove exact traceability, cross-network identity, missing-data and decimal
+preservation, ordering, detachment, repeatability, sanitized failure, and
+isolation across trust/reference/injection/duplicate/malformed failures. Gap C
+is not closed; Sprint 9D.4 owns final closure.

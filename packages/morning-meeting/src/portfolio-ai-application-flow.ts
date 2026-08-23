@@ -17,6 +17,25 @@ export enum MorningMeetingPortfolioAiFailurePolicy {
   Omit = 'omit',
 }
 
+/** Application lifecycle only; these values do not describe canonical analytical state. */
+export enum MorningMeetingPortfolioAiLifecycleOutcome {
+  NotRequested = 'not_requested',
+  Included = 'included',
+  RejectedInvalid = 'rejected_invalid',
+  OmittedInvalid = 'omitted_invalid',
+  Unavailable = 'unavailable',
+}
+
+/** Sanitized fail-closed rejection without provider or runtime failure details. */
+export class MorningMeetingPortfolioAiApplicationError extends MorningMeetingReportError {
+  readonly outcome = MorningMeetingPortfolioAiLifecycleOutcome.RejectedInvalid;
+
+  constructor() {
+    super('Morning Meeting Portfolio AI composition was rejected.');
+    this.name = 'MorningMeetingPortfolioAiApplicationError';
+  }
+}
+
 /** Opt-in application orchestration input; canonical report generation remains independent. */
 export interface MorningMeetingPortfolioAiApplicationInput {
   readonly request: MorningMeetingRequest;
@@ -55,6 +74,20 @@ export interface MorningMeetingPortfolioAiApplicationOutput {
   readonly aiNarrative?: MorningMeetingPortfolioAiNarrative;
 }
 
+/** Additive lifecycle input that distinguishes application intent from composition presence. */
+export interface MorningMeetingPortfolioAiLifecycleInput extends MorningMeetingPortfolioAiApplicationInput {
+  readonly aiRequested: boolean;
+}
+
+/** Explicit lifecycle result kept separate from canonical report authority. */
+export interface MorningMeetingPortfolioAiLifecycleResult {
+  readonly outcome: Exclude<
+    MorningMeetingPortfolioAiLifecycleOutcome,
+    MorningMeetingPortfolioAiLifecycleOutcome.RejectedInvalid
+  >;
+  readonly output: MorningMeetingPortfolioAiApplicationOutput;
+}
+
 /**
  * Adds validated descriptive AI material to presentation without changing the
  * canonical report. It performs no report generation, matching, or inference.
@@ -78,11 +111,11 @@ export function composeMorningMeetingPortfolioAiApplicationOutput(
         'Morning Meeting Portfolio AI composition conflicts with the canonical report.',
       );
     }
-  } catch (error) {
+  } catch {
     if (input.aiFailurePolicy === MorningMeetingPortfolioAiFailurePolicy.Omit) {
       return { canonicalReport };
     }
-    throw asReportError(error);
+    throw new MorningMeetingPortfolioAiApplicationError();
   }
 
   return {
@@ -109,6 +142,45 @@ export function composeMorningMeetingPortfolioAiApplicationOutput(
   };
 }
 
+/**
+ * Makes optional AI lifecycle intent explicit without changing the 9D.2 API.
+ * Invalid requested AI still fails closed through the typed rejection error.
+ */
+export function composeMorningMeetingPortfolioAiLifecycle(
+  input: MorningMeetingPortfolioAiLifecycleInput,
+): MorningMeetingPortfolioAiLifecycleResult {
+  validateLifecycleInput(input);
+  const { aiRequested, ...applicationInput } = input;
+
+  if (!aiRequested) {
+    if (input.composition !== undefined) {
+      throw new MorningMeetingReportError(
+        'Morning Meeting Portfolio AI lifecycle input conflicts with application intent.',
+      );
+    }
+    return {
+      outcome: MorningMeetingPortfolioAiLifecycleOutcome.NotRequested,
+      output: composeMorningMeetingPortfolioAiApplicationOutput(applicationInput),
+    };
+  }
+
+  if (input.composition === undefined) {
+    return {
+      outcome: MorningMeetingPortfolioAiLifecycleOutcome.Unavailable,
+      output: composeMorningMeetingPortfolioAiApplicationOutput(applicationInput),
+    };
+  }
+
+  const output = composeMorningMeetingPortfolioAiApplicationOutput(applicationInput);
+  return {
+    outcome:
+      output.aiNarrative === undefined
+        ? MorningMeetingPortfolioAiLifecycleOutcome.OmittedInvalid
+        : MorningMeetingPortfolioAiLifecycleOutcome.Included,
+    output,
+  };
+}
+
 function validateInputShape(input: MorningMeetingPortfolioAiApplicationInput): void {
   if (
     !isPlainRecord(input) ||
@@ -124,12 +196,22 @@ function validateInputShape(input: MorningMeetingPortfolioAiApplicationInput): v
   }
 }
 
-function asReportError(error: unknown): MorningMeetingReportError {
-  return error instanceof MorningMeetingReportError
-    ? error
-    : new MorningMeetingReportError(
-        error instanceof Error ? error.message : 'Morning Meeting Portfolio AI composition failed.',
-      );
+function validateLifecycleInput(input: MorningMeetingPortfolioAiLifecycleInput): void {
+  if (
+    !isPlainRecord(input) ||
+    !hasAllowedKeys(input, [
+      'request',
+      'report',
+      'composition',
+      'aiFailurePolicy',
+      'aiRequested',
+    ]) ||
+    typeof input.aiRequested !== 'boolean'
+  ) {
+    throw new MorningMeetingReportError(
+      'Morning Meeting Portfolio AI lifecycle input is malformed.',
+    );
+  }
 }
 
 function sameJson(left: unknown, right: unknown): boolean {

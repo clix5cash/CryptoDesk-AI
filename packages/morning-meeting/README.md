@@ -86,3 +86,20 @@ failure policy preserves the canonical report without leaking lower-level
 provider errors into output. Neither policy changes report facts, identity,
 risk, coverage, ordering, timestamps, or provenance. Sprint 9D remains open;
 9D.3 or later owns lifecycle hardening and closure work.
+
+## Sprint 9D.3 lifecycle hardening
+
+`composeMorningMeetingPortfolioAiLifecycle` additively distinguishes
+application intent and outcomes without changing the 9D.2 output contract:
+`not_requested`, `unavailable`, `included`, and `omitted_invalid`. Invalid AI
+under the default reject policy throws a sanitized
+`MorningMeetingPortfolioAiApplicationError` carrying only the
+`rejected_invalid` application outcome—never provider or runtime details.
+
+Lifecycle status is not canonical analytical state. Every non-error outcome
+retains a detached, usable canonical report; only `included` contains the separately
+labeled `non_authoritative_interpretation` narrative. Exact provider-neutral
+execution/model/candidate/fact/section trace locators remain validated. No prose
+conflict, missing-data claim, numeric claim, recommendation, or trading language
+can modify canonical identity, values, risk, coverage, timestamps, provenance,
+or ordering. Gap C remains open; Sprint 9D.4 owns final closure.

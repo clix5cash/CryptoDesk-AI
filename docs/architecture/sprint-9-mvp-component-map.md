@@ -240,3 +240,15 @@ There is no raw-output, parser, candidate, grounding, provider-runtime, or
 vendor dependency in the application API. Missing AI is a normal path; invalid
 AI follows the caller-selected reject or omit policy. Sprint 9D.3 or later owns
 remaining lifecycle and closure work.
+
+## Sprint 9D.3 component-map note
+
+`composeMorningMeetingPortfolioAiLifecycle` wraps the existing application flow
+without entering report generation, AI grounding, or provider runtime. Its
+status describes only application inclusion policy and remains outside both the
+canonical report and AI trust taxonomy.
+
+Default invalid-AI behavior remains fail-closed through a sanitized typed error;
+explicit omission and upstream absence return the canonical report without AI.
+No new dependency edge or stateful component is introduced. Sprint 9D.4 owns
+the final Gap C closure gate.

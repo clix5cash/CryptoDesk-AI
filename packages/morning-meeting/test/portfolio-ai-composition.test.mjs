@@ -20,12 +20,15 @@ import {
 } from '@cryptodesk-ai/ai';
 import {
   MorningMeetingBias,
+  MorningMeetingPortfolioAiApplicationError,
   MorningMeetingPortfolioAiFailurePolicy,
+  MorningMeetingPortfolioAiLifecycleOutcome,
   MorningMeetingReportError,
   MorningMeetingReportValidator,
   MorningMeetingRiskLevel,
   composeMorningMeetingPortfolioAi,
   composeMorningMeetingPortfolioAiApplicationOutput,
+  composeMorningMeetingPortfolioAiLifecycle,
   validateMorningMeetingPortfolioAiComposition,
 } from '../dist/index.js';
 
@@ -69,7 +72,7 @@ function sectionId(section) {
   return JSON.stringify(['composition-portfolio', section]);
 }
 
-function portfolioFixture(suffix = 'one') {
+function portfolioFixture(suffix = 'one', contents = []) {
   const items = [
     {
       id: 'network-a',
@@ -188,19 +191,19 @@ function portfolioFixture(suffix = 'one') {
       {
         id: `candidate-${suffix}-network-a`,
         kind: 'descriptive',
-        content: 'Non-authoritative description for exact network A evidence.',
+        content: contents[0] ?? 'Non-authoritative description for exact network A evidence.',
         factReferences: [references[0]],
       },
       {
         id: `candidate-${suffix}-network-b`,
         kind: 'descriptive',
-        content: 'Non-authoritative description for exact network B evidence.',
+        content: contents[1] ?? 'Non-authoritative description for exact network B evidence.',
         factReferences: [references[1]],
       },
       {
         id: `candidate-${suffix}-missing`,
         kind: 'descriptive',
-        content: 'Missing data remains missing; prose does not fill it.',
+        content: contents[2] ?? 'Missing data remains missing; prose does not fill it.',
         factReferences: [references[2]],
       },
     ],
@@ -477,4 +480,153 @@ test('keeps AI-aware application calls deterministic, detached, and isolated aft
     MorningMeetingReportError,
   );
   assert.deepEqual(composeMorningMeetingPortfolioAiApplicationOutput(source), expected);
+});
+
+test('expresses application-owned not-requested, unavailable, included, and omitted outcomes', () => {
+  const canonical = meetingCanonical();
+  const fixture = portfolioFixture();
+  const composition = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const canonicalInput = { request: canonical.request, report: canonical.report };
+
+  assert.deepEqual(
+    composeMorningMeetingPortfolioAiLifecycle({ ...canonicalInput, aiRequested: false }),
+    {
+      outcome: MorningMeetingPortfolioAiLifecycleOutcome.NotRequested,
+      output: { canonicalReport: canonical.report },
+    },
+  );
+  assert.deepEqual(
+    composeMorningMeetingPortfolioAiLifecycle({ ...canonicalInput, aiRequested: true }),
+    {
+      outcome: MorningMeetingPortfolioAiLifecycleOutcome.Unavailable,
+      output: { canonicalReport: canonical.report },
+    },
+  );
+  assert.equal(
+    composeMorningMeetingPortfolioAiLifecycle({
+      ...canonicalInput,
+      composition,
+      aiRequested: true,
+    }).outcome,
+    MorningMeetingPortfolioAiLifecycleOutcome.Included,
+  );
+  assert.deepEqual(
+    composeMorningMeetingPortfolioAiLifecycle({
+      ...canonicalInput,
+      composition: composeMorningMeetingPortfolioAi(input([], fixture.context)),
+      aiRequested: true,
+    }),
+    {
+      outcome: MorningMeetingPortfolioAiLifecycleOutcome.Included,
+      output: {
+        canonicalReport: canonical.report,
+        aiNarrative: { authority: 'non_authoritative_interpretation', items: [] },
+      },
+    },
+  );
+
+  const invalid = {
+    ...composition,
+    interpretations: [{ ...fixture.grounded, authority: 'untrusted_candidate_interpretation' }],
+  };
+  assert.deepEqual(
+    composeMorningMeetingPortfolioAiLifecycle({
+      ...canonicalInput,
+      composition: invalid,
+      aiRequested: true,
+      aiFailurePolicy: MorningMeetingPortfolioAiFailurePolicy.Omit,
+    }),
+    {
+      outcome: MorningMeetingPortfolioAiLifecycleOutcome.OmittedInvalid,
+      output: { canonicalReport: canonical.report },
+    },
+  );
+});
+
+test('keeps adversarial AI conflicts descriptive while canonical state stays exact', () => {
+  const fixture = portfolioFixture('conflict', [
+    'Price is 0, risk is high, allocation is 100%, and trade now on another network.',
+    'Coverage is complete at an invented 2099 timestamp; this is a recommendation.',
+    'Missing price is 42.123 and provenance should be replaced.',
+  ]);
+  const composition = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const result = composeMorningMeetingPortfolioAiLifecycle({
+    request: composition.canonical.request,
+    report: composition.canonical.report,
+    composition,
+    aiRequested: true,
+  });
+
+  assert.equal(result.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Included);
+  assert.equal(result.output.canonicalReport.marketViews[0].riskLevel, MorningMeetingRiskLevel.Low);
+  assert.equal(result.output.canonicalReport.generatedAt, '2026-08-23T01:00:00.000Z');
+  assert.equal(composition.canonical.portfolioContext.summary.coverage.state, 'partial');
+  assert.equal(
+    composition.canonical.portfolioContext.summary.totalValuedValue,
+    '900719925474099312345678.123456',
+  );
+  assert.deepEqual(
+    composition.canonical.portfolioContext.facts.slice(0, 2).map((fact) => fact.id),
+    result.output.aiNarrative.items.slice(0, 2).map((item) => item.trace.factReferences[0].factId),
+  );
+  assert.match(result.output.aiNarrative.items[0].content, /trade now/);
+  assert.equal('price' in result.output.aiNarrative.items[0], false);
+  assert.equal('riskLevel' in result.output.aiNarrative.items[0], false);
+});
+
+test('sanitizes and isolates every invalid lifecycle composition before a valid call', () => {
+  const fixture = portfolioFixture();
+  const valid = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const groundedItem = fixture.grounded.grounded.interpretations[0];
+  const invalidCompositions = [
+    {
+      ...valid,
+      interpretations: [{ ...fixture.grounded, authority: 'untrusted_candidate_interpretation' }],
+    },
+    {
+      ...valid,
+      interpretations: [
+        {
+          ...fixture.grounded,
+          grounded: {
+            ...fixture.grounded.grounded,
+            interpretations: [
+              {
+                ...groundedItem,
+                factReferences: [
+                  { ...groundedItem.factReferences[0], presentationItemId: 'substituted' },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      ...valid,
+      interpretations: [{ ...fixture.grounded, canonicalPrice: '1' }],
+    },
+    { ...valid, interpretations: [fixture.grounded, fixture.grounded] },
+    {},
+  ];
+  const lifecycleInput = {
+    request: valid.canonical.request,
+    report: valid.canonical.report,
+    composition: valid,
+    aiRequested: true,
+  };
+  const expected = composeMorningMeetingPortfolioAiLifecycle(lifecycleInput);
+
+  for (const composition of invalidCompositions) {
+    assert.throws(
+      () => composeMorningMeetingPortfolioAiLifecycle({ ...lifecycleInput, composition }),
+      (error) => {
+        assert.equal(error instanceof MorningMeetingPortfolioAiApplicationError, true);
+        assert.equal(error.outcome, MorningMeetingPortfolioAiLifecycleOutcome.RejectedInvalid);
+        assert.equal(error.message, 'Morning Meeting Portfolio AI composition was rejected.');
+        return true;
+      },
+    );
+    assert.deepEqual(composeMorningMeetingPortfolioAiLifecycle(lifecycleInput), expected);
+  }
 });

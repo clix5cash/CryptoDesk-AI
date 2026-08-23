@@ -265,3 +265,15 @@ The application explicitly selects reject-or-omit behavior for invalid AI.
 Omission preserves canonical output, while inclusion retains provider-neutral
 identity and reference trace locators without exposing raw execution or runtime
 configuration. Gap C remains open for Sprint 9D.3 or later lifecycle hardening.
+
+## Sprint 9D.3 lifecycle inventory
+
+An additive Morning Meeting lifecycle wrapper now records application-only
+outcomes for AI not requested, unavailable, included, deliberately omitted as
+invalid, or rejected as invalid. The rejected outcome is carried by a sanitized
+Morning Meeting error; it includes no provider/runtime operational detail.
+
+The lifecycle wrapper delegates to the unchanged 9D.2 flow. Canonical report
+state remains detached and independently usable, while traceability remains
+exact and provider-neutral. No persistence, cache, scheduler, retry, fallback,
+or global lifecycle state exists. Gap C is not closed; Sprint 9D.4 owns closure.

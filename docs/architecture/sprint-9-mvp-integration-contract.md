@@ -343,3 +343,21 @@ AI is optional. Invalid AI fails closed by default or may be deliberately
 omitted under an explicit application policy; either outcome leaves canonical
 state unchanged. Gap C and Sprint 9D are not complete. Sprint 9D.3 or later owns
 remaining lifecycle and hardening work.
+
+## Sprint 9D.3 lifecycle contract
+
+The optional lifecycle wrapper distinguishes:
+
+- AI not requested → `not_requested`
+- AI requested but no composition supplied → `unavailable`
+- validated composition presented → `included`
+- invalid composition under explicit omit policy → `omitted_invalid`
+- invalid composition under default reject policy → sanitized
+  `rejected_invalid` application error
+
+These outcomes never alter canonical analytical truth or create another AI
+trust level. Included narrative still carries only
+`non_authoritative_interpretation`; all other non-error outcomes return a usable
+canonical report without AI prose. Exact trace validation, deterministic order,
+detachment, and failed-call isolation remain enforced. Gap C remains open for
+the Sprint 9D.4 closure gate.
