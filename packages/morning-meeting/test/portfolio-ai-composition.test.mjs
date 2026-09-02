@@ -1039,3 +1039,104 @@ test('sanitizes service failures and malformed output without partial lifecycle 
   assert.equal(compositionReads, 2);
   assert.equal(result.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Unavailable);
 });
+
+test('closes Sprint 9E through the complete transport-neutral public MVP application path', async () => {
+  const first = portfolioFixture('9e-closure-first');
+  const second = portfolioFixture('9e-closure-second');
+  const compositionInput = input([second.grounded, first.grounded], first.context);
+  const composition = composeMorningMeetingPortfolioAi(compositionInput);
+  const externalInput = {
+    request: composition.canonical.request,
+    aiRequested: true,
+    composition,
+  };
+  const before = JSON.stringify(externalInput);
+  let generationCount = 0;
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async (request) => {
+      generationCount += 1;
+      assert.notEqual(request, externalInput.request);
+      assert.deepEqual(request, externalInput.request);
+      return composition.canonical.report;
+    },
+  });
+
+  const firstResult = await api.execute(externalInput);
+  const expected = await api.execute(externalInput);
+
+  assert.equal(generationCount, 2);
+  assert.deepEqual(firstResult, expected);
+  assert.equal(firstResult.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Included);
+  assert.deepEqual(firstResult.output.canonicalReport, composition.canonical.report);
+  assert.equal('aiNarrative' in firstResult.output.canonicalReport, false);
+  assert.equal(firstResult.output.aiNarrative.authority, 'non_authoritative_interpretation');
+  assert.deepEqual(
+    firstResult.output.aiNarrative.items.map((item) => ({
+      executionId: item.trace.executionId,
+      providerId: item.trace.providerId,
+      modelId: item.trace.modelId,
+      candidateId: item.trace.candidateId,
+      factReferences: item.trace.factReferences,
+      sectionIds: item.trace.sectionIds,
+    })),
+    [second.grounded, first.grounded].flatMap((grounded) =>
+      grounded.grounded.interpretations.map((item) => ({
+        executionId: grounded.executionId,
+        providerId: grounded.providerId,
+        modelId: grounded.modelId,
+        candidateId: item.id,
+        factReferences: item.factReferences,
+        sectionIds: item.sectionIds ?? [],
+      })),
+    ),
+  );
+  assert.deepEqual(
+    composition.canonical.portfolioContext.facts
+      .slice(0, 2)
+      .map((fact) => [fact.evidence.insight.asset.symbol, fact.evidence.insight.asset.networkId]),
+    [
+      ['USDC', 'network-a'],
+      ['USDC', 'network-b'],
+    ],
+  );
+  assert.equal(composition.canonical.portfolioContext.summary.coverage.state, 'partial');
+  assert.equal(
+    composition.canonical.portfolioContext.facts[2].evidence.insight.unavailableReason,
+    'missing_price',
+  );
+  assert.equal(
+    composition.canonical.portfolioContext.summary.totalValuedValue,
+    '900719925474099312345678.123456',
+  );
+  assert.equal(JSON.stringify(externalInput), before);
+  assert.equal('rawOutput' in firstResult.output.aiNarrative.items[0].trace, false);
+
+  firstResult.output.canonicalReport.marketViews[0].riskLevel = MorningMeetingRiskLevel.High;
+  firstResult.output.aiNarrative.items[0].trace.factReferences[0].factId = 'local-only';
+  assert.deepEqual(await api.execute(externalInput), expected);
+  assert.equal(generationCount, 3);
+
+  const [mvpSource, morningPackage, aiPackage, portfolioPackage, runtimePackage] =
+    await Promise.all([
+      readFile(new URL('../src/mvp-application-api.ts', import.meta.url), 'utf8'),
+      readFile(new URL('../package.json', import.meta.url), 'utf8').then(JSON.parse),
+      readFile(new URL('../../ai/package.json', import.meta.url), 'utf8').then(JSON.parse),
+      readFile(new URL('../../portfolio/package.json', import.meta.url), 'utf8').then(JSON.parse),
+      readFile(new URL('../../openai-runtime/package.json', import.meta.url), 'utf8').then(
+        JSON.parse,
+      ),
+    ]);
+  assert.equal(mvpSource.match(/class DefaultMorningMeetingMvpApplicationApi/g)?.length, 1);
+  assert.equal(mvpSource.match(/morningMeetingService\.generate\(/g)?.length, 1);
+  assert.equal(mvpSource.match(/composeMorningMeetingPortfolioAiLifecycle\(\{/g)?.length, 1);
+  assert.equal(
+    /fetch\(|process\.env|credential|apiKey|rawOutput|retry|fallback|providerRequest/.test(
+      mvpSource,
+    ),
+    false,
+  );
+  assert.equal(morningPackage.dependencies['@cryptodesk-ai/ai'], 'workspace:*');
+  assert.equal(aiPackage.dependencies?.['@cryptodesk-ai/morning-meeting'], undefined);
+  assert.equal(portfolioPackage.dependencies?.['@cryptodesk-ai/ai'], undefined);
+  assert.equal(runtimePackage.dependencies?.['@cryptodesk-ai/morning-meeting'], undefined);
+});

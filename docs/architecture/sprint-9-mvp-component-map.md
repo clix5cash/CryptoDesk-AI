@@ -305,3 +305,17 @@ results terminate with a sanitized application error and no partial output.
 
 The AI branch remains caller-supplied and provider-neutral. Sprint 9E.4 owns
 final Sprint 9E closure.
+
+## Sprint 9E.4 component-map closure
+
+Sprint 9E closes without changing the component map. The sole legal path is:
+
+```text
+external caller → one Morning Meeting MVP facade → one service generation
+→ existing optional 9D lifecycle → detached external result
+```
+
+Dependency and source audits confirm Morning Meeting → AI → Portfolio remains
+one-way, while runtime depends only inward on AI. No second facade, provider
+auto-execution, transport, persistent state, or circular edge exists. Sprint
+9F has not started.

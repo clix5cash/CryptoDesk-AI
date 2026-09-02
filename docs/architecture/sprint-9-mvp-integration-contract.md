@@ -458,3 +458,41 @@ Morning Meeting application failure message. The existing
 `MorningMeetingPortfolioAiApplicationError` continues to represent only
 `rejected_invalid`; successful lifecycle result shapes and semantics are
 unchanged. Sprint 9E remains open and Sprint 9E.4 owns closure.
+
+## Sprint 9E.4 final closure decision
+
+Sprint 9E is CLOSED. The acceptance matrix is:
+
+| Sprint 9E criterion                                                             | Result |
+| ------------------------------------------------------------------------------- | ------ |
+| Exactly one public MVP facade exists and remains transport-neutral              | PASS   |
+| Public request validation is closed and fail-closed                             | PASS   |
+| Malformed pre-generation input performs zero generation calls                   | PASS   |
+| Each accepted call generates one canonical report exactly once                  | PASS   |
+| The existing AI lifecycle is applied at most once                               | PASS   |
+| No retry, fallback, recursion, re-entry, or duplicate generation exists         | PASS   |
+| Canonical Morning Meeting state remains authoritative                           | PASS   |
+| AI remains optional and caller-supplied                                         | PASS   |
+| The facade constructs or invokes no provider/runtime operation                  | PASS   |
+| Raw provider output never crosses the facade                                    | PASS   |
+| AI narrative remains `non_authoritative_interpretation`                         | PASS   |
+| Existing lifecycle success and `rejected_invalid` semantics are unchanged       | PASS   |
+| Request/report/composition correspondence is exact                              | PASS   |
+| Stale, substituted, malformed, or trust-conflicting composition fails closed    | PASS   |
+| Service exceptions and malformed/invalid service results are sanitized          | PASS   |
+| Service failure returns no partial lifecycle result                             | PASS   |
+| Failed calls do not contaminate later valid calls                               | PASS   |
+| Caller, service, lifecycle, composition, and result artifacts remain detached   | PASS   |
+| Same-symbol cross-network identities remain distinct                            | PASS   |
+| Partial, unavailable, insufficient, and missing data remain explicit            | PASS   |
+| Exact decimal strings remain unchanged                                          | PASS   |
+| Canonical, interpretation, candidate, and trace ordering remains deterministic  | PASS   |
+| Existing Morning Meeting, AI, runtime, and Portfolio APIs remain compatible     | PASS   |
+| Dependency direction remains external → Morning Meeting → AI → Portfolio        | PASS   |
+| No forbidden transport, runtime, secret, state, or autonomous capability exists | PASS   |
+| Full repository validation passes                                               | PASS   |
+
+The closure test composes only public APIs and retains exact execution,
+provider, optional-model, candidate, fact, presentation-item, and section
+references. Sprint 9F owns later release/security/integration hardening and has
+not started.

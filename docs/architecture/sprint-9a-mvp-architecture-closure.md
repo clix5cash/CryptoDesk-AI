@@ -438,3 +438,15 @@ error boundary fix both without changing public contracts.
 
 Sprint 9E remains open. Sprint 9E.4 owns final closure; Sprint 9F/9G and Sprint
 10 remain unstarted.
+
+## Sprint 9E.4 closure decision
+
+Sprint 9E is COMPLETE. The 9E.1 facade, 9E.2 external execution hardening, and
+9E.3 lifecycle isolation all pass the final public-API closure gate. Exact
+generation/lifecycle invocation, optional AI, canonical authority, lifecycle
+semantics, traceability, missing data, precision, ordering, detachment,
+sanitized failure, compatibility, dependency, and forbidden-capability audits
+pass with no 9E.4 production fix.
+
+Sprint 9F and Sprint 9G have not started. Sprint 9F owns later release,
+security, and integration hardening.

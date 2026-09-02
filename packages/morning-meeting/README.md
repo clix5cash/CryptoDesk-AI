@@ -187,3 +187,27 @@ invoke, parse, or ground any provider output. Canonical state remains
 authoritative and caller-supplied narrative remains only
 `non_authoritative_interpretation`. Sprint 9E is still open; Sprint 9E.4 owns
 final closure.
+
+## Sprint 9E.4 final closure
+
+Sprint 9E is CLOSED. The final public flow is:
+
+```text
+external caller → validated MVP application input
+→ detached MorningMeetingService request and exactly one generation
+→ authoritative canonical report
+→ optional caller-supplied validated Portfolio AI composition
+→ existing lifecycle at most once
+→ detached canonical result + optional non-authoritative narrative
+```
+
+Closure coverage proves all lifecycle outcomes, no-AI operation, exact
+identity/reference traceability, cross-network separation, partial and missing
+evidence, decimal precision, ordering, detachment, repeatability, sanitized
+failures, request-copy isolation, and failed-call recovery. The facade remains
+additive and transport-neutral, with no provider execution, raw output,
+credentials, network, retry/fallback, persistence, cache, scheduler, or
+autonomous capability.
+
+Sprint 9F owns later release, security, and integration hardening and has not
+started.

@@ -332,3 +332,16 @@ Focused coverage proves no partial result after service failure, later-call
 isolation, output detachment, and preservation of all four successful lifecycle
 outcomes. No new facade, transport, provider execution, state store, or
 dependency edge exists. Sprint 9E remains open for 9E.4 closure.
+
+## Sprint 9E.4 final closure inventory
+
+Sprint 9E is CLOSED with no production component change in 9E.4. One focused
+public-API closure flow verifies the complete external request → exactly-once
+canonical generation → optional supplied composition → at-most-once existing
+lifecycle → detached result path.
+
+The inventory remains one MVP facade, one deterministic service dependency,
+the existing 9D lifecycle, and provider-neutral AI/Portfolio contracts. No
+transport, runtime invocation, stateful service, secret boundary, or reverse
+dependency was added. Sprint 9F owns later release/security/integration
+hardening and has not started.
