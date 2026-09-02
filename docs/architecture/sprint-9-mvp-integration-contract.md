@@ -391,3 +391,34 @@ Focused closure coverage reuses the lower-level 9D.1–9D.3 and Sprint 9C tests
 and adds one complete public-API success path. No production acceptance defect
 was found. Sprint 9E owns MVP application/API lifecycle beyond Gap C and has not
 started.
+
+## Sprint 9E.1 MVP application/API contract
+
+The legal external entry path is now:
+
+```text
+external application caller
+        ↓
+DefaultMorningMeetingMvpApplicationApi.execute(input)
+        ↓
+injected MorningMeetingService.generate(request)
+        ↓
+existing composeMorningMeetingPortfolioAiLifecycle(...)
+        ↓
+MorningMeetingPortfolioAiLifecycleResult
+```
+
+The API validates its closed outer input, detaches the request before invoking
+the service, validates the generated report through the existing 9D lifecycle,
+and returns the existing detached lifecycle result. AI intent is explicit.
+When requested, only an optional caller-supplied
+`MorningMeetingPortfolioAiComposition` may enter; the API performs no provider
+call, parsing, grounding, inference, or autonomous AI execution.
+
+Canonical Morning Meeting and Portfolio records remain authoritative. Included
+narrative remains separate `non_authoritative_interpretation`, retains exact
+execution/provider/optional-model/candidate/fact/presentation-item/section
+references through the validated source chain, and exposes no raw output.
+Malformed or authority-conflicting AI follows the unchanged reject-or-explicit-
+omit policy and cannot affect canonical output. This is Sprint 9E.1 only;
+transport and later application lifecycle work are not implemented.

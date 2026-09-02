@@ -122,3 +122,26 @@ canonical behavior. Exact provider-neutral traceability, cross-network identity,
 missing-data states, decimal strings, ordering, detachment, isolation, and
 legacy APIs are covered. Sprint 9E owns MVP application/API lifecycle beyond
 this closed boundary and has not started.
+
+## Sprint 9E.1 MVP application API
+
+`DefaultMorningMeetingMvpApplicationApi` is the additive, provider- and
+transport-neutral entry point for an external application caller. Its
+`execute(input)` method accepts a canonical `MorningMeetingRequest`, explicit
+`aiRequested` intent, and an optional already-validated
+`MorningMeetingPortfolioAiComposition`. It invokes the injected
+`MorningMeetingService` once and delegates the generated report and optional AI
+material to the unchanged Sprint 9D lifecycle.
+
+The result reuses `MorningMeetingPortfolioAiLifecycleResult` and therefore
+preserves `not_requested`, `unavailable`, `included`, and `omitted_invalid`;
+invalid requested AI under the default reject policy still throws the
+sanitized `MorningMeetingPortfolioAiApplicationError` with
+`rejected_invalid`. Canonical output remains independently usable and detached.
+AI remains separate `non_authoritative_interpretation`, with exact trace
+locators and no raw provider output.
+
+The API performs no AI or provider execution, transport, persistence,
+scheduling, retry, fallback, configuration, or credential lookup. Callers
+explicitly supply any completed composition. Sprint 9E.2 and later work remain
+outside this boundary.

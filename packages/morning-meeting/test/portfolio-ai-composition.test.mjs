@@ -19,6 +19,7 @@ import {
   validatePortfolioAiParsedCandidates,
 } from '@cryptodesk-ai/ai';
 import {
+  DefaultMorningMeetingMvpApplicationApi,
   MorningMeetingBias,
   MorningMeetingPortfolioAiApplicationError,
   MorningMeetingPortfolioAiFailurePolicy,
@@ -696,4 +697,144 @@ test('closes Gap C through the legal public application path with complete autho
   firstResult.output.canonicalReport.marketViews[0].riskLevel = MorningMeetingRiskLevel.High;
   firstResult.output.aiNarrative.items[0].trace.factReferences[0].factId = 'local-only';
   assert.deepEqual(composeMorningMeetingPortfolioAiLifecycle(lifecycleInput), secondResult);
+});
+
+test('exposes canonical no-AI and unavailable lifecycle outcomes through the MVP API', async () => {
+  const canonical = meetingCanonical();
+  const calls = [];
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async (request) => {
+      calls.push(request);
+      return canonical.report;
+    },
+  });
+
+  assert.deepEqual(await api.execute({ request: canonical.request, aiRequested: false }), {
+    outcome: MorningMeetingPortfolioAiLifecycleOutcome.NotRequested,
+    output: { canonicalReport: canonical.report },
+  });
+  assert.deepEqual(await api.execute({ request: canonical.request, aiRequested: true }), {
+    outcome: MorningMeetingPortfolioAiLifecycleOutcome.Unavailable,
+    output: { canonicalReport: canonical.report },
+  });
+  assert.deepEqual(calls, [canonical.request, canonical.request]);
+  assert.notEqual(calls[0], canonical.request);
+});
+
+test('exposes valid AI separately with exact identity, traceability, precision, and ordering', async () => {
+  const first = portfolioFixture('api-first');
+  const second = portfolioFixture('api-second');
+  const composition = composeMorningMeetingPortfolioAi(
+    input([second.grounded, first.grounded], first.context),
+  );
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => composition.canonical.report,
+  });
+  const result = await api.execute({
+    request: composition.canonical.request,
+    aiRequested: true,
+    composition,
+  });
+
+  assert.equal(result.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Included);
+  assert.deepEqual(result.output.canonicalReport, composition.canonical.report);
+  assert.equal(result.output.aiNarrative.authority, 'non_authoritative_interpretation');
+  assert.deepEqual(
+    result.output.aiNarrative.items.map((item) => [
+      item.trace.executionId,
+      item.trace.providerId,
+      item.trace.modelId,
+      item.trace.candidateId,
+      item.trace.factReferences[0].presentationItemId,
+      item.trace.sectionIds,
+    ]),
+    [second.grounded, first.grounded].flatMap((grounded) =>
+      grounded.grounded.interpretations.map((item) => [
+        grounded.executionId,
+        grounded.providerId,
+        grounded.modelId,
+        item.id,
+        item.factReferences[0].presentationItemId,
+        item.sectionIds ?? [],
+      ]),
+    ),
+  );
+  assert.equal(
+    composition.canonical.portfolioContext.summary.totalValuedValue,
+    '900719925474099312345678.123456',
+  );
+  assert.equal(composition.canonical.portfolioContext.summary.coverage.state, 'partial');
+  assert.deepEqual(
+    composition.canonical.portfolioContext.facts
+      .slice(0, 2)
+      .map((fact) => [fact.evidence.insight.asset.symbol, fact.evidence.insight.asset.networkId]),
+    [
+      ['USDC', 'network-a'],
+      ['USDC', 'network-b'],
+    ],
+  );
+  assert.equal(
+    composition.canonical.portfolioContext.facts[2].evidence.insight.unavailableReason,
+    'missing_price',
+  );
+  assert.equal('rawOutput' in result.output.aiNarrative.items[0].trace, false);
+});
+
+test('fails closed or explicitly omits invalid AI while protecting canonical authority', async () => {
+  const fixture = portfolioFixture('api-invalid');
+  const composition = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const invalid = {
+    ...composition,
+    interpretations: [{ ...fixture.grounded, authority: 'untrusted_candidate_interpretation' }],
+  };
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => composition.canonical.report,
+  });
+  const base = {
+    request: composition.canonical.request,
+    aiRequested: true,
+    composition: invalid,
+  };
+
+  await assert.rejects(
+    () => api.execute(base),
+    (error) =>
+      error instanceof MorningMeetingPortfolioAiApplicationError &&
+      error.outcome === MorningMeetingPortfolioAiLifecycleOutcome.RejectedInvalid,
+  );
+  assert.deepEqual(
+    await api.execute({ ...base, aiFailurePolicy: MorningMeetingPortfolioAiFailurePolicy.Omit }),
+    {
+      outcome: MorningMeetingPortfolioAiLifecycleOutcome.OmittedInvalid,
+      output: { canonicalReport: composition.canonical.report },
+    },
+  );
+  assert.equal(composition.canonical.report.marketViews[0].riskLevel, MorningMeetingRiskLevel.Low);
+});
+
+test('validates the MVP boundary and keeps calls detached, deterministic, and failure-isolated', async () => {
+  const canonical = meetingCanonical();
+  let fail = false;
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      if (fail) throw new Error('isolated canonical generation failure');
+      return canonical.report;
+    },
+  });
+  const input = { request: canonical.request, aiRequested: false };
+  const expected = await api.execute(input);
+  const mutable = await api.execute(input);
+  mutable.output.canonicalReport.marketViews[0].riskLevel = MorningMeetingRiskLevel.High;
+
+  assert.deepEqual(await api.execute(input), expected);
+  await assert.rejects(
+    () => api.execute({ ...input, extra: true }),
+    (error) =>
+      error instanceof MorningMeetingReportError &&
+      /MVP application API input is malformed/.test(error.message),
+  );
+  fail = true;
+  await assert.rejects(() => api.execute(input), /isolated canonical generation failure/);
+  fail = false;
+  assert.deepEqual(await api.execute(input), expected);
 });

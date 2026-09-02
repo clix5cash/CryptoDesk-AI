@@ -289,3 +289,18 @@ All authority, optionality, traceability, failure-isolation, compatibility, and
 dependency gates pass. Morning Meeting remains the application owner; AI and
 Portfolio dependency direction remains one-way. Sprint 9E owns later MVP
 application/API lifecycle and has not started.
+
+## Sprint 9E.1 MVP application API inventory
+
+Morning Meeting now exposes the additive
+`DefaultMorningMeetingMvpApplicationApi` external-call boundary. It owns one
+request-scoped sequence: validate the closed API envelope, invoke an injected
+`MorningMeetingService` once, and pass its canonical report with explicit AI
+intent and any caller-supplied 9D composition into the existing lifecycle.
+
+The public input, output, interface, and default implementation live in
+`@cryptodesk-ai/morning-meeting`. The output is the existing
+`MorningMeetingPortfolioAiLifecycleResult`; no competing lifecycle or trust
+model was introduced. This boundary adds no runtime, provider invocation,
+transport, storage, scheduler, credential, or autonomous composition. Sprint
+9E.2 has not started.

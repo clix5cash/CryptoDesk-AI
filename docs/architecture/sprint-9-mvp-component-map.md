@@ -264,3 +264,18 @@ Source and dependency audits confirm no raw-output shortcut, reverse package
 edge, provider/runtime coupling, vendor contract, stateful lifecycle component,
 or canonical mutation. Sprint 9E owns lifecycle beyond this boundary and is not
 implemented.
+
+## Sprint 9E.1 component-map note
+
+`DefaultMorningMeetingMvpApplicationApi` sits outside the deterministic report
+service and immediately above the completed 9D lifecycle:
+
+```text
+external caller → Morning Meeting MVP API → MorningMeetingService.generate
+→ composeMorningMeetingPortfolioAiLifecycle → canonical report + optional AI narrative
+```
+
+It depends only on Morning Meeting public contracts and the injected service;
+the already-established Morning Meeting → AI → Portfolio package direction is
+unchanged. AI composition is caller-supplied and opt-in. The facade has no
+provider/runtime, vendor, secret, transport, persistence, or scheduling edge.

@@ -16,3 +16,4 @@ export * from './news-narrator-completion.js';
 export * from './provider-neutral-news-narrator-adapter.js';
 export * from './portfolio-ai-composition.js';
 export * from './portfolio-ai-application-flow.js';
+export * from './mvp-application-api.js';
