@@ -318,4 +318,17 @@ Injected-service failures are sanitized at the external application boundary.
 Composition mismatch, identity substitution, invalid trust, and canonical
 injection continue through the existing sanitized AI rejection/omission
 semantics. The component remains stateless, provider-neutral, transport-neutral,
-and optional-AI. Sprint 9E remains open; 9E.3 has not started.
+and optional-AI. Sprint 9E.2 ends at this execution hardening boundary.
+
+## Sprint 9E.3 lifecycle-hardening inventory
+
+The existing facade now isolates the service-owned request copy from the
+lifecycle-owned request copy. This closes a mutation seam without changing any
+public input, output, lifecycle, or error type. Service exceptions and invalid
+service results converge on one sanitized application failure; invalid supplied
+AI retains the existing sanitized `rejected_invalid` error.
+
+Focused coverage proves no partial result after service failure, later-call
+isolation, output detachment, and preservation of all four successful lifecycle
+outcomes. No new facade, transport, provider execution, state store, or
+dependency edge exists. Sprint 9E remains open for 9E.4 closure.

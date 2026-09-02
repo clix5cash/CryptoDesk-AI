@@ -443,4 +443,18 @@ The composition must exactly own the generated request/report and retain its
 validated source identities and references. There is no stale-artifact repair,
 fuzzy reconciliation, provider invocation, retry, fallback, network transport,
 or raw-output exposure. Canonical authority and the existing five lifecycle
-outcomes remain unchanged. Sprint 9E remains open for 9E.3.
+outcomes remain unchanged. Sprint 9E.2 ends at this execution boundary.
+
+## Sprint 9E.3 lifecycle-hardening contract
+
+For every accepted call, the facade validates first, creates independent
+detached request copies, invokes canonical generation exactly once, and applies
+the existing lifecycle at most once. A service cannot mutate the lifecycle's
+accepted request identity. No service failure reaches composition, and invalid
+service output returns no partial result.
+
+All non-AI execution failures are normalized to the fixed provider-neutral
+Morning Meeting application failure message. The existing
+`MorningMeetingPortfolioAiApplicationError` continues to represent only
+`rejected_invalid`; successful lifecycle result shapes and semantics are
+unchanged. Sprint 9E remains open and Sprint 9E.4 owns closure.

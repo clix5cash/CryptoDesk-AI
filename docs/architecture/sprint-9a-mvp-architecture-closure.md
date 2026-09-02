@@ -425,5 +425,16 @@ and sanitizes injected-service failures. Exact composition ownership and all
 canonical/non-authoritative separation remain delegated to the closed 9D
 contracts.
 
-Sprint 9E is not yet complete. Sprint 9E.3, Sprint 9F/9G, and Sprint 10 remain
-unstarted; no transport or autonomous provider execution was introduced.
+Sprint 9E is not yet complete. Sprint 9E.2 ends at external execution
+hardening; Sprint 9F/9G and Sprint 10 remain unstarted.
+
+## Sprint 9E.3 implementation status
+
+Lifecycle hardening closes two acceptance defects in the existing facade:
+service-side mutation could affect the request later used for lifecycle
+validation, and malformed service results could escape the stable external
+error boundary. Independent request copies and one sanitized post-generation
+error boundary fix both without changing public contracts.
+
+Sprint 9E remains open. Sprint 9E.4 owns final closure; Sprint 9F/9G and Sprint
+10 remain unstarted.

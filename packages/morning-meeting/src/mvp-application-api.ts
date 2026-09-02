@@ -1,10 +1,15 @@
 import { Timeframe } from '@cryptodesk-ai/market-intelligence';
-import type { MorningMeetingRequest, MorningMeetingService } from './contracts.js';
+import type {
+  MorningMeetingReport,
+  MorningMeetingRequest,
+  MorningMeetingService,
+} from './contracts.js';
 import { MorningMeetingReportError } from './errors.js';
 import { MorningMeetingNewsBriefSelector } from './news-brief-selector.js';
 import type { MorningMeetingPortfolioAiComposition } from './portfolio-ai-composition.js';
 import {
   type MorningMeetingPortfolioAiLifecycleResult,
+  MorningMeetingPortfolioAiApplicationError,
   MorningMeetingPortfolioAiFailurePolicy,
   composeMorningMeetingPortfolioAiLifecycle,
 } from './portfolio-ai-application-flow.js';
@@ -46,21 +51,27 @@ export class DefaultMorningMeetingMvpApplicationApi implements MorningMeetingMvp
     input: MorningMeetingMvpApplicationApiInput,
   ): Promise<MorningMeetingMvpApplicationApiOutput> {
     validateMorningMeetingMvpApplicationApiInput(input);
-    const request = clone(input.request);
-    let report;
+    const lifecycleRequest = clone(input.request);
+    const serviceRequest = clone(lifecycleRequest);
+    let report: MorningMeetingReport;
     try {
-      report = await this.morningMeetingService.generate(request);
+      report = await this.morningMeetingService.generate(serviceRequest);
     } catch {
       throw new MorningMeetingReportError('Morning Meeting MVP application execution failed.');
     }
 
-    return composeMorningMeetingPortfolioAiLifecycle({
-      request,
-      report,
-      aiRequested: input.aiRequested,
-      ...(input.composition === undefined ? {} : { composition: input.composition }),
-      ...(input.aiFailurePolicy === undefined ? {} : { aiFailurePolicy: input.aiFailurePolicy }),
-    });
+    try {
+      return composeMorningMeetingPortfolioAiLifecycle({
+        request: lifecycleRequest,
+        report,
+        aiRequested: input.aiRequested,
+        ...(input.composition === undefined ? {} : { composition: input.composition }),
+        ...(input.aiFailurePolicy === undefined ? {} : { aiFailurePolicy: input.aiFailurePolicy }),
+      });
+    } catch (error) {
+      if (error instanceof MorningMeetingPortfolioAiApplicationError) throw error;
+      throw new MorningMeetingReportError('Morning Meeting MVP application execution failed.');
+    }
   }
 }
 

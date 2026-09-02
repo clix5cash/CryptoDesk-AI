@@ -294,3 +294,14 @@ composition is accepted only through the existing exact request/report,
 identity, trust, and reference validation chain. No retry loop, fallback,
 provider call, transport adapter, mutable global state, or reverse dependency
 is present. Sprint 9E is not complete.
+
+## Sprint 9E.3 component-map note
+
+No component or dependency edge is added. Inside the existing facade, the
+validated request splits into detached service and lifecycle copies. Exactly
+one service call produces the sole canonical report; only a successful result
+can reach the single existing lifecycle call. Service exceptions and malformed
+results terminate with a sanitized application error and no partial output.
+
+The AI branch remains caller-supplied and provider-neutral. Sprint 9E.4 owns
+final Sprint 9E closure.

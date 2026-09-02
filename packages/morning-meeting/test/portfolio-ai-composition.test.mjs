@@ -863,6 +863,14 @@ test('hardens external request validation and rejects contradictory AI options b
     { request: { timeframe: '1h', extra: true }, aiRequested: false },
     { request: { timeframe: '1h', asOf: 'not-a-timestamp' }, aiRequested: false },
     { request: { timeframe: '1h', assetIds: [''] }, aiRequested: false },
+    {
+      request: { timeframe: '1h', newsMarketIntelligenceViews: [null] },
+      aiRequested: false,
+    },
+    {
+      request: { timeframe: '1h', newsBriefSelectionPolicy: { rules: 'invalid' } },
+      aiRequested: false,
+    },
     { request: canonical.request, aiRequested: 'yes' },
     { request: canonical.request, aiRequested: false, aiFailurePolicy: 'omit' },
     { request: canonical.request, aiRequested: true, aiFailurePolicy: 'omit' },
@@ -958,4 +966,76 @@ test('rejects stale, substituted, untrusted, and injected compositions without c
     assert.equal(validResult.output.canonicalReport.id, valid.canonical.report.id);
   }
   assert.equal(generationCount, invalidCompositions.length * 2);
+});
+
+test('isolates lifecycle request ownership from mutation by the injected service', async () => {
+  const canonical = meetingCanonical();
+  const originalInput = { request: canonical.request, aiRequested: false };
+  const before = JSON.stringify(originalInput);
+  let receivedRequest;
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async (request) => {
+      receivedRequest = request;
+      request.assetIds = ['service-local-mutation'];
+      request.asOf = '2099-01-01T00:00:00.000Z';
+      return canonical.report;
+    },
+  });
+
+  const first = await api.execute(originalInput);
+  const second = await api.execute(originalInput);
+
+  assert.deepEqual(first, second);
+  assert.equal(first.outcome, MorningMeetingPortfolioAiLifecycleOutcome.NotRequested);
+  assert.deepEqual(first.output.canonicalReport, canonical.report);
+  assert.equal(JSON.stringify(originalInput), before);
+  assert.notEqual(receivedRequest, originalInput.request);
+});
+
+test('sanitizes service failures and malformed output without partial lifecycle results', async () => {
+  const canonical = meetingCanonical();
+  let mode = 'throw';
+  let attempts = 0;
+  let compositionReads = 0;
+  const input = {
+    request: canonical.request,
+    aiRequested: true,
+    get composition() {
+      compositionReads += 1;
+      return undefined;
+    },
+  };
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      attempts += 1;
+      if (mode === 'throw') throw new Error('internal credential and endpoint detail');
+      if (mode === 'malformed') return null;
+      return canonical.report;
+    },
+  });
+
+  await assert.rejects(
+    () => api.execute(input),
+    (error) =>
+      error instanceof MorningMeetingReportError &&
+      error.message === 'Morning Meeting MVP application execution failed.',
+  );
+  assert.equal(attempts, 1);
+  assert.equal(compositionReads, 0);
+
+  mode = 'malformed';
+  await assert.rejects(
+    () => api.execute(input),
+    (error) =>
+      error instanceof MorningMeetingReportError &&
+      error.message === 'Morning Meeting MVP application execution failed.',
+  );
+  assert.equal(attempts, 2);
+  assert.equal(compositionReads, 1);
+
+  mode = 'valid';
+  const result = await api.execute(input);
+  assert.equal(attempts, 3);
+  assert.equal(compositionReads, 2);
+  assert.equal(result.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Unavailable);
 });

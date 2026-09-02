@@ -166,4 +166,24 @@ be supplied by the caller and must exactly match the generated request/report.
 Canonical state remains authoritative, AI remains optional
 `non_authoritative_interpretation`, and no HTTP, network, credential,
 persistence, retry, fallback, or scheduler boundary is added. Sprint 9E is not
-yet complete; Sprint 9E.3 remains later work.
+yet complete; Sprint 9E.2 ends at external execution hardening.
+
+## Sprint 9E.3 lifecycle hardening
+
+The MVP facade now keeps two detached request copies: one exclusively for the
+injected service and one exclusively for lifecycle validation. A service cannot
+mutate the request that defines the accepted execution. Canonical generation is
+still attempted exactly once and the existing lifecycle is still applied at
+most once.
+
+Service exceptions and malformed service results produce the same sanitized
+`MorningMeetingReportError` and never return a partial lifecycle result.
+`MorningMeetingPortfolioAiApplicationError` remains the distinct existing
+`rejected_invalid` contract for invalid supplied AI. No-AI, unavailable,
+included, and explicit omitted-invalid results retain their established shapes.
+
+The facade remains transport-neutral and does not construct requests for,
+invoke, parse, or ground any provider output. Canonical state remains
+authoritative and caller-supplied narrative remains only
+`non_authoritative_interpretation`. Sprint 9E is still open; Sprint 9E.4 owns
+final closure.
