@@ -30,6 +30,7 @@ import {
   composeMorningMeetingPortfolioAi,
   composeMorningMeetingPortfolioAiApplicationOutput,
   composeMorningMeetingPortfolioAiLifecycle,
+  validateMorningMeetingMvpApplicationApiInput,
   validateMorningMeetingPortfolioAiComposition,
 } from '../dist/index.js';
 
@@ -834,7 +835,127 @@ test('validates the MVP boundary and keeps calls detached, deterministic, and fa
       /MVP application API input is malformed/.test(error.message),
   );
   fail = true;
-  await assert.rejects(() => api.execute(input), /isolated canonical generation failure/);
+  await assert.rejects(
+    () => api.execute(input),
+    (error) =>
+      error instanceof MorningMeetingReportError &&
+      error.message === 'Morning Meeting MVP application execution failed.',
+  );
   fail = false;
   assert.deepEqual(await api.execute(input), expected);
+});
+
+test('hardens external request validation and rejects contradictory AI options before generation', async () => {
+  const canonical = meetingCanonical();
+  let generationCount = 0;
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      generationCount += 1;
+      return canonical.report;
+    },
+  });
+  const malformed = [
+    null,
+    {},
+    { request: null, aiRequested: false },
+    { request: {}, aiRequested: false },
+    { request: { timeframe: 'unsupported' }, aiRequested: false },
+    { request: { timeframe: '1h', extra: true }, aiRequested: false },
+    { request: { timeframe: '1h', asOf: 'not-a-timestamp' }, aiRequested: false },
+    { request: { timeframe: '1h', assetIds: [''] }, aiRequested: false },
+    { request: canonical.request, aiRequested: 'yes' },
+    { request: canonical.request, aiRequested: false, aiFailurePolicy: 'omit' },
+    { request: canonical.request, aiRequested: true, aiFailurePolicy: 'omit' },
+    { request: canonical.request, aiRequested: false, composition: {} },
+  ];
+
+  for (const value of malformed) {
+    await assert.rejects(() => api.execute(value), MorningMeetingReportError);
+  }
+  assert.equal(generationCount, 0);
+  assert.doesNotThrow(() =>
+    validateMorningMeetingMvpApplicationApiInput({
+      request: canonical.request,
+      aiRequested: false,
+    }),
+  );
+  assert.equal(
+    (await api.execute({ request: canonical.request, aiRequested: false })).outcome,
+    MorningMeetingPortfolioAiLifecycleOutcome.NotRequested,
+  );
+  assert.equal(generationCount, 1);
+});
+
+test('generates exactly once and applies the AI lifecycle at most once per external execution', async () => {
+  const fixture = portfolioFixture('api-once');
+  const composition = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  let generationCount = 0;
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      generationCount += 1;
+      return composition.canonical.report;
+    },
+  });
+
+  const result = await api.execute({
+    request: composition.canonical.request,
+    aiRequested: true,
+    composition,
+  });
+  assert.equal(generationCount, 1);
+  assert.equal(result.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Included);
+
+  const source = await readFile(new URL('../src/mvp-application-api.ts', import.meta.url), 'utf8');
+  const executeSource = source.slice(
+    source.indexOf('  async execute('),
+    source.indexOf('\n}\n\n/** Validates'),
+  );
+  assert.equal(source.match(/morningMeetingService\.generate\(/g)?.length, 1);
+  assert.equal(source.match(/composeMorningMeetingPortfolioAiLifecycle\(\{/g)?.length, 1);
+  assert.equal(/retry|fallback|while\s*\(|for\s*\(/.test(executeSource), false);
+});
+
+test('rejects stale, substituted, untrusted, and injected compositions without contaminating later calls', async () => {
+  const fixture = portfolioFixture('api-isolation');
+  const valid = composeMorningMeetingPortfolioAi(input([fixture.grounded], fixture.context));
+  const staleReport = {
+    ...valid.canonical.report,
+    id: 'stale-report',
+  };
+  const invalidCompositions = [
+    { ...valid, canonical: { ...valid.canonical, report: staleReport } },
+    {
+      ...valid,
+      interpretations: [{ ...fixture.grounded, providerId: 'substituted-provider' }],
+    },
+    {
+      ...valid,
+      interpretations: [{ ...fixture.grounded, authority: 'untrusted_candidate_interpretation' }],
+    },
+    { ...valid, canonicalRisk: 'high' },
+  ];
+  let generationCount = 0;
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      generationCount += 1;
+      return valid.canonical.report;
+    },
+  });
+  const base = { request: valid.canonical.request, aiRequested: true };
+
+  for (const composition of invalidCompositions) {
+    await assert.rejects(
+      () => api.execute({ ...base, composition }),
+      (error) => {
+        assert.equal(error instanceof MorningMeetingPortfolioAiApplicationError, true);
+        assert.equal(error.outcome, MorningMeetingPortfolioAiLifecycleOutcome.RejectedInvalid);
+        assert.equal(error.message, 'Morning Meeting Portfolio AI composition was rejected.');
+        return true;
+      },
+    );
+    const validResult = await api.execute({ ...base, composition: valid });
+    assert.equal(validResult.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Included);
+    assert.equal(validResult.output.canonicalReport.id, valid.canonical.report.id);
+  }
+  assert.equal(generationCount, invalidCompositions.length * 2);
 });

@@ -303,4 +303,19 @@ The public input, output, interface, and default implementation live in
 `MorningMeetingPortfolioAiLifecycleResult`; no competing lifecycle or trust
 model was introduced. This boundary adds no runtime, provider invocation,
 transport, storage, scheduler, credential, or autonomous composition. Sprint
-9E.2 has not started.
+9E.1 ends at this additive facade.
+
+## Sprint 9E.2 external execution inventory
+
+The 9E.1 facade is hardened in place; no overlapping application component is
+added. Its exported input validator closes the application request envelope,
+validates deterministic Morning Meeting scope/time fields, and rejects
+contradictory AI options before invoking the service. One accepted execution
+performs exactly one report generation and at most one delegation to the
+existing 9D lifecycle.
+
+Injected-service failures are sanitized at the external application boundary.
+Composition mismatch, identity substitution, invalid trust, and canonical
+injection continue through the existing sanitized AI rejection/omission
+semantics. The component remains stateless, provider-neutral, transport-neutral,
+and optional-AI. Sprint 9E remains open; 9E.3 has not started.

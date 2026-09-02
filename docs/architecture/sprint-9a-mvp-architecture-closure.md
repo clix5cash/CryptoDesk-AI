@@ -413,5 +413,17 @@ lifecycle output and rejection semantics. Runtime/configuration remains
 outside canonical code, failures remain request-scoped, and no reverse or
 circular dependency was added.
 
-This increment does not close all of Sprint 9E. Sprint 9E.2, Sprint 9F/9G, and
-Sprint 10 remain unstarted.
+This increment does not close all of Sprint 9E. Sprint 9E.1 ends at the additive
+facade; Sprint 9F/9G and Sprint 10 remain unstarted.
+
+## Sprint 9E.2 implementation status
+
+The single 9E.1 facade now enforces a stable closed external request, rejects
+contradictory AI options before side effects, invokes deterministic report
+generation exactly once, applies the established AI lifecycle at most once,
+and sanitizes injected-service failures. Exact composition ownership and all
+canonical/non-authoritative separation remain delegated to the closed 9D
+contracts.
+
+Sprint 9E is not yet complete. Sprint 9E.3, Sprint 9F/9G, and Sprint 10 remain
+unstarted; no transport or autonomous provider execution was introduced.

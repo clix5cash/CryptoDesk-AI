@@ -143,5 +143,27 @@ locators and no raw provider output.
 
 The API performs no AI or provider execution, transport, persistence,
 scheduling, retry, fallback, configuration, or credential lookup. Callers
-explicitly supply any completed composition. Sprint 9E.2 and later work remain
-outside this boundary.
+explicitly supply any completed composition. Sprint 9E.1 established this
+boundary; later increments may only harden it compatibly.
+
+## Sprint 9E.2 external execution lifecycle
+
+The same `DefaultMorningMeetingMvpApplicationApi.execute` entry point is now the
+stable transport-neutral execution contract. The exported
+`validateMorningMeetingMvpApplicationApiInput` validator fails closed on an
+unknown or malformed envelope/request, unsupported timeframe or timestamp,
+invalid failure policy, and contradictory AI options before canonical report
+generation begins.
+
+Each accepted call invokes the injected `MorningMeetingService.generate`
+exactly once and the existing Portfolio AI lifecycle at most once. Arbitrary
+service failures are exposed only as a deterministic provider-neutral Morning
+Meeting application error. Existing `rejected_invalid` and explicit
+`omitted_invalid` behavior remains unchanged for supplied AI material.
+
+There is no automatic provider execution: the optional composition must still
+be supplied by the caller and must exactly match the generated request/report.
+Canonical state remains authoritative, AI remains optional
+`non_authoritative_interpretation`, and no HTTP, network, credential,
+persistence, retry, fallback, or scheduler boundary is added. Sprint 9E is not
+yet complete; Sprint 9E.3 remains later work.

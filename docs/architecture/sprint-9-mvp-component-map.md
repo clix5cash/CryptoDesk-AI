@@ -279,3 +279,18 @@ It depends only on Morning Meeting public contracts and the injected service;
 the already-established Morning Meeting → AI → Portfolio package direction is
 unchanged. AI composition is caller-supplied and opt-in. The facade has no
 provider/runtime, vendor, secret, transport, persistence, or scheduling edge.
+
+## Sprint 9E.2 component-map note
+
+Sprint 9E.2 hardens the existing node without changing the map:
+
+```text
+external caller → validate MVP envelope → generate canonical report exactly once
+→ apply existing optional AI lifecycle at most once → validated lifecycle result
+```
+
+Malformed or contradictory input stops before service invocation. A supplied
+composition is accepted only through the existing exact request/report,
+identity, trust, and reference validation chain. No retry loop, fallback,
+provider call, transport adapter, mutable global state, or reverse dependency
+is present. Sprint 9E is not complete.

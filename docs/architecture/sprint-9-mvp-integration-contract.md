@@ -422,3 +422,25 @@ references through the validated source chain, and exposes no raw output.
 Malformed or authority-conflicting AI follows the unchanged reject-or-explicit-
 omit policy and cannot affect canonical output. This is Sprint 9E.1 only;
 transport and later application lifecycle work are not implemented.
+
+## Sprint 9E.2 external trigger and execution contract
+
+`MorningMeetingMvpApplicationApiInput` remains the single external request:
+canonical `MorningMeetingRequest`, explicit `aiRequested`, optional supplied
+`MorningMeetingPortfolioAiComposition`, and optional existing failure policy.
+`MorningMeetingMvpApplicationApiOutput` remains the existing 9D lifecycle
+result. No runtime configuration or provider artifact enters either contract.
+
+The execution rules are:
+
+1. validate the closed external envelope and request;
+2. reject contradictory AI options before any generation;
+3. invoke `MorningMeetingService.generate` exactly once;
+4. invoke `composeMorningMeetingPortfolioAiLifecycle` at most once;
+5. return its detached result or a sanitized application error.
+
+The composition must exactly own the generated request/report and retain its
+validated source identities and references. There is no stale-artifact repair,
+fuzzy reconciliation, provider invocation, retry, fallback, network transport,
+or raw-output exposure. Canonical authority and the existing five lifecycle
+outcomes remain unchanged. Sprint 9E remains open for 9E.3.

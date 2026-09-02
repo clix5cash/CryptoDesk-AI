@@ -1,5 +1,7 @@
+import { Timeframe } from '@cryptodesk-ai/market-intelligence';
 import type { MorningMeetingRequest, MorningMeetingService } from './contracts.js';
 import { MorningMeetingReportError } from './errors.js';
+import { MorningMeetingNewsBriefSelector } from './news-brief-selector.js';
 import type { MorningMeetingPortfolioAiComposition } from './portfolio-ai-composition.js';
 import {
   type MorningMeetingPortfolioAiLifecycleResult,
@@ -43,9 +45,14 @@ export class DefaultMorningMeetingMvpApplicationApi implements MorningMeetingMvp
   async execute(
     input: MorningMeetingMvpApplicationApiInput,
   ): Promise<MorningMeetingMvpApplicationApiOutput> {
-    validateInput(input);
+    validateMorningMeetingMvpApplicationApiInput(input);
     const request = clone(input.request);
-    const report = await this.morningMeetingService.generate(request);
+    let report;
+    try {
+      report = await this.morningMeetingService.generate(request);
+    } catch {
+      throw new MorningMeetingReportError('Morning Meeting MVP application execution failed.');
+    }
 
     return composeMorningMeetingPortfolioAiLifecycle({
       request,
@@ -57,18 +64,70 @@ export class DefaultMorningMeetingMvpApplicationApi implements MorningMeetingMvp
   }
 }
 
-function validateInput(input: MorningMeetingMvpApplicationApiInput): void {
+/** Validates the complete transport-neutral external execution envelope. */
+export function validateMorningMeetingMvpApplicationApiInput(
+  input: MorningMeetingMvpApplicationApiInput,
+): void {
   if (
     !isPlainRecord(input) ||
     !hasAllowedKeys(input, ['request', 'aiRequested', 'composition', 'aiFailurePolicy']) ||
     !hasOwn(input, 'request') ||
     !isPlainRecord(input.request) ||
-    !hasOwn(input.request, 'timeframe') ||
     typeof input.aiRequested !== 'boolean' ||
     (input.aiFailurePolicy !== undefined &&
       !Object.values(MorningMeetingPortfolioAiFailurePolicy).includes(input.aiFailurePolicy))
   ) {
     throw new MorningMeetingReportError('Morning Meeting MVP application API input is malformed.');
+  }
+
+  validateRequest(input.request);
+
+  if (
+    (!input.aiRequested && input.composition !== undefined) ||
+    (input.aiFailurePolicy !== undefined && input.composition === undefined)
+  ) {
+    throw new MorningMeetingReportError(
+      'Morning Meeting MVP application API input has contradictory AI options.',
+    );
+  }
+}
+
+function validateRequest(request: MorningMeetingRequest): void {
+  if (
+    !hasExactOptionalKeys(request, [
+      'assetIds',
+      'marketIds',
+      'timeframe',
+      'asOf',
+      'newsMarketIntelligenceViews',
+      'newsBriefSelectionPolicy',
+    ]) ||
+    !hasOwn(request, 'timeframe') ||
+    !Object.values(Timeframe).includes(request.timeframe) ||
+    !isOptionalIdentifierArray(request.assetIds) ||
+    !isOptionalIdentifierArray(request.marketIds) ||
+    (request.asOf !== undefined && !isIsoTimestamp(request.asOf)) ||
+    (request.newsMarketIntelligenceViews !== undefined &&
+      (!Array.isArray(request.newsMarketIntelligenceViews) ||
+        request.newsMarketIntelligenceViews.some((view) => !isPlainRecord(view)))) ||
+    (request.newsBriefSelectionPolicy !== undefined &&
+      !isPlainRecord(request.newsBriefSelectionPolicy))
+  ) {
+    throw new MorningMeetingReportError('Morning Meeting MVP application request is malformed.');
+  }
+
+  if (request.newsBriefSelectionPolicy !== undefined) {
+    try {
+      new MorningMeetingNewsBriefSelector().select(
+        { items: [] },
+        {
+          asOf: request.asOf ?? '1970-01-01T00:00:00.000Z',
+          policy: request.newsBriefSelectionPolicy,
+        },
+      );
+    } catch {
+      throw new MorningMeetingReportError('Morning Meeting MVP application request is malformed.');
+    }
   }
 }
 
@@ -78,12 +137,32 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   );
 }
 
-function hasOwn(value: Record<string, unknown>, key: string): boolean {
+function hasOwn(value: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key);
 }
 
 function hasAllowedKeys(value: Record<string, unknown>, allowed: ReadonlyArray<string>): boolean {
   return Object.keys(value).every((key) => allowed.includes(key));
+}
+
+function hasExactOptionalKeys(value: object, allowed: ReadonlyArray<string>): boolean {
+  return Object.keys(value).every((key) => allowed.includes(key));
+}
+
+function isOptionalIdentifierArray(value: unknown): boolean {
+  return (
+    value === undefined ||
+    (Array.isArray(value) &&
+      value.every((entry) => typeof entry === 'string' && entry.trim().length > 0))
+  );
+}
+
+function isIsoTimestamp(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value) &&
+    !Number.isNaN(Date.parse(value))
+  );
 }
 
 function clone<T>(value: T): T {
