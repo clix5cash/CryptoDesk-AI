@@ -343,3 +343,19 @@ Repeated no-AI calls, independent facade instances, failure recovery, and build
 artifact inspection show no accumulated lifecycle state, duplicate invocation,
 secret fixture leakage, or hidden release component. Sprint 9F remains open;
 Sprint 9F.4 has not started.
+
+## Sprint 9F.4 final closure
+
+Sprint 9F closes with the component map unchanged:
+
+```text
+external caller → one Morning Meeting MVP facade → deterministic canonical service
+→ optional existing Morning Meeting lifecycle → provider-neutral AI → Portfolio
+
+OpenAI runtime → provider-neutral AI
+```
+
+The runtime edge remains separate from the facade; optional AI artifacts are
+prepared explicitly before being supplied to the application. Closure audits
+find no reverse/circular edge, hidden stateful component, transport, deployment,
+publishing, or autonomous execution. Sprint 9G has not started.

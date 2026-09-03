@@ -391,3 +391,17 @@ in-memory no-AI batch showed no duplicate/pathological work; wall-clock output
 is environment-specific and not a release guarantee. No deployment,
 publishing, transport, state store, or autonomous component exists. Sprint 9F
 remains open; Sprint 9F.4 has not started.
+
+## Sprint 9F.4 final closure inventory
+
+Sprint 9F is CLOSED without a production component change. The inventory still
+contains one public MVP facade, the existing deterministic Morning Meeting
+service/lifecycle, provider-neutral AI contracts, canonical Portfolio
+contracts, and the separate concrete OpenAI runtime. Closure tests and audits
+confirm contained package-root artifacts, private/unpublished metadata,
+request-scoped state, and the legal one-way graph.
+
+No transport, deployment, publishing, persistence, cache, scheduler, mutable
+global application state, provider auto-execution, autonomous/Ritual behavior,
+or Sprint 10 component was introduced. Sprint 9G owns final MVP release audit
+and closure and has not started.

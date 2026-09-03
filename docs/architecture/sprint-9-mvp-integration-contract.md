@@ -560,3 +560,52 @@ in the validation environment, without a timing gate; operation counts show no
 duplicate generation or retained state. Built declarations, export maps, and
 artifact contents are audited without publishing. Sprint 9F remains open;
 Sprint 9F.4 has not started.
+
+## Sprint 9F.4 final closure decision
+
+Sprint 9F is CLOSED. Every release-candidate acceptance criterion passes:
+
+| Sprint 9F criterion                                     | Result |
+| ------------------------------------------------------- | ------ |
+| One intended public MVP facade                          | PASS   |
+| Package-root public exports remain contained            | PASS   |
+| Internal deep imports remain blocked                    | PASS   |
+| Workspace dependency graph remains acyclic              | PASS   |
+| Required dependency direction remains correct           | PASS   |
+| No reverse or circular dependency exists                | PASS   |
+| No-AI path remains independently usable                 | PASS   |
+| AI remains optional and caller/composition controlled   | PASS   |
+| Canonical report remains authoritative                  | PASS   |
+| AI narrative remains `non_authoritative_interpretation` | PASS   |
+| Raw provider output remains contained                   | PASS   |
+| Credentials remain runtime-owned                        | PASS   |
+| Authorization/header values remain runtime-local        | PASS   |
+| Endpoint/runtime details remain contained               | PASS   |
+| Vendor exception/body details remain sanitized          | PASS   |
+| Hostile/prototype-shaped input fails closed             | PASS   |
+| Trust progression remains unchanged                     | PASS   |
+| Canonical mutation remains impossible                   | PASS   |
+| Service/runtime failures remain isolated                | PASS   |
+| Failed calls do not contaminate later calls             | PASS   |
+| Same-symbol cross-network identity remains distinct     | PASS   |
+| Partial/missing data remains explicit                   | PASS   |
+| Exact decimal precision remains preserved               | PASS   |
+| Ordering remains deterministic                          | PASS   |
+| Outputs remain detached                                 | PASS   |
+| Separate runtime/application instances remain isolated  | PASS   |
+| Exactly-once invocation semantics remain valid          | PASS   |
+| No retry/fallback/routing exists                        | PASS   |
+| No transport/server/CLI/UI exists                       | PASS   |
+| No persistence/cache/scheduler exists                   | PASS   |
+| No mutable global state exists                          | PASS   |
+| No deployment/publishing behavior exists                | PASS   |
+| No Sprint 10 capability exists                          | PASS   |
+| Release artifact/build audit passes                     | PASS   |
+| Full repository validation passes                       | PASS   |
+
+The 9F.1 release-surface audit, 9F.2 security hardening, and 9F.3
+production-like path remain valid. The 100-call in-memory baseline remains
+informational only, with operation-count evidence for no duplicate invocation
+or accumulation. Packages remain private and no deployment or publishing was
+performed. Sprint 9G owns final MVP release audit and closure and has not
+started; Sprint 10 remains out of scope.

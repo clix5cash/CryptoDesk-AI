@@ -265,3 +265,18 @@ in-memory calls. On the validation environment the observed batch was roughly
 or realtime guarantee. Invocation accounting stayed exactly one service call
 per accepted input, with detached repeatable output and no retained lifecycle
 state. Sprint 9F remains open; this is not deployment or publishing.
+
+## Sprint 9F.4 final closure
+
+Sprint 9F is CLOSED. The sole release path remains the package-root
+`DefaultMorningMeetingMvpApplicationApi`: exactly one deterministic canonical
+generation followed by at most one existing optional lifecycle application.
+The no-AI path is independently usable; AI composition remains caller-supplied,
+exactly validated, and `non_authoritative_interpretation` only.
+
+Closure revalidates sanitized failures, runtime-owned credentials and transport
+details, raw-output containment, hostile-input rejection, exact traceability,
+cross-network identity, missing-data states, decimal precision, ordering,
+detachment, instance isolation, private build artifacts, and the informational
+performance baseline. No deployment/publishing or Sprint 10 capability was
+added. Sprint 9G owns final MVP release audit and closure and has not started.

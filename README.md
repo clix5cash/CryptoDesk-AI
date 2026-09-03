@@ -27,3 +27,9 @@ provider-neutral execution seam through parsing, candidate validation,
 grounding, caller-supplied composition, and the MVP facade without live
 credentials or network access. This repository still provides no deployment,
 publishing, server, CLI, or UI artifact; Sprint 9F remains open.
+
+Sprint 9F is CLOSED after its release-candidate integration, security,
+production-like E2E, artifact, compatibility, and repository validation gates
+passed. Sprint 9G owns the final MVP release audit and closure; it has not
+started. No package was published or deployed, and Sprint 10 remains out of
+scope.

@@ -140,3 +140,49 @@ test('contains the built release artifacts and emits the required public declara
   assert.equal(/@cryptodesk-ai\/openai-runtime/u.test(aiDeclaration), false);
   assert.equal(/@cryptodesk-ai\/morning-meeting/u.test(aiDeclaration), false);
 });
+
+test('closes the Sprint 9F release boundary without runtime, state, or publishing expansion', async () => {
+  const [mvpSource, lifecycleSource, compositionSource, runtimeSource] = await Promise.all([
+    readFile(new URL('../src/mvp-application-api.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../src/portfolio-ai-application-flow.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../src/portfolio-ai-composition.ts', import.meta.url), 'utf8'),
+    readFile(
+      new URL('../../openai-runtime/src/openai-portfolio-adapter.ts', import.meta.url),
+      'utf8',
+    ),
+  ]);
+  const applicationSources = [mvpSource, lifecycleSource, compositionSource].join('\n');
+  const manifests = await Promise.all(
+    packageNames.map((name) => readJson(`../../${name}/package.json`)),
+  );
+
+  assert.equal(mvpSource.match(/class DefaultMorningMeetingMvpApplicationApi/g)?.length, 1);
+  assert.equal(mvpSource.match(/morningMeetingService\.generate\(/g)?.length, 1);
+  assert.equal(mvpSource.match(/composeMorningMeetingPortfolioAiLifecycle\(\{/g)?.length, 1);
+  assert.equal(
+    /apiKey|authorization|Bearer|process\.env|fetch\(|openai-runtime|providerRequest/iu.test(
+      applicationSources,
+    ),
+    false,
+  );
+  assert.match(runtimeSource, /authorization: `Bearer \$\{runtime\.apiKey\}`/u);
+  assert.equal(/process\.env|console\.(?:log|error|warn)/u.test(runtimeSource), false);
+  assert.equal(
+    /while\s*\(|retry|fallback|scheduler|cron|database|websocket|express|fastify|graphql/iu.test(
+      mvpSource,
+    ),
+    false,
+  );
+
+  for (const manifest of manifests) {
+    assert.equal(manifest.private, true);
+    assert.equal(manifest.version, '0.0.0');
+    assert.deepEqual(Object.keys(manifest.exports), ['.']);
+    assert.equal(
+      Object.keys(manifest.scripts ?? {}).some((script) =>
+        /publish|deploy|serve|start|release/iu.test(script),
+      ),
+      false,
+    );
+  }
+});
