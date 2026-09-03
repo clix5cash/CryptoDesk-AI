@@ -331,3 +331,15 @@ Manifest traversal proves the workspace graph is acyclic. Deep package imports
 are blocked by the export map, Portfolio has no AI edge, AI has no Morning
 Meeting edge, and runtime has no Morning Meeting edge. No new production
 component or dependency was required. Sprint 9F.2 has not started.
+
+## Sprint 9F.3 release-candidate audit
+
+The component map remains unchanged. Production-like E2E coverage traverses
+only existing public seams from an injected provider-neutral adapter through
+the AI trust pipeline and caller-supplied composition into the single MVP
+facade. No direct runtime-to-Morning Meeting edge is introduced.
+
+Repeated no-AI calls, independent facade instances, failure recovery, and build
+artifact inspection show no accumulated lifecycle state, duplicate invocation,
+secret fixture leakage, or hidden release component. Sprint 9F remains open;
+Sprint 9F.4 has not started.

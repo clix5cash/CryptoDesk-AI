@@ -248,3 +248,20 @@ Optional AI composition remains explicitly caller-supplied, exact-match
 validated, separate from canonical state, and only
 `non_authoritative_interpretation`. Sprint 9F remains open; no deployment or
 publishing behavior is introduced.
+
+## Sprint 9F.3 release-candidate E2E
+
+Production-like coverage now composes an injected provider-neutral adapter
+through raw execution, closed parsing, candidate validation, grounding,
+caller-supplied Morning Meeting composition, and the public MVP facade. It
+retains exact execution/provider/model/candidate/fact/presentation/section
+identity while keeping canonical state separate and authoritative. Existing
+failure-matrix coverage remains authoritative for malformed application,
+service, runtime, candidate, grounding, trust, identity, and reference paths.
+
+The no-AI release baseline uses separate facade instances and 100 sequential
+in-memory calls. On the validation environment the observed batch was roughly
+1 ms; this is informational, environment-specific, and has no timing assertion
+or realtime guarantee. Invocation accounting stayed exactly one service call
+per accepted input, with detached repeatable output and no retained lifecycle
+state. Sprint 9F remains open; this is not deployment or publishing.

@@ -540,3 +540,23 @@ public error cause. There is no logging, environment discovery, mutable global
 state, retry/fallback, transport, deployment, or trust promotion added.
 Dependency direction remains Morning Meeting → AI → Portfolio and OpenAI
 runtime → AI. Sprint 9F remains open; Sprint 9F.3 has not started.
+
+## Sprint 9F.3 production-like release-candidate hardening
+
+One public-API E2E path now exercises an explicitly injected provider-neutral
+adapter → `untrusted_model_execution` → closed candidate parsing/validation →
+deterministic grounding to `non_authoritative_interpretation` → caller-supplied
+Morning Meeting composition → `DefaultMorningMeetingMvpApplicationApi`. The
+facade still performs exactly one canonical generation per accepted request and
+no provider invocation of its own. Exact identity, traceability, cross-network
+separation, partial/missing state, decimal strings, order, and detachment
+survive the path.
+
+The production-like failure matrix reuses authoritative application, service,
+runtime, parser, candidate, and grounding suites. Fixed sanitized errors, zero
+retry/fallback, raw-output containment, canonical authority, and next-call
+recovery remain intact. A 100-call sequential no-AI batch observed roughly 1 ms
+in the validation environment, without a timing gate; operation counts show no
+duplicate generation or retained state. Built declarations, export maps, and
+artifact contents are audited without publishing. Sprint 9F remains open;
+Sprint 9F.4 has not started.

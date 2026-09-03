@@ -21,3 +21,9 @@ no network server, CLI, or publishable deployment artifact is included.
 The facade generates one authoritative deterministic Morning Meeting and may
 include an explicitly caller-supplied Portfolio AI composition through the
 existing non-authoritative lifecycle. It never invokes a provider itself.
+
+Production-like release-candidate tests compose the existing injected
+provider-neutral execution seam through parsing, candidate validation,
+grounding, caller-supplied composition, and the MVP facade without live
+credentials or network access. This repository still provides no deployment,
+publishing, server, CLI, or UI artifact; Sprint 9F remains open.

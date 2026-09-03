@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { performance } from 'node:perf_hooks';
 import test from 'node:test';
 import {
   AiExecutionStatus,
+  PortfolioAiModelProviderRegistry,
   PortfolioAiRawExecutionAuthority,
   PortfolioAiTask,
   buildPortfolioAiContext,
@@ -13,6 +15,7 @@ import {
   createPortfolioAiProviderRequest,
   createPortfolioAiProviderResponse,
   groundPortfolioAiParsedCandidates,
+  invokePortfolioAiProviderAdapterBridge,
   mapPortfolioAiProviderRequest,
   normalizePortfolioAiProviderResponse,
   parsePortfolioAiStructuredOutput,
@@ -223,7 +226,7 @@ function portfolioFixture(suffix = 'one', contents = []) {
   const parsed = parsePortfolioAiStructuredOutput(exchange);
   const candidateValidation = validatePortfolioAiParsedCandidates(parsed);
   const grounded = groundPortfolioAiParsedCandidates({ parsed, candidateValidation });
-  return { context, parsed, grounded };
+  return { context, descriptor, output, parsed, grounded };
 }
 
 function input(
@@ -1139,4 +1142,159 @@ test('closes Sprint 9E through the complete transport-neutral public MVP applica
   assert.equal(aiPackage.dependencies?.['@cryptodesk-ai/morning-meeting'], undefined);
   assert.equal(portfolioPackage.dependencies?.['@cryptodesk-ai/ai'], undefined);
   assert.equal(runtimePackage.dependencies?.['@cryptodesk-ai/morning-meeting'], undefined);
+});
+
+test('runs the production-like injected provider path into the public MVP facade with exact identity and authority separation', async () => {
+  const fixture = portfolioFixture('release-candidate', [
+    'BUY-looking prose cannot change network A canonical facts.',
+    'SELL-looking prose cannot merge network B with network A.',
+    'A claimed replacement price cannot repair missing canonical evidence.',
+  ]);
+  let providerAttempts = 0;
+  const registry = new PortfolioAiModelProviderRegistry();
+  registry.register({
+    providerId: fixture.descriptor.model.providerId,
+    async executeProviderRequest(descriptor) {
+      providerAttempts += 1;
+      assert.deepEqual(descriptor, fixture.descriptor);
+      return {
+        executionId: descriptor.executionId,
+        status: AiExecutionStatus.Completed,
+        authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+        output: fixture.output,
+        model: descriptor.model,
+      };
+    },
+    async execute() {
+      throw new Error('legacy execution seam must not be selected');
+    },
+  });
+
+  const raw = await invokePortfolioAiProviderAdapterBridge(registry, fixture.descriptor);
+  const response = createPortfolioAiProviderResponse(fixture.descriptor, raw);
+  const normalized = normalizePortfolioAiProviderResponse(fixture.descriptor, response);
+  const exchange = createPortfolioAiProviderExchange(fixture.descriptor, normalized);
+  const parsed = parsePortfolioAiStructuredOutput(exchange);
+  const candidateValidation = validatePortfolioAiParsedCandidates(parsed);
+  const grounded = groundPortfolioAiParsedCandidates({ parsed, candidateValidation });
+  const composition = composeMorningMeetingPortfolioAi(input([grounded], fixture.context));
+  const externalInput = {
+    request: composition.canonical.request,
+    aiRequested: true,
+    composition,
+  };
+  const before = JSON.stringify(externalInput);
+  let generationCount = 0;
+  const api = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      generationCount += 1;
+      return composition.canonical.report;
+    },
+  });
+
+  const first = await api.execute(externalInput);
+  const repeated = await api.execute(externalInput);
+
+  assert.equal(providerAttempts, 1);
+  assert.equal(generationCount, 2);
+  assert.deepEqual(first, repeated);
+  assert.equal(first.outcome, MorningMeetingPortfolioAiLifecycleOutcome.Included);
+  assert.deepEqual(first.output.canonicalReport, composition.canonical.report);
+  assert.equal(first.output.aiNarrative.authority, 'non_authoritative_interpretation');
+  assert.deepEqual(
+    first.output.aiNarrative.items.map((item) => [
+      item.trace.executionId,
+      item.trace.providerId,
+      item.trace.modelId,
+      item.trace.candidateId,
+      item.trace.factReferences[0]?.presentationItemId,
+    ]),
+    [
+      [
+        'composition-execution-release-candidate',
+        'composition-provider',
+        'composition-model',
+        'candidate-release-candidate-network-a',
+        'network-a',
+      ],
+      [
+        'composition-execution-release-candidate',
+        'composition-provider',
+        'composition-model',
+        'candidate-release-candidate-network-b',
+        'network-b',
+      ],
+      [
+        'composition-execution-release-candidate',
+        'composition-provider',
+        'composition-model',
+        'candidate-release-candidate-missing',
+        'missing-price',
+      ],
+    ],
+  );
+  assert.deepEqual(
+    composition.canonical.portfolioContext.facts
+      .slice(0, 2)
+      .map((fact) => [fact.evidence.insight.asset.symbol, fact.evidence.insight.asset.networkId]),
+    [
+      ['USDC', 'network-a'],
+      ['USDC', 'network-b'],
+    ],
+  );
+  assert.equal(composition.canonical.portfolioContext.summary.coverage.state, 'partial');
+  assert.equal(
+    composition.canonical.portfolioContext.summary.totalValuedValue,
+    '900719925474099312345678.123456',
+  );
+  assert.equal(JSON.stringify(externalInput), before);
+  assert.equal('sourceExchange' in first.output.aiNarrative.items[0].trace, false);
+  assert.equal('rawOutput' in first.output.aiNarrative.items[0].trace, false);
+});
+
+test('characterizes a repeated in-memory no-AI release batch without timing gates or retained state', async (t) => {
+  const canonical = meetingCanonical();
+  const executionCount = 100;
+  let firstCalls = 0;
+  let secondCalls = 0;
+  const firstApi = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      firstCalls += 1;
+      return canonical.report;
+    },
+  });
+  const secondApi = new DefaultMorningMeetingMvpApplicationApi({
+    generate: async () => {
+      secondCalls += 1;
+      return canonical.report;
+    },
+  });
+  const externalInput = { request: canonical.request, aiRequested: false };
+  const before = JSON.stringify(externalInput);
+  const startedAt = performance.now();
+  const results = [];
+  for (let index = 0; index < executionCount; index += 1) {
+    results.push(await firstApi.execute(externalInput));
+  }
+  const elapsedMs = performance.now() - startedAt;
+  const isolated = await secondApi.execute(externalInput);
+
+  assert.equal(firstCalls, executionCount);
+  assert.equal(secondCalls, 1);
+  assert.equal(JSON.stringify(externalInput), before);
+  assert.equal(
+    results.every((result) => result.outcome === 'not_requested'),
+    true,
+  );
+  assert.equal(
+    results.slice(1).every((result) => result !== results[0]),
+    true,
+  );
+  assert.deepEqual(results[0], isolated);
+  results[0].output.canonicalReport.marketViews[0].riskLevel = MorningMeetingRiskLevel.High;
+  assert.deepEqual(await secondApi.execute(externalInput), isolated);
+  assert.equal(secondCalls, 2);
+  t.diagnostic(
+    `informational baseline: ${executionCount} sequential in-memory no-AI executions in ${elapsedMs.toFixed(3)} ms on this test environment`,
+  );
 });

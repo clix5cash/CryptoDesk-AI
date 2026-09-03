@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
 import * as publicApi from '../dist/index.js';
 
@@ -90,4 +90,53 @@ test('keeps the workspace release dependency graph acyclic and one-way', async (
   for (const name of manifests.keys()) visit(name);
 
   assert.equal(visited.size, manifests.size);
+});
+
+test('contains the built release artifacts and emits the required public declarations', async () => {
+  const morningDeclaration = await readFile(new URL('../dist/index.d.ts', import.meta.url), 'utf8');
+  const mvpDeclaration = await readFile(
+    new URL('../dist/mvp-application-api.d.ts', import.meta.url),
+    'utf8',
+  );
+  const aiDeclaration = await readFile(
+    new URL('../../ai/dist/index.d.ts', import.meta.url),
+    'utf8',
+  );
+  const runtimeDeclaration = await readFile(
+    new URL('../../openai-runtime/dist/index.d.ts', import.meta.url),
+    'utf8',
+  );
+  const runtimeFiles = await readdir(new URL('../../openai-runtime/dist/', import.meta.url));
+  const morningFiles = await readdir(new URL('../dist/', import.meta.url));
+  const builtText = [morningDeclaration, mvpDeclaration, aiDeclaration, runtimeDeclaration].join(
+    '\n',
+  );
+
+  assert.match(morningDeclaration, /mvp-application-api/u);
+  assert.match(mvpDeclaration, /DefaultMorningMeetingMvpApplicationApi/u);
+  assert.match(mvpDeclaration, /MorningMeetingMvpApplicationApiInput/u);
+  assert.match(aiDeclaration, /portfolio-model-execution/u);
+  assert.match(runtimeDeclaration, /createOpenAiPortfolioModelProviderAdapter/u);
+  assert.deepEqual(runtimeFiles.sort(), [
+    'index.d.ts',
+    'index.d.ts.map',
+    'index.js',
+    'openai-portfolio-adapter.d.ts',
+    'openai-portfolio-adapter.d.ts.map',
+    'openai-portfolio-adapter.js',
+  ]);
+  assert.equal(
+    morningFiles.some((file) => /\.test\.|fixture|secret/iu.test(file)),
+    false,
+  );
+  assert.equal(
+    runtimeFiles.some((file) => /\.test\.|fixture|secret/iu.test(file)),
+    false,
+  );
+  assert.equal(
+    /secret-never-exposed|prototype-secret|authorization:\s*Bearer/iu.test(builtText),
+    false,
+  );
+  assert.equal(/@cryptodesk-ai\/openai-runtime/u.test(aiDeclaration), false);
+  assert.equal(/@cryptodesk-ai\/morning-meeting/u.test(aiDeclaration), false);
 });

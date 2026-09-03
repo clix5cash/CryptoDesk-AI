@@ -375,3 +375,19 @@ secret/body/endpoint containment, recovery, and instance-boundary evidence;
 existing tests retain authority for trust, canonical separation, traceability,
 missing data, precision, ordering, and dependency/export closure. Sprint 9F is
 not complete; Sprint 9F.3 has not started.
+
+## Sprint 9F.3 release-candidate inventory
+
+No production component or dependency edge is added. Release-candidate tests
+compose the existing provider-neutral execution, parsing, validation,
+grounding, Morning Meeting composition, and sole MVP facade surfaces. Separate
+no-AI facade instances and repeated calls demonstrate request-scoped state,
+exact invocation accounting, output detachment, and post-mutation isolation.
+
+The build artifact audit confirms required root declarations, declaration
+maps, runtime modules, blocked test/fixture leakage, and the absence of runtime
+imports from provider-neutral AI declarations. The informational 100-call
+in-memory no-AI batch showed no duplicate/pathological work; wall-clock output
+is environment-specific and not a release guarantee. No deployment,
+publishing, transport, state store, or autonomous component exists. Sprint 9F
+remains open; Sprint 9F.4 has not started.
