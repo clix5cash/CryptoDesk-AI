@@ -496,3 +496,27 @@ The closure test composes only public APIs and retains exact execution,
 provider, optional-model, candidate, fact, presentation-item, and section
 references. Sprint 9F owns later release/security/integration hardening and has
 not started.
+
+## Sprint 9F.1 release and integration boundary audit
+
+The MVP release entry point is the package-root
+`DefaultMorningMeetingMvpApplicationApi`. Its required public supporting
+surface is `MorningMeetingMvpApplicationApiInput`,
+`MorningMeetingMvpApplicationApiOutput`, `MorningMeetingMvpApplicationApi`,
+`validateMorningMeetingMvpApplicationApiInput`, the injected
+`MorningMeetingService`, and the existing optional composition/lifecycle/error
+contracts. These contracts remain provider- and transport-neutral.
+
+| Release/integration gate                                                           | Result |
+| ---------------------------------------------------------------------------------- | ------ |
+| One intended application facade; no competing execution facade                     | PASS   |
+| Package-root export map contains public artifacts and blocks deep imports          | PASS   |
+| Workspace dependency graph is acyclic and directionally legal                      | PASS   |
+| Input, authority, trust, detachment, and sanitized-error gates remain closed       | PASS   |
+| No-AI, unavailable, included, invalid/stale, service-failure paths remain covered  | PASS   |
+| Identity, traceability, cross-network, missing-data, precision, and order survive  | PASS   |
+| No raw output, secret, environment, transport, provider auto-run, or mutable state | PASS   |
+| Existing public APIs and private workspace package metadata remain compatible      | PASS   |
+
+No production defect was found. Sprint 9F.1 adds release audit tests and
+documentation only. Sprint 9F remains open; Sprint 9F.2 has not started.

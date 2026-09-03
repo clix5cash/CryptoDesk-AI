@@ -9,3 +9,15 @@ Architecture documentation:
 - [Sprint 9 MVP Component and Dependency Map](docs/architecture/sprint-9-mvp-component-map.md)
 - [Sprint 9 MVP Integration Contract](docs/architecture/sprint-9-mvp-integration-contract.md)
 - [Sprint 9A MVP Architecture Closure](docs/architecture/sprint-9a-mvp-architecture-closure.md)
+
+## MVP release surface
+
+The transport-neutral MVP application entry point is
+`DefaultMorningMeetingMvpApplicationApi` from
+`@cryptodesk-ai/morning-meeting`. Workspace packages are currently private
+build artifacts and expose only their package-root `dist/index` entry points;
+no network server, CLI, or publishable deployment artifact is included.
+
+The facade generates one authoritative deterministic Morning Meeting and may
+include an explicitly caller-supplied Portfolio AI composition through the
+existing non-authoritative lifecycle. It never invokes a provider itself.

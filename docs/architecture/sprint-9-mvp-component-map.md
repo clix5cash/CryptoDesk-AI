@@ -319,3 +319,15 @@ Dependency and source audits confirm Morning Meeting → AI → Portfolio remain
 one-way, while runtime depends only inward on AI. No second facade, provider
 auto-execution, transport, persistent state, or circular edge exists. Sprint
 9F has not started.
+
+## Sprint 9F.1 release-boundary audit
+
+The component map is unchanged. Release consumers enter through the sole
+package-root `DefaultMorningMeetingMvpApplicationApi` facade; supporting lower
+contracts remain independently public for explicit composition and testing,
+but none is a competing external execution facade.
+
+Manifest traversal proves the workspace graph is acyclic. Deep package imports
+are blocked by the export map, Portfolio has no AI edge, AI has no Morning
+Meeting edge, and runtime has no Morning Meeting edge. No new production
+component or dependency was required. Sprint 9F.2 has not started.

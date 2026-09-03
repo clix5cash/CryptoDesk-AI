@@ -450,3 +450,15 @@ pass with no 9E.4 production fix.
 
 Sprint 9F and Sprint 9G have not started. Sprint 9F owns later release,
 security, and integration hardening.
+
+## Sprint 9F.1 audit status
+
+The release and integration boundary audit passes. The sole MVP facade and its
+supporting package-root contracts are contained by explicit export maps; the
+workspace dependency graph is acyclic and preserves all authority and trust
+directions. Existing 9E integration coverage remains green, and new release
+tests guard facade uniqueness, deep-import exclusion, metadata consistency,
+and forbidden-capability absence.
+
+No production fix was required. Sprint 9F is not complete; Sprint 9F.2 and
+later release hardening remain unstarted, as do Sprint 9G and Sprint 10.

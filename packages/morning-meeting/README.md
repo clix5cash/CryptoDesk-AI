@@ -211,3 +211,23 @@ autonomous capability.
 
 Sprint 9F owns later release, security, and integration hardening and has not
 started.
+
+## Sprint 9F.1 release and integration boundary audit
+
+The MVP release surface is the package-root export of
+`DefaultMorningMeetingMvpApplicationApi`, its input/output interface and
+validator, and the existing composition/lifecycle contracts needed to supply
+optional AI. Package metadata exposes only `.` through `dist/index.js` and
+`dist/index.d.ts`; internal module paths are not public exports.
+
+Release audit coverage verifies facade uniqueness, root-export containment,
+the acyclic workspace graph, Morning Meeting → AI → Portfolio direction, and
+the absence of runtime → Morning Meeting coupling. Existing integration tests
+continue to prove no-AI, unavailable, included, invalid/stale AI, sanitized
+service failure, detachment, traceability, cross-network identity, missing
+data, precision, and ordering.
+
+All packages remain private workspace artifacts at version `0.0.0`; Sprint
+9F.1 does not create a publishing or deployment mechanism. No production
+acceptance defect or capability expansion was required. Sprint 9F remains open;
+Sprint 9F.2 owns later hardening.

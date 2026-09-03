@@ -345,3 +345,17 @@ the existing 9D lifecycle, and provider-neutral AI/Portfolio contracts. No
 transport, runtime invocation, stateful service, secret boundary, or reverse
 dependency was added. Sprint 9F owns later release/security/integration
 hardening and has not started.
+
+## Sprint 9F.1 release-boundary inventory
+
+The audited release surface contains one application facade in
+`@cryptodesk-ai/morning-meeting`, exposed only from the package root. Its
+supporting public contracts are the existing MVP request/result validator,
+Morning Meeting service, Portfolio AI composition, lifecycle result/outcomes,
+and sanitized errors. No internal deep-import path is exported.
+
+All workspace package manifests remain private `0.0.0` build artifacts with a
+single `.` export mapped to `dist/index.js` and `dist/index.d.ts`. The workspace
+dependency graph is acyclic and retains Morning Meeting → AI → Portfolio;
+OpenAI runtime depends only on AI. Sprint 9F.1 adds audit coverage and
+documentation only. Sprint 9F remains open for 9F.2.
