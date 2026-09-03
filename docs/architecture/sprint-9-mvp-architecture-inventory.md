@@ -359,3 +359,19 @@ single `.` export mapped to `dist/index.js` and `dist/index.d.ts`. The workspace
 dependency graph is acyclic and retains Morning Meeting → AI → Portfolio;
 OpenAI runtime depends only on AI. Sprint 9F.1 adds audit coverage and
 documentation only. Sprint 9F remains open for 9F.2.
+
+## Sprint 9F.2 security-boundary inventory
+
+No component or dependency edge is added. The concrete OpenAI runtime remains
+the sole owner of explicitly supplied credential, authorization, endpoint, and
+vendor transport material. A minimal runtime validator fix rejects inherited
+configuration and response fields instead of treating them as own vendor data.
+Provider-neutral results retain fixed sanitized failures and opaque untrusted
+output only.
+
+The Morning Meeting MVP facade remains runtime-free, stateless, closed-schema,
+and no-AI capable. Focused security coverage adds hostile/prototype input,
+secret/body/endpoint containment, recovery, and instance-boundary evidence;
+existing tests retain authority for trust, canonical separation, traceability,
+missing data, precision, ordering, and dependency/export closure. Sprint 9F is
+not complete; Sprint 9F.3 has not started.

@@ -520,3 +520,23 @@ contracts. These contracts remain provider- and transport-neutral.
 
 No production defect was found. Sprint 9F.1 adds release audit tests and
 documentation only. Sprint 9F remains open; Sprint 9F.2 has not started.
+
+## Sprint 9F.2 security and failure-containment hardening
+
+The runtime owns explicit credentials, authorization construction, endpoint
+configuration, vendor response handling, and network exceptions. Public
+provider-neutral failures contain only stable codes/messages and exact model
+identity. Runtime configuration and vendor objects now require plain
+own-property records, closing inherited/prototype-field acceptance; hostile
+failures cannot retain secret-looking values and a later valid call remains
+isolated.
+
+The MVP facade remains a separate no-runtime boundary. Its closed input rejects
+prototype-shaped or injected fields before generation, its service/lifecycle
+errors remain sanitized, and raw `untrusted_model_execution` content cannot
+enter canonical or user-facing application output. Narration completion errors
+also discard their arbitrary original exception instead of retaining it as a
+public error cause. There is no logging, environment discovery, mutable global
+state, retry/fallback, transport, deployment, or trust promotion added.
+Dependency direction remains Morning Meeting → AI → Portfolio and OpenAI
+runtime → AI. Sprint 9F remains open; Sprint 9F.3 has not started.

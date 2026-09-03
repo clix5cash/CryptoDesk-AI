@@ -148,13 +148,24 @@ test('rejects malformed, unknown, duplicate, target-mutated, and provenance-muta
 
 test('normalizes invocation failure and supports registry and direct-narrator composition', async () => {
   let fail = true;
+  const secret = 'credential endpoint and vendor response body';
   const concreteAdapter = adapter({
     complete: async (request) => {
-      if (fail) throw new Error('client failed');
+      if (fail) throw new Error(secret);
       return { items: request.items.map((item) => responseFor(item)) };
     },
   });
-  await assert.rejects(() => concreteAdapter.narrate(input()), MorningMeetingNarratorProviderError);
+  await assert.rejects(
+    () => concreteAdapter.narrate(input()),
+    (error) => {
+      assert.equal(error instanceof MorningMeetingNarratorProviderError, true);
+      assert.equal(error.message, 'Narrator provider "future-provider" completion failed.');
+      assert.equal(error.cause, undefined);
+      assert.equal(JSON.stringify(error).includes(secret), false);
+      assert.equal(error.stack?.includes(secret), false);
+      return true;
+    },
+  );
   fail = false;
   assert.equal((await concreteAdapter.narrate(input())).items.length, 2);
 

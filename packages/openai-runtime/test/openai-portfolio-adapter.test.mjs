@@ -445,3 +445,87 @@ test('rejects invalid runtime configuration without echoing credentials', () => 
     );
   }
 });
+
+test('rejects inherited runtime and vendor fields without retaining hostile failure data', async () => {
+  const secret = 'prototype-secret-never-exposed';
+  const endpoint = 'https://prototype-endpoint.openai.test/v1/responses';
+  const inheritedConfiguration = Object.create({ apiKey: secret, endpoint });
+
+  assert.throws(
+    () => createOpenAiPortfolioModelProviderAdapter(inheritedConfiguration),
+    (error) =>
+      error instanceof TypeError &&
+      !error.message.includes(secret) &&
+      !error.message.includes(endpoint),
+  );
+
+  let calls = 0;
+  const inheritedPayload = Object.create({
+    status: 'completed',
+    model: 'explicit-model',
+    output: [{ content: [{ type: 'output_text', text: secret }] }],
+  });
+  const adapter = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: secret, endpoint },
+    async () => {
+      calls += 1;
+      return response(
+        true,
+        calls === 1
+          ? inheritedPayload
+          : {
+              status: 'completed',
+              model: 'explicit-model',
+              output: [{ content: [{ type: 'output_text', text: 'Isolated valid output.' }] }],
+            },
+      );
+    },
+  );
+
+  const rejected = await adapter.execute(executionRequest());
+  const recovered = await adapter.execute(executionRequest());
+
+  assert.equal(calls, 2);
+  assert.equal(rejected.status, AiExecutionStatus.Failed);
+  assert.equal(rejected.failure.code, 'provider_response_invalid');
+  assert.equal(JSON.stringify(rejected).includes(secret), false);
+  assert.equal(JSON.stringify(rejected).includes(endpoint), false);
+  assert.equal(recovered.status, AiExecutionStatus.Completed);
+  assert.equal(recovered.output, 'Isolated valid output.');
+});
+
+test('keeps credentials and failure state isolated between runtime instances', async () => {
+  const firstSecret = 'first-instance-secret';
+  const secondSecret = 'second-instance-secret';
+  const authorizations = [];
+  const first = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: firstSecret, endpoint: 'https://first-runtime.openai.test/v1/responses' },
+    async (request) => {
+      authorizations.push(request.authorization);
+      throw new Error(`${firstSecret}: vendor failure`);
+    },
+  );
+  const second = createOpenAiPortfolioModelProviderAdapter(
+    { apiKey: secondSecret, endpoint: 'https://second-runtime.openai.test/v1/responses' },
+    async (request) => {
+      authorizations.push(request.authorization);
+      return response(true, {
+        status: 'completed',
+        model: 'explicit-model',
+        output: [{ content: [{ type: 'output_text', text: 'Second instance output.' }] }],
+      });
+    },
+  );
+
+  const failed = await first.execute(executionRequest());
+  const completed = await second.execute(executionRequest());
+
+  assert.deepEqual(authorizations, [`Bearer ${firstSecret}`, `Bearer ${secondSecret}`]);
+  assert.equal(failed.failure.code, 'provider_transport_failed');
+  assert.equal(completed.status, AiExecutionStatus.Completed);
+  assert.equal(completed.output, 'Second instance output.');
+  for (const artifact of [first, second, failed, completed]) {
+    assert.equal(JSON.stringify(artifact).includes(firstSecret), false);
+    assert.equal(JSON.stringify(artifact).includes(secondSecret), false);
+  }
+});

@@ -48,3 +48,17 @@ opaque `untrusted_model_execution` text.
 No live credential or network call is part of repository tests. A live-provider
 smoke test remains explicit later release/hardening work. Gap B output mapping
 belongs to Sprint 9C, and Morning Meeting integration remains Sprint 9D.
+
+## Sprint 9F.2 security boundary
+
+Credentials, authorization values, HTTPS endpoints, vendor bodies, and network
+exceptions remain owned by this concrete runtime. Only fixed provider-neutral
+failure codes/messages leave it; configuration and vendor payload records must
+be plain own-property objects, so inherited/prototype-shaped values fail closed.
+Raw completed text remains opaque `untrusted_model_execution` and is never
+promoted here.
+
+Configuration is explicitly supplied per adapter instance. There is no
+environment discovery, logging, retry/fallback, global credential or model
+state, persistence, transport endpoint exposure through AI contracts, or
+autonomous provider execution. Sprint 9F remains open after this hardening.

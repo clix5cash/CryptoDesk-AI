@@ -231,3 +231,20 @@ All packages remain private workspace artifacts at version `0.0.0`; Sprint
 9F.1 does not create a publishing or deployment mechanism. No production
 acceptance defect or capability expansion was required. Sprint 9F remains open;
 Sprint 9F.2 owns later hardening.
+
+## Sprint 9F.2 application security boundary
+
+The MVP facade continues to reject non-plain/prototype-shaped and unknown-field
+application envelopes before generation. Service and lifecycle failures cross
+the facade only through the existing fixed Morning Meeting errors; arbitrary
+runtime, endpoint, credential, vendor-body, exception, stack, or raw-output
+details are not returned. The provider-neutral news narrator likewise maps a
+completion-client exception to its fixed error without retaining the original
+exception as `cause`. Failed calls retain no state and do not affect later executions.
+
+The no-AI path needs only the injected `MorningMeetingService`; it performs no
+environment discovery, credential lookup, network call, or provider execution.
+Optional AI composition remains explicitly caller-supplied, exact-match
+validated, separate from canonical state, and only
+`non_authoritative_interpretation`. Sprint 9F remains open; no deployment or
+publishing behavior is introduced.

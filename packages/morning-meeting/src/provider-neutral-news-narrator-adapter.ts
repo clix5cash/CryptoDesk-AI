@@ -50,10 +50,9 @@ export class ProviderNeutralMorningMeetingNewsNarratorAdapter implements Morning
     let response: MorningMeetingNewsNarrationCompletionResponse;
     try {
       response = await this.configuration.completionClient.complete(request);
-    } catch (error) {
+    } catch {
       throw new MorningMeetingNarratorProviderError(
         `Narrator provider "${this.providerId}" completion failed.`,
-        error,
       );
     }
 
