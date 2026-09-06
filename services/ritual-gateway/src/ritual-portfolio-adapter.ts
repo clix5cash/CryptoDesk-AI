@@ -99,14 +99,21 @@ async function executeRitualInvocation(
   runtime: RitualRuntimeConfiguration,
   invoke: RitualInferenceInvoker,
 ): Promise<PortfolioAiModelExecutionResult> {
-  if (request.model?.providerId !== RITUAL_PROVIDER_ID) {
-    return failed(request, 'provider_identity_mismatch', 'Provider identity is not supported.');
+  const detachedRequest = clone(request);
+  if (detachedRequest.model?.providerId !== RITUAL_PROVIDER_ID) {
+    return failed(
+      detachedRequest,
+      'provider_identity_mismatch',
+      'Provider identity is not supported.',
+    );
   }
 
   const invocation: RitualInferenceInvocation = {
-    executionId: request.executionId,
+    executionId: detachedRequest.executionId,
     providerId: RITUAL_PROVIDER_ID,
-    ...(request.model.modelId === undefined ? {} : { modelId: request.model.modelId }),
+    ...(detachedRequest.model.modelId === undefined
+      ? {}
+      : { modelId: detachedRequest.model.modelId }),
     targetId: runtime.targetId,
     payload,
   };
@@ -114,26 +121,30 @@ async function executeRitualInvocation(
   const outcome = await executeInjectedRitualTransport(invocation, invoke);
   switch (outcome.kind) {
     case 'invocation_failed':
-      return failed(request, 'ritual_invocation_failed', 'The Ritual invocation failed.');
+      return failed(detachedRequest, 'ritual_invocation_failed', 'The Ritual invocation failed.');
     case 'result_invalid':
-      return failed(request, 'ritual_result_invalid', 'The Ritual execution result is invalid.');
+      return failed(
+        detachedRequest,
+        'ritual_result_invalid',
+        'The Ritual execution result is invalid.',
+      );
     case 'identity_mismatch':
       return failed(
-        request,
+        detachedRequest,
         'ritual_identity_mismatch',
         'The Ritual execution identity conflicts with the request.',
       );
     case 'failed':
       return outcome.failureKind === RitualInferenceFailureKind.Timeout
-        ? failed(request, 'ritual_timeout', 'The Ritual execution timed out.')
-        : failed(request, 'ritual_execution_failed', 'The Ritual execution failed.');
+        ? failed(detachedRequest, 'ritual_timeout', 'The Ritual execution timed out.')
+        : failed(detachedRequest, 'ritual_execution_failed', 'The Ritual execution failed.');
     case 'completed':
       return {
-        executionId: request.executionId,
+        executionId: detachedRequest.executionId,
         status: AiExecutionStatus.Completed,
         authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
         output: outcome.output,
-        model: detachModel(request),
+        model: detachModel(detachedRequest),
       };
   }
 }
@@ -194,4 +205,8 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 
 function hasOnlyKeys(value: Record<string, unknown>, allowed: ReadonlyArray<string>): boolean {
   return Object.keys(value).every((key) => allowed.includes(key));
+}
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }

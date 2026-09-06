@@ -341,6 +341,92 @@ test('detaches configuration, invocation input, and results across equivalent ca
   assert.equal(second.output, 'stable output');
 });
 
+test('settles against a pre-dispatch identity snapshot despite caller mutation while pending', async () => {
+  let release;
+  let observedInvocation;
+  const adapter = createRitualPortfolioModelProviderAdapter(
+    { targetId: 'settlement-target' },
+    async (invocation) => {
+      observedInvocation = structuredClone(invocation);
+      return new Promise((resolve) => {
+        release = () => resolve(completed(observedInvocation, 'settled output'));
+      });
+    },
+  );
+  const request = {
+    executionId: 'settlement-execution',
+    context: context(),
+    model: { providerId: 'ritual', modelId: 'settlement-model' },
+  };
+
+  const pending = adapter.execute(request);
+  request.executionId = 'caller-mutated-execution';
+  request.model.providerId = 'caller-mutated-provider';
+  request.model.modelId = 'caller-mutated-model';
+  release();
+  const result = await pending;
+
+  assert.equal(observedInvocation.executionId, 'settlement-execution');
+  assert.deepEqual(observedInvocation.modelId, 'settlement-model');
+  assert.equal(result.executionId, 'settlement-execution');
+  assert.deepEqual(result.model, { providerId: 'ritual', modelId: 'settlement-model' });
+  assert.equal(result.output, 'settled output');
+});
+
+test('recovers cleanly after every lifecycle failure class', async () => {
+  const failures = [
+    (invocation) => ({
+      executionId: invocation.executionId,
+      providerId: invocation.providerId,
+      modelId: invocation.modelId,
+      targetId: invocation.targetId,
+      status: RitualInferenceStatus.Failed,
+      failureKind: RitualInferenceFailureKind.Timeout,
+    }),
+    () => {
+      throw new Error('secret transport failure');
+    },
+    () => ({ status: RitualInferenceStatus.Completed }),
+    (invocation) => ({ ...completed(invocation), executionId: 'stale-execution' }),
+    (invocation) => ({ ...completed(invocation), targetId: 'wrong-target' }),
+    (invocation) => Object.assign(Object.create({ inherited: true }), completed(invocation)),
+  ];
+  let calls = 0;
+  let behavior;
+  const adapter = createRitualPortfolioModelProviderAdapter(
+    { targetId: 'recovery-target' },
+    async (invocation) => {
+      calls += 1;
+      return behavior(invocation);
+    },
+  );
+  const request = {
+    executionId: 'recovery-execution',
+    context: context(),
+    model: { providerId: 'ritual', modelId: 'recovery-model' },
+  };
+
+  await assert.rejects(
+    () => adapter.execute({ ...request, unexpected: true }),
+    AiBoundaryValidationError,
+  );
+  behavior = (invocation) => completed(invocation, 'clean recovery');
+  assert.equal((await adapter.execute(request)).status, AiExecutionStatus.Completed);
+
+  for (const failure of failures) {
+    behavior = failure;
+    const failed = await adapter.execute(request);
+    assert.equal(failed.status, AiExecutionStatus.Failed);
+
+    behavior = (invocation) => completed(invocation, 'clean recovery');
+    const recovered = await adapter.execute(request);
+    assert.equal(recovered.status, AiExecutionStatus.Completed);
+    assert.equal(recovered.output, 'clean recovery');
+  }
+
+  assert.equal(calls, failures.length * 2 + 1);
+});
+
 test('keeps the Ritual gateway concrete, root-exported, network-free, and inward-dependent', async () => {
   const [manifest, adapterSource, transportSource] = await Promise.all([
     readFile(new URL('../package.json', import.meta.url), 'utf8').then(JSON.parse),

@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B.2 internal transport adapter implemented
+Status: Sprint 10A COMPLETE; Sprint 10B.3 execution lifecycle hardened
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -426,5 +426,43 @@ RPC/network transport, SDK integration, wallet/private key/signing, chain
 submission, receipt or attestation settlement, process environment discovery,
 persistence, scheduler, autonomous loop, deployment, publishing, server, CLI,
 or UI exists. Ritual output remains opaque `untrusted_model_execution`, and
-canonical Portfolio and Morning Meeting authority is unchanged. Sprint 10B.3
-has not started.
+canonical Portfolio and Morning Meeting authority is unchanged. That was the
+Sprint 10B.2 checkpoint.
+
+## Sprint 10B.3 execution lifecycle hardening
+
+Lifecycle ownership remains entirely inside the concrete gateway. One accepted
+adapter request is snapshotted before asynchronous dispatch, produces one
+internal transport call, observes the first and only settlement of the supplied
+Promise, performs one terminal decode, and returns one provider-neutral result.
+The transport Promise exposes no callback registry or pending public object, so
+duplicate or incompatible late resolution/rejection attempts are structurally
+ignored by JavaScript Promise settlement and cannot cause a second mapping.
+
+`completed` and `failed` remain the only terminal response shapes. Timeout is a
+final failed response, not a pending state; it cannot later become completed.
+Likewise, a thrown transport, malformed result, prototype-shaped result, or
+identity/target mismatch is final for that call and cannot be repaired by a
+second result. There is no retry, fallback, route switch, replay, recursive
+entry, background work, or additional provider-neutral failure taxonomy.
+
+After mapping, the gateway retains no timer, invocation, request or response
+body, exception, target detail, pending lifecycle object, or terminal cache.
+The decoded outcome contains only newly created primitive terminal data. The
+adapter's validated request snapshot prevents caller mutation during an
+in-flight transport from changing settled execution or model identity. Mutating
+transport input, runtime response, or returned provider-neutral output cannot
+affect caller-owned input or a later execution.
+
+Regression coverage verifies first-settlement finality, exactly-one invocation,
+exactly-one result mapping, in-flight caller mutation isolation, independent
+instances, and clean recovery after timeout, thrown transport, malformed result,
+execution mismatch, target mismatch, invalid request, and prototype-shaped
+result. Trust remains `untrusted_model_execution`, and canonical authority is
+unchanged.
+
+No public export was added. No timer or external cancellation, live Ritual
+network/RPC, SDK networking, wallet/private key/signing, process environment
+discovery, scheduler, persistence, routing/fallback, provider auto-selection,
+autonomous/on-chain execution, deployment, publishing, server, CLI, or UI was
+introduced. Sprint 10B.4 has not started.

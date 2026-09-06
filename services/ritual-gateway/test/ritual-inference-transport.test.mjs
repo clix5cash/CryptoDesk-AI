@@ -108,3 +108,27 @@ test('decodes terminal failures and rejects malformed transport responses withou
     { kind: 'result_invalid' },
   );
 });
+
+test('observes only the first Promise settlement and retains no mutable terminal result', async () => {
+  const response = completed(invocation(), 'first terminal output');
+  let calls = 0;
+  const outcome = await executeInjectedRitualTransport(invocation(), async () => {
+    calls += 1;
+    return new Promise((resolve) => {
+      resolve(response);
+      resolve({ ...response, status: 'failed', failureKind: 'timeout' });
+    });
+  });
+
+  response.output = 'late incompatible mutation';
+  assert.equal(calls, 1);
+  assert.deepEqual(outcome, { kind: 'completed', output: 'first terminal output' });
+
+  outcome.output = 'consumer mutation';
+  assert.deepEqual(
+    await executeInjectedRitualTransport(invocation(), async (request) =>
+      completed(request, 'first terminal output'),
+    ),
+    { kind: 'completed', output: 'first terminal output' },
+  );
+});

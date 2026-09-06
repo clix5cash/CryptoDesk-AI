@@ -46,5 +46,20 @@ The transport module is not exported from the package root. There is still no
 default or live transport, network/RPC access, Ritual SDK, endpoint discovery,
 credential handling, timer, retry, fallback, routing, cancellation, wallet,
 signing, settlement, persistence, scheduling, or autonomous behavior. Timeout
-continues to mean an explicitly injected terminal failure. Sprint 10B.3 has not
-started.
+continues to mean an explicitly injected terminal failure. That was the Sprint
+10B.2 checkpoint.
+
+Sprint 10B.3 hardens lifecycle settlement without adding another lifecycle
+state or public API. The single injected Promise is the settlement boundary:
+JavaScript observes its first resolution or rejection only, so late competing
+settlements cannot trigger another decode or provider-neutral mapping. Timeout,
+runtime failure, thrown transport, malformed result, and identity conflict are
+terminal for that call and cannot be repaired by a later response.
+
+The adapter snapshots the validated provider-neutral request before dispatch.
+Caller mutation while transport is pending therefore cannot alter the settled
+execution or model identity. Transport responses are reduced immediately to a
+new gateway-owned outcome containing only primitive terminal data; no request,
+response, exception, timer, pending lifecycle object, or mutable terminal cache
+is retained. Every failure class is followed successfully by an equivalent
+clean call in regression coverage. Sprint 10B.4 has not started.

@@ -119,4 +119,11 @@ closed request, performs exactly one supplied transport call, and decodes one
 closed terminal response into the existing sanitized result model. The module
 is not package-root exported, and no live Ritual RPC/network, SDK, credential,
 wallet, signing, retry, routing, persistence, scheduler, autonomous capability,
-deployment, or publishing was added. Sprint 10B.3 has not started.
+deployment, or publishing was added. That was the Sprint 10B.2 checkpoint.
+
+Sprint 10B.3 hardens the internal execution lifecycle around a single Promise
+settlement and one provider-neutral mapping. The gateway now snapshots validated
+request identity before asynchronous dispatch, ignores structurally impossible
+late competing Promise settlements, retains no pending or terminal cache, and
+recovers cleanly after every supported failure class. No public export or new
+capability was added. Sprint 10B.4 has not started.
