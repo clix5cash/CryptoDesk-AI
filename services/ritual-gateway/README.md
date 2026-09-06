@@ -31,4 +31,20 @@ field. Timeout is an injected terminal failure, not an adapter timer or a third
 lifecycle state. External cancellation is not supported by the frozen
 provider-neutral contract and remains later work. Each factory instance retains
 only its detached target and invoker, with no shared request, result, timeout,
-credential, or provider-selection state. Sprint 10A.4 has not started.
+credential, or provider-selection state.
+
+Sprint 10B.2 places a gateway-internal transport adapter behind the unchanged
+`RitualInferenceInvoker` construction seam. It prepares one closed, detached
+transport request from the already validated invocation, calls only the injected
+transport once, and decodes one closed `completed` or `failed` response. Unknown,
+mixed, prototype-shaped, extra-field, malformed, or identity-conflicting
+responses fail closed. Exceptions and rejected responses map through the
+existing fixed sanitized gateway failures; request bodies and transport details
+do not cross the provider-neutral result boundary.
+
+The transport module is not exported from the package root. There is still no
+default or live transport, network/RPC access, Ritual SDK, endpoint discovery,
+credential handling, timer, retry, fallback, routing, cancellation, wallet,
+signing, settlement, persistence, scheduling, or autonomous behavior. Timeout
+continues to mean an explicitly injected terminal failure. Sprint 10B.3 has not
+started.

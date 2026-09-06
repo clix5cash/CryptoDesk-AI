@@ -110,4 +110,13 @@ behind the existing `RitualInferenceInvoker` inside the private gateway: one
 caller-selected request, one gateway-owned invocation, one validated terminal
 result, and sanitized `untrusted_model_execution` mapping. No live transport,
 credential, wallet/signing, settlement, persistence, scheduling, routing,
-autonomy, deployment, or publishing was added. Sprint 10B.2 has not started.
+autonomy, deployment, or publishing was added. That was the Sprint 10B.1
+checkpoint.
+
+Sprint 10B.2 implements the first gateway-internal, injected transport adapter
+behind that unchanged boundary. It deterministically prepares one detached
+closed request, performs exactly one supplied transport call, and decodes one
+closed terminal response into the existing sanitized result model. The module
+is not package-root exported, and no live Ritual RPC/network, SDK, credential,
+wallet, signing, retry, routing, persistence, scheduler, autonomous capability,
+deployment, or publishing was added. Sprint 10B.3 has not started.

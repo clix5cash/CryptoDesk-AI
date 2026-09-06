@@ -8,6 +8,7 @@ import {
   validatePortfolioAiModelExecutionRequest,
   validatePortfolioAiProviderRequestDescriptor,
 } from '@cryptodesk-ai/ai';
+import { executeInjectedRitualTransport } from './ritual-inference-transport.js';
 
 const RITUAL_PROVIDER_ID = 'ritual';
 
@@ -110,36 +111,31 @@ async function executeRitualInvocation(
     payload,
   };
 
-  let result: RitualInferenceInvocationResult;
-  try {
-    result = await invoke(clone(invocation));
-  } catch {
-    return failed(request, 'ritual_invocation_failed', 'The Ritual invocation failed.');
+  const outcome = await executeInjectedRitualTransport(invocation, invoke);
+  switch (outcome.kind) {
+    case 'invocation_failed':
+      return failed(request, 'ritual_invocation_failed', 'The Ritual invocation failed.');
+    case 'result_invalid':
+      return failed(request, 'ritual_result_invalid', 'The Ritual execution result is invalid.');
+    case 'identity_mismatch':
+      return failed(
+        request,
+        'ritual_identity_mismatch',
+        'The Ritual execution identity conflicts with the request.',
+      );
+    case 'failed':
+      return outcome.failureKind === RitualInferenceFailureKind.Timeout
+        ? failed(request, 'ritual_timeout', 'The Ritual execution timed out.')
+        : failed(request, 'ritual_execution_failed', 'The Ritual execution failed.');
+    case 'completed':
+      return {
+        executionId: request.executionId,
+        status: AiExecutionStatus.Completed,
+        authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
+        output: outcome.output,
+        model: detachModel(request),
+      };
   }
-
-  if (!isValidRuntimeResult(result)) {
-    return failed(request, 'ritual_result_invalid', 'The Ritual execution result is invalid.');
-  }
-  if (!sameIdentity(invocation, result)) {
-    return failed(
-      request,
-      'ritual_identity_mismatch',
-      'The Ritual execution identity conflicts with the request.',
-    );
-  }
-  if (result.status === RitualInferenceStatus.Failed) {
-    return result.failureKind === RitualInferenceFailureKind.Timeout
-      ? failed(request, 'ritual_timeout', 'The Ritual execution timed out.')
-      : failed(request, 'ritual_execution_failed', 'The Ritual execution failed.');
-  }
-
-  return {
-    executionId: request.executionId,
-    status: AiExecutionStatus.Completed,
-    authority: PortfolioAiRawExecutionAuthority.UntrustedModelExecution,
-    output: result.output,
-    model: detachModel(request),
-  };
 }
 
 function executionRequestFromDescriptor(
@@ -150,59 +146,6 @@ function executionRequestFromDescriptor(
     context: descriptor.request.promptDocument.plan.input.context,
     model: descriptor.model,
   };
-}
-
-function isValidRuntimeResult(value: unknown): value is RitualInferenceInvocationResult {
-  if (
-    !isPlainRecord(value) ||
-    !isNonEmptyString(value.executionId) ||
-    value.providerId !== RITUAL_PROVIDER_ID ||
-    (value.modelId !== undefined && !isNonEmptyString(value.modelId)) ||
-    !isNonEmptyString(value.targetId)
-  ) {
-    return false;
-  }
-
-  if (value.status === RitualInferenceStatus.Completed) {
-    return (
-      hasExactKeys(value, [
-        'executionId',
-        'providerId',
-        'targetId',
-        'status',
-        'output',
-        ...(value.modelId === undefined ? [] : ['modelId']),
-      ]) && isNonEmptyString(value.output)
-    );
-  }
-  if (value.status === RitualInferenceStatus.Failed) {
-    return (
-      hasExactKeys(value, [
-        'executionId',
-        'providerId',
-        'targetId',
-        'status',
-        'failureKind',
-        ...(value.modelId === undefined ? [] : ['modelId']),
-      ]) &&
-      Object.values(RitualInferenceFailureKind).includes(
-        value.failureKind as RitualInferenceFailureKind,
-      )
-    );
-  }
-  return false;
-}
-
-function sameIdentity(
-  request: RitualInferenceInvocation,
-  result: RitualInferenceInvocationResult,
-): boolean {
-  return (
-    result.executionId === request.executionId &&
-    result.providerId === request.providerId &&
-    result.modelId === request.modelId &&
-    result.targetId === request.targetId
-  );
 }
 
 function failed(
@@ -251,13 +194,4 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 
 function hasOnlyKeys(value: Record<string, unknown>, allowed: ReadonlyArray<string>): boolean {
   return Object.keys(value).every((key) => allowed.includes(key));
-}
-
-function hasExactKeys(value: Record<string, unknown>, expected: ReadonlyArray<string>): boolean {
-  const actual = Object.keys(value);
-  return actual.length === expected.length && actual.every((key) => expected.includes(key));
-}
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
 }

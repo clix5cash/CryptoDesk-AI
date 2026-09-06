@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B.1 execution integration boundary defined
+Status: Sprint 10A COMPLETE; Sprint 10B.2 internal transport adapter implemented
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -379,4 +379,52 @@ AI, Portfolio, Morning Meeting, OpenAI runtime, and the MVP facade must not
 depend on the Ritual gateway. The gateway root export remains the only consumer
 surface; internal modules, future transport structures, configuration secrets,
 raw runtime bodies, exception text, stacks, endpoints, and vendor details must
-not cross it. Sprint 10B.2 has not started.
+not cross it.
+
+## Sprint 10B.2 internal transport adapter
+
+The concrete implementation now delegates each accepted adapter execution to
+`src/ritual-inference-transport.ts`, an internal gateway module behind the
+unchanged root-exported `RitualInferenceInvoker` seam. No transport type or
+helper was added to the package-root surface.
+
+The gateway owns this sequence:
+
+```text
+validated and detached Ritual invocation
+  -> closed gateway-local transport-request preparation
+  -> exactly one explicitly injected transport call
+  -> closed gateway-local terminal-response decoding
+  -> existing sanitized Ritual adapter mapping
+  -> provider-neutral Completed or Failed result
+```
+
+Preparation preserves execution, provider, optional model, and target identity
+exactly and copies the opaque payload without interpreting it. The internal
+request is a plain own-property record; it is independently detached before the
+supplied transport receives it. No discovery, environment lookup, canonical
+processing, candidate parsing, or grounding occurs.
+
+The decoder accepts only mutually exclusive `completed` and `failed` terminal
+records with exact own fields and exact identity. Missing or unknown status,
+mixed terminal fields, malformed nested values, inherited/prototype-shaped
+records, unknown fields, and identity or target substitution fail closed. A
+transport throw becomes the existing fixed `ritual_invocation_failed` result;
+invalid and mismatched responses use the existing fixed sanitized result codes.
+Exception text, request and response bodies, target internals, headers,
+credentials, endpoint details, stacks, and vendor details are not propagated.
+
+One accepted adapter call produces exactly one injected transport call. Invalid
+adapter or prepared transport input produces zero calls. There is no retry,
+fallback, routing, provider selection, recursion, re-entry, or retained mutable
+transport state. Separate adapters and supplied transports remain independent.
+Timeout remains an injected `failed` terminal response mapped to
+`ritual_timeout`; 10B.2 adds no timer or external-cancellation contract.
+
+This is still network-independent infrastructure. No default/live Ritual
+RPC/network transport, SDK integration, wallet/private key/signing, chain
+submission, receipt or attestation settlement, process environment discovery,
+persistence, scheduler, autonomous loop, deployment, publishing, server, CLI,
+or UI exists. Ritual output remains opaque `untrusted_model_execution`, and
+canonical Portfolio and Morning Meeting authority is unchanged. Sprint 10B.3
+has not started.

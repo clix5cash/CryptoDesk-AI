@@ -342,20 +342,27 @@ test('detaches configuration, invocation input, and results across equivalent ca
 });
 
 test('keeps the Ritual gateway concrete, root-exported, network-free, and inward-dependent', async () => {
-  const [manifest, source] = await Promise.all([
+  const [manifest, adapterSource, transportSource] = await Promise.all([
     readFile(new URL('../package.json', import.meta.url), 'utf8').then(JSON.parse),
     readFile(new URL('../src/ritual-portfolio-adapter.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../src/ritual-inference-transport.ts', import.meta.url), 'utf8'),
   ]);
 
   assert.deepEqual(Object.keys(manifest.exports), ['.']);
   assert.deepEqual(manifest.dependencies, { '@cryptodesk-ai/ai': 'workspace:*' });
   assert.equal(manifest.private, true);
   assert.equal(
-    /process\.env|fetch\(|http\(|createWallet|privateKey|setTimeout|while\s*\(/iu.test(source),
+    /process\.env|fetch\(|http\(|createWallet|privateKey|setTimeout|while\s*\(/iu.test(
+      `${adapterSource}\n${transportSource}`,
+    ),
     false,
   );
   await assert.rejects(
     () => import('@cryptodesk-ai/ritual-gateway/ritual-portfolio-adapter'),
+    (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED',
+  );
+  await assert.rejects(
+    () => import('@cryptodesk-ai/ritual-gateway/ritual-inference-transport'),
     (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED',
   );
 });
