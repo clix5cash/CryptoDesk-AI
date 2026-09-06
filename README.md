@@ -82,3 +82,10 @@ trust or canonical authority.
 This audit adds no Ritual runtime implementation, network call, credential,
 wallet, chain transaction, scheduler, persistence, autonomous behavior,
 deployment, publishing, or public transport. Sprint 10A.2 has not started.
+
+Sprint 10A.2 implements the first private `@cryptodesk-ai/ritual-gateway`
+service package. Its adapter factory uses only an explicitly injected,
+network-independent invocation primitive and maps closed terminal results to
+the existing provider-neutral `untrusted_model_execution` contract. It adds no
+live Ritual connection, chain transaction, credential, wallet, autonomous
+behavior, or change to canonical authority. Sprint 10A.3 has not started.

@@ -1,7 +1,9 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A.1 architecture audit and boundary definition  
-Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)  
+Status: Sprint 10A.2 runtime contract and injected execution primitive
+
+Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
+
 Compatibility baseline: [Sprint 9 MVP Closure Evidence](./sprint-9-mvp-closure-evidence.md)
 
 ## Scope
@@ -188,8 +190,26 @@ Ritual execution primitive is supported and how its terminal result is obtained
 and sanitized. Sprint 10A.1 does not select a precompile, encode a chain call,
 define callbacks, manage fees/secrets, or implement autonomous execution.
 
-## Sprint 10A.1 decision
+## Sprint 10A.2 implementation
 
-The boundary audit passes without a production or test change. Ritual belongs
-behind a dedicated concrete gateway/provider adapter that depends inward on the
-existing provider-neutral AI contracts. Sprint 10A.2 has not started.
+The implementation now resides in the private root-exported
+`@cryptodesk-ai/ritual-gateway` service package under
+`services/ritual-gateway`. Its public runtime surface is:
+
+- `createRitualPortfolioModelProviderAdapter`;
+- `RitualRuntimeConfiguration` with one required opaque `targetId`;
+- `RitualInferenceInvoker` and its closed invocation/result contracts;
+- `RitualInferenceStatus` and `RitualInferenceFailureKind`.
+
+The factory implements both existing adapter execution seams. It serializes the
+validated context or prompt document into a runtime-owned payload, invokes the
+required injected function exactly once, validates exact execution/provider/
+optional-model/target identity, and maps only terminal completed or failed
+results. Completed text remains opaque `untrusted_model_execution`; runtime
+failure, timeout, thrown invocation, malformed result, and identity mismatch
+become fixed sanitized provider-neutral failures.
+
+No AI, Morning Meeting, or Portfolio contract changed. No default transport,
+network, chain, credential, wallet, signing, scheduler, persistence, retry,
+fallback, routing, deployment, publishing, or autonomous behavior exists.
+Sprint 10A.3 has not started.

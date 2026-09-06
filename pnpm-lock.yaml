@@ -74,6 +74,12 @@ importers:
 
   packages/portfolio: {}
 
+  services/ritual-gateway:
+    dependencies:
+      '@cryptodesk-ai/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+
 packages:
   '@eslint-community/eslint-utils@4.10.1':
     resolution:

@@ -8,6 +8,7 @@
     { "path": "./packages/morning-meeting" },
     { "path": "./packages/data" },
     { "path": "./packages/integrations" },
-    { "path": "./packages/openai-runtime" }
+    { "path": "./packages/openai-runtime" },
+    { "path": "./services/ritual-gateway" }
   ]
 }
