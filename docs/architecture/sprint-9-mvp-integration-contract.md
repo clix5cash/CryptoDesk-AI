@@ -641,3 +641,34 @@ manifest traversal, export/facade enumeration, source security scans, and build
 artifact inspection. No redundant test or production fix was required. Sprint
 9G is not complete, Sprint 9 is not complete, and Sprint 9G.2/Sprint 10 have not
 started. No deployment or publishing was performed.
+
+## Sprint 9G.2 final MVP acceptance and release readiness
+
+The complete Sprint 9 MVP implementation passes final acceptance:
+
+| Acceptance area                                                           | Result |
+| ------------------------------------------------------------------------- | ------ |
+| Single package-root facade and coherent public entry points               | PASS   |
+| Full canonical and optional caller-supplied AI lifecycle                  | PASS   |
+| Canonical authority and structural AI separation                          | PASS   |
+| Sanitized security/trust/hostile-input boundaries                         | PASS   |
+| Determinism, detachment, failed-call and instance isolation               | PASS   |
+| Cross-network identity, missing-data semantics, precision, and ordering   | PASS   |
+| Complete acyclic workspace graph with only legal dependency direction     | PASS   |
+| Forced-build JS/declaration/declaration-map and private-package artifacts | PASS   |
+| Sprint 8 and Sprint 9A–9G.1 backward compatibility                        | PASS   |
+| Full repository validation                                                | PASS   |
+
+Existing authoritative coverage proves exactly-once generation, at-most-once
+lifecycle application, one explicitly selected adapter attempt, zero hidden
+provider selection/retry/fallback, and recovery after every representative
+application, service, runtime, parser, candidate, grounding, identity, trust,
+and reference failure. Canonical state remains usable without AI; raw execution
+never enters canonical or user-facing output.
+
+Direct release audit confirms eight resolvable package roots, 121 source modules
+with matching JS/declaration output, 121 valid declaration maps, contained test
+secrets/runtime types, root-only export maps, and private `0.0.0` metadata. No
+production or test change was necessary. Sprint 9G and Sprint 9 remain open for
+the next planned closure step; Sprint 10 has not started, and no deployment or
+publishing was performed.

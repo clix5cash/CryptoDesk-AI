@@ -377,3 +377,17 @@ internal module path. Runtime credentials, authorization, endpoints, vendor
 mapping, and raw execution remain outside the application path. No second
 facade, reverse edge, stateful release component, transport, deployment, or
 Sprint 10 component was found. Sprint 9G remains open after this baseline step.
+
+## Sprint 9G.2 final acceptance audit
+
+The component graph remains identical to the 9G.1 baseline. Behavioral
+acceptance reuses the complete public provider-neutral-to-facade path and the
+independent no-AI path; neither creates a new component or edge. Runtime and
+facade instances remain request-scoped and isolated, and failures retain no
+application state.
+
+All eight package roots resolve from package context, all export maps remain
+root-only, and the graph remains acyclic. No provider auto-execution, reverse
+dependency, transport, state store, deployment, publishing, autonomous/on-chain
+component, or Sprint 10 capability is present. Sprint 9G remains open for its
+next closure step.

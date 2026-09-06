@@ -26,7 +26,8 @@ Production-like release-candidate tests compose the existing injected
 provider-neutral execution seam through parsing, candidate validation,
 grounding, caller-supplied composition, and the MVP facade without live
 credentials or network access. This repository still provides no deployment,
-publishing, server, CLI, or UI artifact; Sprint 9F remains open.
+publishing, server, CLI, or UI artifact. At that checkpoint Sprint 9F remained
+open.
 
 Sprint 9F is CLOSED after its release-candidate integration, security,
 production-like E2E, artifact, compatibility, and repository validation gates
@@ -39,3 +40,10 @@ changing the implementation: one transport-neutral facade, private package-root
 artifacts, an acyclic one-way dependency graph, authoritative canonical output,
 and optional caller-supplied non-authoritative AI. Sprint 9G and Sprint 9 remain
 open for the later closure increments; Sprint 10 has not started.
+
+Sprint 9G.2 revalidates final MVP acceptance across the public application path,
+canonical/AI authority boundary, failure and security matrix, data integrity,
+instance isolation, dependency graph, and generated release artifacts. All
+acceptance gates pass without a production or test change. Sprint 9G and Sprint
+9 remain open for the next planned closure step; no deployment or publishing
+has occurred.

@@ -425,3 +425,18 @@ missing-data semantics, precision, ordering, detachment, and failure isolation.
 No new component, test, production source, export, dependency, package version,
 or release mechanism is required for this audit. Sprint 9G and Sprint 9 remain
 open; Sprint 9G.2 and Sprint 10 have not started.
+
+## Sprint 9G.2 final MVP acceptance inventory
+
+The accepted MVP inventory is unchanged: eight private workspace packages, one
+public Morning Meeting MVP facade, one deterministic service/lifecycle path,
+provider-neutral AI trust stages, canonical Portfolio contracts, and a separate
+concrete OpenAI runtime. All 121 TypeScript source modules produce matching JS,
+declaration, and valid declaration-map artifacts.
+
+The complete success, no-AI, degraded, hostile-input, service/runtime failure,
+candidate/grounding failure, and recovery matrix remains covered by the 354-test
+baseline. Direct audits reconfirm root export resolution, blocked deep imports,
+secret/runtime-detail containment, exact legal dependency edges, and private
+unpublished metadata. No production or test change is required. Sprint 9G and
+Sprint 9 remain open for the next closure step; Sprint 10 has not started.
