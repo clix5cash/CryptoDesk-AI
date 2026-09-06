@@ -161,3 +161,49 @@ applicable, owns such capabilities; Sprint 10 has not started.
 Sprint 9G.3 is complete only after its repository validation passes. Sprint
 9G.4 remains the owner of the final Sprint 9 closure action. This document does
 not mark Sprint 9 complete.
+
+## Sprint 9G.4 final acceptance matrix
+
+| Final acceptance criterion                                                                               | Result |
+| -------------------------------------------------------------------------------------------------------- | ------ |
+| Sprint 9A architecture baseline remains valid                                                            | PASS   |
+| Gap A, Gap B, and Gap C remain CLOSED                                                                    | PASS   |
+| Exactly one intended package-root MVP facade exists; no competing facade or required deep import exists  | PASS   |
+| Package-root exports resolve and internal deep imports remain blocked                                    | PASS   |
+| The workspace graph is acyclic and preserves Morning Meeting -> AI -> Portfolio and OpenAI runtime -> AI | PASS   |
+| No reverse/circular or Sprint 10 dependency exists                                                       | PASS   |
+| Canonical Morning Meeting remains authoritative                                                          | PASS   |
+| AI remains optional, explicitly caller-supplied, and non-authoritative                                   | PASS   |
+| Independent No-AI and full AI-inclusive public paths remain valid                                        | PASS   |
+| Exactly-one service generation and at-most-one lifecycle application remain valid                        | PASS   |
+| Provider execution remains explicit, selected, single-attempt, and non-autonomous                        | PASS   |
+| Credentials, authorization values, endpoints, and runtime details remain runtime-owned and contained     | PASS   |
+| Vendor bodies/errors, raw output, arbitrary exceptions, and stacks remain sanitized or contained         | PASS   |
+| Hostile/prototype-shaped input fails closed                                                              | PASS   |
+| Trust progression remains untrusted execution -> untrusted candidate -> non-authoritative interpretation | PASS   |
+| Canonical mutation, repair, reconciliation, or promotion remains impossible                              | PASS   |
+| Same-symbol cross-network identities remain distinct                                                     | PASS   |
+| Partial, missing, unavailable, and insufficient data remain explicit                                     | PASS   |
+| Exact decimal strings and deterministic canonical/AI ordering remain preserved                           | PASS   |
+| Inputs and outputs remain detached; runtime/facade instances and failed calls remain isolated            | PASS   |
+| No retry, fallback, routing, re-entry, duplicate generation, or mutable global state exists              | PASS   |
+| No persistence, cache, scheduler, transport, server, CLI, UI, deployment, or publishing exists           | PASS   |
+| No autonomous/on-chain capability exists                                                                 | PASS   |
+| Sprint 8 and all Sprint 9 public contracts remain backward compatible                                    | PASS   |
+| Private workspace JS, declaration, declaration-map, and export artifacts remain valid and contained      | PASS   |
+| Documentation reflects the implemented architecture and Sprint 10 remains unstarted                      | PASS   |
+| Full repository validation passes                                                                        | PASS   |
+
+## Final closure decision
+
+All applicable acceptance criteria pass with no unresolved architectural,
+security, integration, or release defect and no production or test change.
+
+**Sprint 9G — Final MVP Release Audit & Closure: COMPLETE.**
+
+**Sprint 9 — MVP Integration & Release: COMPLETE.**
+
+The repository is ready to enter the next frozen roadmap stage, **Sprint 10 —
+Ritual & Autonomous Runtime Expansion**. Sprint 10 has not started. Sprint 9
+performed no deployment or publishing and introduced no public transport/UI,
+persistence/cache/scheduler, or autonomous/on-chain runtime.

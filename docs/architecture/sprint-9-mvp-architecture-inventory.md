@@ -440,3 +440,14 @@ baseline. Direct audits reconfirm root export resolution, blocked deep imports,
 secret/runtime-detail containment, exact legal dependency edges, and private
 unpublished metadata. No production or test change is required. Sprint 9G and
 Sprint 9 remain open for the next closure step; Sprint 10 has not started.
+
+## Sprint 9G.4 final closure inventory
+
+The final inventory is unchanged: eight private workspace packages, one public
+MVP facade in Morning Meeting, provider-neutral AI contracts, one inward-facing
+concrete OpenAI runtime, canonical Portfolio authority, and no transport,
+storage, scheduler, deployment, publishing, or autonomous component. All final
+acceptance and repository validation gates pass.
+
+Sprint 9G and Sprint 9 — MVP Integration & Release are COMPLETE. Sprint 10 is
+the next roadmap stage and has not started.

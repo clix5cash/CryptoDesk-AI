@@ -54,3 +54,17 @@ security, dependency, artifact, and compatibility evidence without changing
 production or test code. It records the caller-owned composition preparation
 seam separately from facade execution. Sprint 9G.4 still owns final Sprint 9
 closure; Sprint 9 is not yet complete and Sprint 10 has not started.
+
+## Sprint 9 final status
+
+**Sprint 9 — MVP Integration & Release: COMPLETE.**
+
+**Sprint 9G — Final MVP Release Audit & Closure: COMPLETE.** Every final
+architecture, integration, authority, trust, security, failure, isolation,
+dependency, compatibility, and release-artifact gate passed against the
+354-test baseline. No production or test change was required for final closure.
+
+The repository is ready to enter the next frozen roadmap stage, **Sprint 10 —
+Ritual & Autonomous Runtime Expansion**, but Sprint 10 has not started. Sprint
+9 performed no deployment or publishing and added no transport/server/CLI/UI,
+persistence/cache/scheduler, or autonomous/on-chain runtime.

@@ -391,3 +391,18 @@ root-only, and the graph remains acyclic. No provider auto-execution, reverse
 dependency, transport, state store, deployment, publishing, autonomous/on-chain
 component, or Sprint 10 capability is present. Sprint 9G remains open for its
 next closure step.
+
+## Sprint 9G.4 final closure map
+
+The final component and dependency map remains unchanged and fully compliant:
+
+```text
+external caller -> Morning Meeting MVP facade
+Morning Meeting -> AI -> Portfolio
+OpenAI runtime -> AI
+```
+
+There is one facade, no reverse or circular edge, and no new runtime, transport,
+state, deployment, publishing, or autonomous component. All Sprint 9 closure
+gates pass. Sprint 9G and Sprint 9 — MVP Integration & Release are COMPLETE;
+Sprint 10 has not started.

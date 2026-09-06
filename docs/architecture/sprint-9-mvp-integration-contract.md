@@ -688,3 +688,21 @@ No unresolved Sprint 9 integration gap or missing test invariant was found.
 Sprint 9G.3 is complete only after full validation passes. Sprint 9G.4 still
 owns final Sprint 9 closure; Sprint 9 is not marked complete, and Sprint 10 has
 not started.
+
+## Sprint 9G.4 final Sprint 9 closure decision
+
+Every final acceptance gate passes. Gap A, Gap B, and Gap C remain CLOSED; the
+single package-root MVP facade, caller-owned optional AI preparation,
+authoritative canonical Morning Meeting, closed trust progression, sanitized
+security/failure boundaries, exactly-once semantics, data integrity, isolation,
+acyclic dependency graph, private release artifacts, and backward compatibility
+all remain verified by the 354-test baseline and final direct audits.
+
+**Sprint 9G — Final MVP Release Audit & Closure: COMPLETE.**
+
+**Sprint 9 — MVP Integration & Release: COMPLETE.**
+
+No production or test change was required. No deployment, publishing,
+transport, persistence, scheduling, autonomous execution, or on-chain
+capability was introduced. Sprint 10 — Ritual & Autonomous Runtime Expansion
+is the next frozen roadmap stage, but Sprint 10 has not started.
