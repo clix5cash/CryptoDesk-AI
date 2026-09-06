@@ -33,3 +33,9 @@ production-like E2E, artifact, compatibility, and repository validation gates
 passed. Sprint 9G owns the final MVP release audit and closure; it has not
 started. No package was published or deployed, and Sprint 10 remains out of
 scope.
+
+Sprint 9G.1 records the final MVP architecture and release baseline without
+changing the implementation: one transport-neutral facade, private package-root
+artifacts, an acyclic one-way dependency graph, authoritative canonical output,
+and optional caller-supplied non-authoritative AI. Sprint 9G and Sprint 9 remain
+open for the later closure increments; Sprint 10 has not started.

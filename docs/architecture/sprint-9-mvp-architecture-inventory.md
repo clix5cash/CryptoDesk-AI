@@ -405,3 +405,23 @@ No transport, deployment, publishing, persistence, cache, scheduler, mutable
 global application state, provider auto-execution, autonomous/Ritual behavior,
 or Sprint 10 component was introduced. Sprint 9G owns final MVP release audit
 and closure and has not started.
+
+## Sprint 9G.1 final MVP baseline inventory
+
+The repository-wide baseline contains eight private workspace packages and one
+intended public application facade:
+`DefaultMorningMeetingMvpApplicationApi` from the Morning Meeting package root.
+Every package exports only `.`, backed by `dist/index.js` and `dist/index.d.ts`;
+internal deep imports remain outside the export maps.
+
+The complete workspace graph is acyclic. Its relevant edges remain Morning
+Meeting → AI → Portfolio and OpenAI runtime → AI, alongside the existing
+Morning Meeting/News/Market integration edges. There is no Portfolio → AI,
+AI → Morning Meeting, or runtime → Morning Meeting edge. Existing Sprint 9
+coverage remains authoritative for optional/no-AI operation, lifecycle and
+exactly-once behavior, trust/security containment, canonical identity and
+missing-data semantics, precision, ordering, detachment, and failure isolation.
+
+No new component, test, production source, export, dependency, package version,
+or release mechanism is required for this audit. Sprint 9G and Sprint 9 remain
+open; Sprint 9G.2 and Sprint 10 have not started.

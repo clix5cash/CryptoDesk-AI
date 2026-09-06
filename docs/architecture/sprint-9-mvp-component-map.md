@@ -359,3 +359,21 @@ The runtime edge remains separate from the facade; optional AI artifacts are
 prepared explicitly before being supplied to the application. Closure audits
 find no reverse/circular edge, hidden stateful component, transport, deployment,
 publishing, or autonomous execution. Sprint 9G has not started.
+
+## Sprint 9G.1 final baseline audit
+
+The final MVP baseline preserves the closed Sprint 9F map:
+
+```text
+external caller → DefaultMorningMeetingMvpApplicationApi
+→ deterministic Morning Meeting service/lifecycle → provider-neutral AI → Portfolio
+
+OpenAI runtime → provider-neutral AI
+```
+
+Manifest traversal across all eight workspace packages is acyclic. Package-root
+resolution exposes exactly one MVP facade, while the export map blocks its
+internal module path. Runtime credentials, authorization, endpoints, vendor
+mapping, and raw execution remain outside the application path. No second
+facade, reverse edge, stateful release component, transport, deployment, or
+Sprint 10 component was found. Sprint 9G remains open after this baseline step.

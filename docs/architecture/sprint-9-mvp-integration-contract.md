@@ -609,3 +609,35 @@ informational only, with operation-count evidence for no duplicate invocation
 or accumulation. Packages remain private and no deployment or publishing was
 performed. Sprint 9G owns final MVP release audit and closure and has not
 started; Sprint 10 remains out of scope.
+
+## Sprint 9G.1 final MVP architecture and release baseline
+
+The post-9F repository baseline passes every audit criterion:
+
+| Sprint 9G.1 baseline criterion                                                                              | Result |
+| ----------------------------------------------------------------------------------------------------------- | ------ |
+| Sprint 9A–9F architecture and contracts remain internally consistent                                        | PASS   |
+| Exactly one intended package-root MVP facade exists                                                         | PASS   |
+| Root exports are contained and internal deep imports remain blocked                                         | PASS   |
+| Complete eight-package workspace graph is acyclic and correctly directed                                    | PASS   |
+| Portfolio → AI, AI → Morning Meeting, and runtime → Morning Meeting are absent                              | PASS   |
+| OpenAI runtime depends inward only on provider-neutral AI                                                   | PASS   |
+| Canonical Morning Meeting state remains authoritative and detached                                          | PASS   |
+| Optional caller-supplied AI remains structurally separate and non-authoritative                             | PASS   |
+| No-AI operation and exactly-once application semantics remain valid                                         | PASS   |
+| Hostile/invalid input fails closed without repair or coercion                                               | PASS   |
+| Secrets, transport details, vendor bodies, raw output, and exceptions remain contained                      | PASS   |
+| Trust progression remains untrusted execution → untrusted candidate → non-authoritative interpretation      | PASS   |
+| Cross-network identity and partial/missing/unavailable/insufficient states remain exact                     | PASS   |
+| Decimal strings, deterministic order, immutability, and call/instance isolation survive                     | PASS   |
+| No retry, fallback, re-entry, duplicate generation, or hidden provider selection exists                     | PASS   |
+| No mutable global state or forbidden storage, scheduler, routing, transport, deployment, or autonomy exists | PASS   |
+| Sprint 8/Sprint 9 public contracts remain backward compatible                                               | PASS   |
+| Private workspace release artifacts and generated declarations remain consistent                            | PASS   |
+| Documentation matches implementation and claims no Sprint 10 implementation                                 | PASS   |
+
+The audit reuses the 354-test Sprint 9F closure baseline and performs direct
+manifest traversal, export/facade enumeration, source security scans, and build
+artifact inspection. No redundant test or production fix was required. Sprint
+9G is not complete, Sprint 9 is not complete, and Sprint 9G.2/Sprint 10 have not
+started. No deployment or publishing was performed.
