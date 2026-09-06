@@ -8,6 +8,7 @@ Architecture documentation:
 - [Sprint 9 MVP Architecture Inventory](docs/architecture/sprint-9-mvp-architecture-inventory.md)
 - [Sprint 9 MVP Component and Dependency Map](docs/architecture/sprint-9-mvp-component-map.md)
 - [Sprint 9 MVP Integration Contract](docs/architecture/sprint-9-mvp-integration-contract.md)
+- [Sprint 9 MVP Closure Evidence](docs/architecture/sprint-9-mvp-closure-evidence.md)
 - [Sprint 9A MVP Architecture Closure](docs/architecture/sprint-9a-mvp-architecture-closure.md)
 
 ## MVP release surface
@@ -47,3 +48,9 @@ instance isolation, dependency graph, and generated release artifacts. All
 acceptance gates pass without a production or test change. Sprint 9G and Sprint
 9 remain open for the next planned closure step; no deployment or publishing
 has occurred.
+
+Sprint 9G.3 consolidates the complete 9A-9G.2 objective, gap, contract,
+security, dependency, artifact, and compatibility evidence without changing
+production or test code. It records the caller-owned composition preparation
+seam separately from facade execution. Sprint 9G.4 still owns final Sprint 9
+closure; Sprint 9 is not yet complete and Sprint 10 has not started.

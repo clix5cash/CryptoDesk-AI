@@ -672,3 +672,19 @@ secrets/runtime types, root-only export maps, and private `0.0.0` metadata. No
 production or test change was necessary. Sprint 9G and Sprint 9 remain open for
 the next planned closure step; Sprint 10 has not started, and no deployment or
 publishing was performed.
+
+## Sprint 9G.3 final Sprint 9 closure evidence
+
+The complete 9A-9G.2 objective, Gap A/B/C, public-contract, handoff, authority,
+trust, security, failure, data-integrity, isolation, dependency, artifact, and
+compatibility evidence is consolidated in
+[Sprint 9 MVP Closure Evidence](./sprint-9-mvp-closure-evidence.md). The record
+accurately separates caller-owned provider/parse/validate/ground/compose work
+from facade execution: the facade accepts an optional already-validated
+composition, generates the canonical Morning Meeting exactly once, and applies
+the existing lifecycle at most once. It does not invoke a provider.
+
+No unresolved Sprint 9 integration gap or missing test invariant was found.
+Sprint 9G.3 is complete only after full validation passes. Sprint 9G.4 still
+owns final Sprint 9 closure; Sprint 9 is not marked complete, and Sprint 10 has
+not started.
