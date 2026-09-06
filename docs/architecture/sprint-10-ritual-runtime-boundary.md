@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B.3 execution lifecycle hardened
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -465,4 +465,59 @@ No public export was added. No timer or external cancellation, live Ritual
 network/RPC, SDK networking, wallet/private key/signing, process environment
 discovery, scheduler, persistence, routing/fallback, provider auto-selection,
 autonomous/on-chain execution, deployment, publishing, server, CLI, or UI was
-introduced. Sprint 10B.4 has not started.
+introduced. That was the Sprint 10B.3 checkpoint.
+
+## Sprint 10B closure evidence
+
+| Stage | Objective and implementation boundary                                                                                          | Acceptance evidence                                                                                                                                                                                                        | Unresolved defects |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 10B.1 | Fix execution ownership at the existing gateway adapter/invoker seam and define permitted and deferred integration capability. | Architecture, dependency, authority, security, identity, lifecycle, export, and compatibility audit; no executable transport added.                                                                                        | None               |
+| 10B.2 | Add one private, deterministic transport preparation/invocation/decoding layer behind the unchanged invoker contract.          | Closed request and terminal decoding, exactly-one injected call, timeout/failure mapping, sanitization, detachment, recovery, root-export, and deep-import tests.                                                          | None               |
+| 10B.3 | Harden settlement, mutation resistance, failure finality, and state isolation.                                                 | Pre-dispatch request snapshot; first-Promise-settlement, caller-mutation, failure-recovery, instance-isolation, and no-retained-state evidence. The discovered caller-mutation race was fixed and has regression coverage. | None               |
+| 10B.4 | Audit and close the complete execution integration without extending runtime capability.                                       | Nine-package forced build, full 367-test suite, acyclic traversal, root/deep-export checks, declaration/artifact audit, source security scan, and compatibility validation.                                                | None               |
+
+Every Sprint 10B acceptance gate passes. The final implemented path is:
+
+```text
+validated provider-neutral AI request
+  -> detached request snapshot
+  -> @cryptodesk-ai/ritual-gateway adapter
+  -> gateway-local closed request preparation
+  -> exactly one injected transport invocation
+  -> one closed completed or failed terminal decode
+  -> deterministic sanitized provider-neutral result
+  -> untrusted_model_execution
+```
+
+The gateway remains the sole concrete Ritual boundary. Request identity and the
+opaque payload are captured before asynchronous dispatch. Execution, provider,
+optional model, and target identity remain exact. One Promise supplies one
+observable settlement and one mapping; invalid input invokes nothing. Timeout,
+runtime failure, thrown transport, malformed or mixed results, unknown status,
+prototype-shaped data, and identity conflicts are terminal, sanitized,
+non-retrying, and isolated from later calls and other instances.
+
+The gateway retains no pending lifecycle object, request/response/exception
+history, target state beyond immutable instance configuration, terminal cache,
+global registry, provider-selection state, persistence, or background replay.
+The public gateway contracts established in Sprint 10A remain unchanged. The
+transport module and implementation helpers remain package-private, deep imports
+are blocked, and root declarations contain no transport/lifecycle internals.
+
+The verified closure baseline is 367 passing tests across nine private,
+acyclic workspace packages. Generated output contains 100 JavaScript files, 100
+declarations, and 100 valid declaration maps. Root exports resolve; no test or
+secret fixture entered gateway runtime artifacts; provider-neutral declarations
+contain no Ritual implementation type; and no deploy/publish script exists.
+
+Sprint 10B intentionally provides no live Ritual RPC/network or SDK transport,
+chain transaction, wallet/private key/signing, receipt or attestation settlement,
+external cancellation, scheduler, persistence, cache, routing/fallback,
+provider auto-selection, autonomous loop, autonomous trading, Portfolio or
+Morning Meeting mutation, canonical or recommendation authority, deployment,
+server, UI, CLI, or publishing. Canonical Portfolio and Morning Meeting state
+remain authoritative; Ritual output remains `untrusted_model_execution`.
+
+**Sprint 10B — Ritual Execution Integration: COMPLETE.** Sprint 10C has not
+started. Live Ritual connectivity and autonomous/on-chain capability have not
+started.

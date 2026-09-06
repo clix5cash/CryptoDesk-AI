@@ -62,4 +62,14 @@ execution or model identity. Transport responses are reduced immediately to a
 new gateway-owned outcome containing only primitive terminal data; no request,
 response, exception, timer, pending lifecycle object, or mutable terminal cache
 is retained. Every failure class is followed successfully by an equivalent
-clean call in regression coverage. Sprint 10B.4 has not started.
+clean call in regression coverage. That was the Sprint 10B.3 checkpoint.
+
+Sprint 10B.4 revalidated the complete path with the full 367-test workspace
+suite, a forced nine-package build, dependency/export/declaration/artifact
+audits, and runtime security scans. No additional production or test change was
+required. The gateway remains private and instance-scoped; its transport stays
+internal and injected, and its public Sprint 10A contracts remain unchanged.
+
+**Sprint 10B — Ritual Execution Integration: COMPLETE.** Sprint 10C, live
+Ritual connectivity, SDK networking, wallet/signing, settlement, scheduling,
+persistence, routing, autonomy, deployment, and publishing have not started.

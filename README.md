@@ -126,4 +126,13 @@ settlement and one provider-neutral mapping. The gateway now snapshots validated
 request identity before asynchronous dispatch, ignores structurally impossible
 late competing Promise settlements, retains no pending or terminal cache, and
 recovers cleanly after every supported failure class. No public export or new
-capability was added. Sprint 10B.4 has not started.
+capability was added. That was the Sprint 10B.3 checkpoint.
+
+**Sprint 10B — Ritual Execution Integration: COMPLETE.** The 10B.4 closure
+audit passed with 367 tests across nine acyclic private workspace packages. The
+final path snapshots validated identity, prepares one gateway-local request,
+performs exactly one injected transport call, decodes one closed terminal
+result, and returns one sanitized provider-neutral result. Public gateway
+contracts remain unchanged and transport internals remain unexported. Sprint
+10C, live Ritual connectivity, autonomous/on-chain capability, deployment, and
+publishing have not started.
