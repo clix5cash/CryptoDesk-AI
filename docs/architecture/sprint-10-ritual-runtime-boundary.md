@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A — Ritual Runtime Foundation COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B.1 execution integration boundary defined
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -37,12 +37,11 @@ ADR-001 explicitly assigns Ritual-specific code to a dedicated
 `ritual-gateway` service and provider adapter. Repository inspection confirms
 that this remains the safest role.
 
-Future Ritual integration should be a **concrete runtime/provider adapter** in
-the service boundary reserved by the workspace, conceptually
-`services/ritual-gateway`. It should implement the existing AI-owned
-`PortfolioAiModelProviderAdapter` contract (including the descriptor-aware seam
-when needed) and translate one explicit caller-selected Ritual execution into a
-validated `PortfolioAiModelExecutionResult`.
+Sprint 10A established Ritual as a **concrete runtime/provider adapter** and
+implemented it in `services/ritual-gateway`. It implements the existing
+AI-owned `PortfolioAiModelProviderAdapter` contract, including the
+descriptor-aware seam, and translates one explicit caller-selected Ritual
+execution into a validated `PortfolioAiModelExecutionResult`.
 
 Ritual is not:
 
@@ -288,6 +287,96 @@ deployment, or publishing. Canonical Portfolio and Morning Meeting state remain
 authoritative; Ritual output remains optional and `untrusted_model_execution`.
 
 **Sprint 10A — Ritual Runtime Foundation: COMPLETE.** The verified closure
-baseline is 362 passing tests across nine acyclic workspace packages. Sprint
-10B has not started, live Ritual execution has not started, and no autonomous or
-on-chain capability has started.
+baseline is 362 passing tests across nine acyclic workspace packages. At that
+closure checkpoint Sprint 10B had not started, live Ritual execution had not
+started, and no autonomous or on-chain capability had started.
+
+## Sprint 10B.1 execution integration boundary
+
+Sprint 10B extends only the concrete gateway side of the frozen boundary. The
+integration point is the existing root-exported `RitualInferenceInvoker` passed
+to `createRitualPortfolioModelProviderAdapter`; it is not a new provider-neutral
+interface, application facade, or orchestration service.
+
+Ownership is fixed as follows:
+
+| Concern                                                                                                                    | Owner                                                           |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Canonical Portfolio and Morning Meeting facts                                                                              | Existing Portfolio and Morning Meeting packages                 |
+| Provider-neutral request/result validation and explicit provider/model selection                                           | `@cryptodesk-ai/ai` and its caller                              |
+| Optional interpretation preparation and composition                                                                        | Existing caller-owned AI pipeline and Morning Meeting lifecycle |
+| Ritual configuration, target, request encoding, invocation mechanism, runtime terminal validation, and detail sanitization | `@cryptodesk-ai/ritual-gateway`                                 |
+| Credential, endpoint, authorization, chain, receipt, attestation, or vendor material if later authorized                   | Concrete gateway runtime only; never provider-neutral output    |
+
+The legal execution contract is:
+
+```text
+explicit caller-selected provider/model request
+  -> provider-neutral validation and detached dispatch
+  -> Ritual adapter with detached instance-owned configuration
+  -> exactly one RitualInferenceInvoker call
+  -> gateway-owned invocation/transport operation
+  -> exactly one validated completed or failed terminal envelope
+  -> sanitized provider-neutral Completed or Failed result
+  -> untrusted_model_execution
+```
+
+Execution, provider, optional model, and target identities must remain exact.
+The gateway may not generate, infer, default, repair, or substitute them.
+`completed` requires opaque non-empty output and no failure field. `failed`
+requires one closed runtime-owned failure kind and no output. Timeout remains a
+terminal failed result. Unknown, incomplete, mixed, prototype-shaped, or
+identity-conflicting results fail closed. Runtime phases such as submission or
+settlement, if later authorized, remain internal and must not create a second
+AI or Morning Meeting lifecycle.
+
+One accepted adapter execution owns one explicit provider attempt. Internal
+transport mechanics may not trigger another adapter execution, provider/model
+selection, retry, fallback, routing, parser, grounding operation, composition,
+or report generation. Invalid input invokes nothing. Failure returns no partial
+successful result and cannot affect a later call or another gateway instance.
+
+### Permitted during Sprint 10B
+
+Subject to an explicit later 10B task, the gateway may add the smallest
+runtime-owned implementation behind `RitualInferenceInvoker`: closed explicit
+configuration, request encoding, one-shot invocation, terminal-response
+decoding and validation, runtime-local timeout cleanup, sanitized mapping, and
+deterministic injected tests. Any live connection, chain-specific structure, or
+credential mechanism requires separate authorization and must remain private to
+the gateway. It may not change provider-neutral AI contracts merely to expose a
+Ritual implementation detail.
+
+Sprint 10B.1 itself adds no executable capability. It does not select a Ritual
+precompile, endpoint, executor discovery mechanism, SDK, RPC client, credential,
+wallet, signing mechanism, chain submission, receipt parser, or settlement
+tracker.
+
+### Deferred beyond Sprint 10B.1
+
+Wallet/private-key/signing, chain transaction authority, receipt or attestation
+settlement, credential acquisition, environment discovery, persistence,
+scheduling, autonomous loops, provider routing/fallback, automatic selection,
+Portfolio mutation, trading or recommendation authority, public
+transport/server/UI/CLI, deployment, and publishing remain deferred to later
+explicit Sprint 10 work. External cancellation also remains deferred because it
+would require a reviewed additive contract.
+
+Canonical output remains authoritative and usable without AI or Ritual. Ritual
+output remains opaque `untrusted_model_execution`; later parsing and grounding
+may only produce the established non-authoritative interpretation. Runtime
+provenance, settlement, or attestation must never promote analytical trust,
+repair missing facts, or alter identity, values, risk, coverage, timestamps,
+provenance, precision, ordering, or lifecycle state.
+
+The compile-time dependency remains strictly:
+
+```text
+@cryptodesk-ai/ritual-gateway -> @cryptodesk-ai/ai -> @cryptodesk-ai/portfolio
+```
+
+AI, Portfolio, Morning Meeting, OpenAI runtime, and the MVP facade must not
+depend on the Ritual gateway. The gateway root export remains the only consumer
+surface; internal modules, future transport structures, configuration secrets,
+raw runtime bodies, exception text, stacks, endpoints, and vendor details must
+not cross it. Sprint 10B.2 has not started.

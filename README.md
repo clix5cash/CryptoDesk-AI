@@ -100,5 +100,14 @@ detachment, recovery, and independent gateway instances.
 passed with 362 tests across nine acyclic workspace packages. Ritual remains an
 explicitly injected, network-independent concrete adapter; canonical state
 remains authoritative and Ritual output remains `untrusted_model_execution`.
-Sprint 10B, live Ritual execution, wallets/signing, scheduling/persistence,
-autonomous/on-chain execution, deployment, and publishing have not started.
+At the Sprint 10A closure checkpoint, Sprint 10B, live Ritual execution,
+wallets/signing, scheduling/persistence, autonomous/on-chain execution,
+deployment, and publishing had not started.
+
+Sprint 10B.1 defines the next integration boundary without adding execution
+capability. Future explicitly authorized 10B implementation attaches only
+behind the existing `RitualInferenceInvoker` inside the private gateway: one
+caller-selected request, one gateway-owned invocation, one validated terminal
+result, and sanitized `untrusted_model_execution` mapping. No live transport,
+credential, wallet/signing, settlement, persistence, scheduling, routing,
+autonomy, deployment, or publishing was added. Sprint 10B.2 has not started.
