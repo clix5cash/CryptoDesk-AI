@@ -10,6 +10,7 @@ Architecture documentation:
 - [Sprint 9 MVP Integration Contract](docs/architecture/sprint-9-mvp-integration-contract.md)
 - [Sprint 9 MVP Closure Evidence](docs/architecture/sprint-9-mvp-closure-evidence.md)
 - [Sprint 9A MVP Architecture Closure](docs/architecture/sprint-9a-mvp-architecture-closure.md)
+- [Sprint 10 Ritual Runtime Boundary](docs/architecture/sprint-10-ritual-runtime-boundary.md)
 
 ## MVP release surface
 
@@ -68,3 +69,16 @@ The repository is ready to enter the next frozen roadmap stage, **Sprint 10 —
 Ritual & Autonomous Runtime Expansion**, but Sprint 10 has not started. Sprint
 9 performed no deployment or publishing and added no transport/server/CLI/UI,
 persistence/cache/scheduler, or autonomous/on-chain runtime.
+
+## Sprint 10A.1 architecture boundary
+
+Sprint 10A.1 defines future Ritual integration as a dedicated concrete
+`ritual-gateway` service/provider adapter behind the existing AI-owned
+provider-neutral execution contract. The future dependency points inward from
+the gateway to `@cryptodesk-ai/ai`; Portfolio, AI, Morning Meeting, and the MVP
+facade do not depend on Ritual. Ritual execution provenance does not promote AI
+trust or canonical authority.
+
+This audit adds no Ritual runtime implementation, network call, credential,
+wallet, chain transaction, scheduler, persistence, autonomous behavior,
+deployment, publishing, or public transport. Sprint 10A.2 has not started.
