@@ -21,4 +21,14 @@ Morning Meeting, or promote trust.
 10A.2 adds no RPC/HTTP call, Ritual SDK, ABI/precompile/receipt/attestation
 shape, credential, environment lookup, wallet/signing behavior, scheduler,
 persistence, retry, fallback, routing, autonomous execution, deployment, or
-publishing. Sprint 10A.3 has not started.
+publishing. This was the Sprint 10A.2 baseline.
+
+Sprint 10A.3 closes both factory configuration and direct adapter requests as
+plain own-property records before invocation. Terminal results use exactly one
+of two exclusive shapes: `completed` requires non-empty opaque output and has
+no failure field; `failed` requires one closed failure kind and has no output
+field. Timeout is an injected terminal failure, not an adapter timer or a third
+lifecycle state. External cancellation is not supported by the frozen
+provider-neutral contract and remains later work. Each factory instance retains
+only its detached target and invoker, with no shared request, result, timeout,
+credential, or provider-selection state. Sprint 10A.4 has not started.

@@ -5,6 +5,7 @@ import {
   type PortfolioAiModelProviderAdapter,
   PortfolioAiRawExecutionAuthority,
   type PortfolioAiProviderRequestDescriptor,
+  validatePortfolioAiModelExecutionRequest,
   validatePortfolioAiProviderRequestDescriptor,
 } from '@cryptodesk-ai/ai';
 
@@ -76,6 +77,7 @@ export function createRitualPortfolioModelProviderAdapter(
   return {
     providerId: RITUAL_PROVIDER_ID,
     async execute(request) {
+      validatePortfolioAiModelExecutionRequest(request);
       return executeRitualInvocation(request, JSON.stringify(request.context), runtime, invoke);
     },
     async executeProviderRequest(descriptor) {
@@ -153,15 +155,6 @@ function executionRequestFromDescriptor(
 function isValidRuntimeResult(value: unknown): value is RitualInferenceInvocationResult {
   if (
     !isPlainRecord(value) ||
-    !hasOnlyKeys(value, [
-      'executionId',
-      'providerId',
-      'modelId',
-      'targetId',
-      'status',
-      'output',
-      'failureKind',
-    ]) ||
     !isNonEmptyString(value.executionId) ||
     value.providerId !== RITUAL_PROVIDER_ID ||
     (value.modelId !== undefined && !isNonEmptyString(value.modelId)) ||
@@ -171,11 +164,27 @@ function isValidRuntimeResult(value: unknown): value is RitualInferenceInvocatio
   }
 
   if (value.status === RitualInferenceStatus.Completed) {
-    return isNonEmptyString(value.output) && value.failureKind === undefined;
+    return (
+      hasExactKeys(value, [
+        'executionId',
+        'providerId',
+        'targetId',
+        'status',
+        'output',
+        ...(value.modelId === undefined ? [] : ['modelId']),
+      ]) && isNonEmptyString(value.output)
+    );
   }
   if (value.status === RitualInferenceStatus.Failed) {
     return (
-      value.output === undefined &&
+      hasExactKeys(value, [
+        'executionId',
+        'providerId',
+        'targetId',
+        'status',
+        'failureKind',
+        ...(value.modelId === undefined ? [] : ['modelId']),
+      ]) &&
       Object.values(RitualInferenceFailureKind).includes(
         value.failureKind as RitualInferenceFailureKind,
       )
@@ -242,6 +251,11 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 
 function hasOnlyKeys(value: Record<string, unknown>, allowed: ReadonlyArray<string>): boolean {
   return Object.keys(value).every((key) => allowed.includes(key));
+}
+
+function hasExactKeys(value: Record<string, unknown>, expected: ReadonlyArray<string>): boolean {
+  const actual = Object.keys(value);
+  return actual.length === expected.length && actual.every((key) => expected.includes(key));
 }
 
 function clone<T>(value: T): T {

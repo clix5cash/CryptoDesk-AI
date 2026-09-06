@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A.2 runtime contract and injected execution primitive
+Status: Sprint 10A.3 runtime contract hardening and terminal semantics
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -212,4 +212,29 @@ become fixed sanitized provider-neutral failures.
 No AI, Morning Meeting, or Portfolio contract changed. No default transport,
 network, chain, credential, wallet, signing, scheduler, persistence, retry,
 fallback, routing, deployment, publishing, or autonomous behavior exists.
-Sprint 10A.3 has not started.
+This established the Sprint 10A.2 baseline.
+
+## Sprint 10A.3 hardening
+
+The gateway now validates both its closed runtime configuration and the legacy
+direct execution request before payload serialization or invocation. It reuses
+the authoritative provider-neutral request validator, so empty or substituted
+identities, unknown fields, inherited/prototype-shaped records, and malformed
+nested canonical context fail before the injected runtime seam is reached.
+
+An invocation has exactly one terminal shape. `completed` requires non-empty
+opaque output and forbids a failure field; `failed` requires one closed
+runtime-owned failure kind and forbids output. Unknown, missing, mixed, or
+identity-substituted terminal records map to the fixed sanitized
+`ritual_result_invalid` or `ritual_identity_mismatch` provider-neutral failure.
+Timeout remains an explicitly injected terminal failure mapped to
+`ritual_timeout`; the adapter creates no timer, cancellation signal, pending
+state, retry, fallback, or re-entry. External cancellation would require a
+separately approved additive boundary and is deferred.
+
+Configuration, invocation input, and mapped results remain detached. Factory
+instances retain only their own detached target and injected function; they
+share no credential placeholder, request/result state, failure state, cache,
+registry, or provider selection. Runtime failure codes stay owned by this
+concrete package and cross the AI seam only as existing sanitized failed-result
+fields. No live transport or other 10A.4 capability has started.

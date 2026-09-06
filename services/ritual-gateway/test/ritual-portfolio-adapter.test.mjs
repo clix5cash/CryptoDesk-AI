@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
+  AiBoundaryValidationError,
   AiExecutionStatus,
   PortfolioAiModelProviderRegistry,
   PortfolioAiRawExecutionAuthority,
@@ -199,23 +200,119 @@ test('fails closed for malformed, incomplete, and substituted runtime results, t
   };
   results.push(
     { status: RitualInferenceStatus.Completed },
+    (invocation) => Object.assign(Object.create({ inherited: 'secret' }), completed(invocation)),
+    (invocation) => ({ ...completed(invocation), failureKind: undefined }),
+    (invocation) => ({
+      executionId: invocation.executionId,
+      providerId: invocation.providerId,
+      modelId: invocation.modelId,
+      targetId: invocation.targetId,
+      status: RitualInferenceStatus.Failed,
+      failureKind: RitualInferenceFailureKind.RuntimeFailure,
+      output: undefined,
+    }),
     (invocation) => ({ ...completed(invocation), executionId: 'substituted-execution' }),
     (invocation) => ({ ...completed(invocation), internalReceipt: 'secret-receipt' }),
     (invocation) => completed(invocation, 'later valid output'),
   );
 
   const malformed = await adapter.execute(request);
+  const prototypeShaped = await adapter.execute(request);
+  const mixedCompleted = await adapter.execute(request);
+  const mixedFailed = await adapter.execute(request);
   const substituted = await adapter.execute(request);
   const injected = await adapter.execute(request);
   const valid = await adapter.execute(request);
 
-  assert.equal(calls, 4);
+  assert.equal(calls, 7);
   assert.equal(malformed.failure.code, 'ritual_result_invalid');
+  assert.equal(prototypeShaped.failure.code, 'ritual_result_invalid');
+  assert.equal(mixedCompleted.failure.code, 'ritual_result_invalid');
+  assert.equal(mixedFailed.failure.code, 'ritual_result_invalid');
   assert.equal(substituted.failure.code, 'ritual_identity_mismatch');
   assert.equal(injected.failure.code, 'ritual_result_invalid');
   assert.equal(valid.status, AiExecutionStatus.Completed);
   assert.equal(valid.output, 'later valid output');
   assert.equal(JSON.stringify(injected).includes('secret-receipt'), false);
+});
+
+test('validates direct execution and configuration as closed plain records before invocation', async () => {
+  const invalidConfigurations = [
+    undefined,
+    {},
+    { targetId: '' },
+    { targetId: 'target', extra: true },
+    Object.create({ targetId: 'inherited-target' }),
+    Object.assign(Object.create(null), { targetId: 'prototype-less-target' }),
+  ];
+  for (const configuration of invalidConfigurations) {
+    assert.throws(
+      () => createRitualPortfolioModelProviderAdapter(configuration, async () => undefined),
+      (error) =>
+        error instanceof TypeError && error.message === 'Ritual runtime configuration is invalid.',
+    );
+  }
+  assert.throws(
+    () => createRitualPortfolioModelProviderAdapter({ targetId: 'target' }, undefined),
+    (error) => error instanceof TypeError && error.message === 'Ritual runtime invoker is invalid.',
+  );
+
+  let calls = 0;
+  const adapter = createRitualPortfolioModelProviderAdapter(
+    { targetId: 'closed-target' },
+    async (invocation) => {
+      calls += 1;
+      return completed(invocation);
+    },
+  );
+  const valid = {
+    executionId: 'closed-execution',
+    context: context(),
+    model: { providerId: 'ritual', modelId: 'closed-model' },
+  };
+  const invalidRequests = [
+    { ...valid, executionId: '' },
+    { ...valid, unexpected: 'secret-looking-runtime-detail' },
+    Object.assign(Object.create({ inherited: true }), valid),
+    { ...valid, model: { ...valid.model, prototype: 'injected' } },
+  ];
+  for (const request of invalidRequests) {
+    await assert.rejects(() => adapter.execute(request), AiBoundaryValidationError);
+  }
+  assert.equal(calls, 0);
+});
+
+test('keeps configuration, invocation, result, and failure state isolated between instances', async () => {
+  const calls = { first: 0, second: 0 };
+  const first = createRitualPortfolioModelProviderAdapter(
+    { targetId: 'first-target' },
+    async (invocation) => {
+      calls.first += 1;
+      throw new Error(`secret for ${invocation.targetId}`);
+    },
+  );
+  const second = createRitualPortfolioModelProviderAdapter(
+    { targetId: 'second-target' },
+    async (invocation) => {
+      calls.second += 1;
+      return completed(invocation, 'second-instance-output');
+    },
+  );
+  const request = {
+    executionId: 'instance-execution',
+    context: context(),
+    model: { providerId: 'ritual', modelId: 'instance-model' },
+  };
+
+  const failed = await first.execute(request);
+  const succeeded = await second.execute(request);
+
+  assert.equal(calls.first, 1);
+  assert.equal(calls.second, 1);
+  assert.equal(failed.failure.code, 'ritual_invocation_failed');
+  assert.equal(JSON.stringify(failed).includes('first-target'), false);
+  assert.equal(succeeded.status, AiExecutionStatus.Completed);
+  assert.equal(succeeded.output, 'second-instance-output');
 });
 
 test('detaches configuration, invocation input, and results across equivalent calls', async () => {
