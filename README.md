@@ -88,4 +88,17 @@ service package. Its adapter factory uses only an explicitly injected,
 network-independent invocation primitive and maps closed terminal results to
 the existing provider-neutral `untrusted_model_execution` contract. It adds no
 live Ritual connection, chain transaction, credential, wallet, autonomous
-behavior, or change to canonical authority. Sprint 10A.3 has not started.
+behavior, or change to canonical authority. This established the Sprint 10A.2
+baseline.
+
+Sprint 10A.3 closed direct request and runtime configuration validation,
+enforced mutually exclusive `completed`/`failed` terminal shapes, and verified
+hostile-input rejection, sanitized failure mapping, exactly-once invocation,
+detachment, recovery, and independent gateway instances.
+
+**Sprint 10A — Ritual Runtime Foundation: COMPLETE.** The 10A.4 closure audit
+passed with 362 tests across nine acyclic workspace packages. Ritual remains an
+explicitly injected, network-independent concrete adapter; canonical state
+remains authoritative and Ritual output remains `untrusted_model_execution`.
+Sprint 10B, live Ritual execution, wallets/signing, scheduling/persistence,
+autonomous/on-chain execution, deployment, and publishing have not started.

@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A.3 runtime contract hardening and terminal semantics
+Status: Sprint 10A — Ritual Runtime Foundation COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -24,10 +24,12 @@ autonomy, deployment, or publishing capability.
 | Application composition and lifecycle      | `@cryptodesk-ai/morning-meeting`         | Caller-supplied composition, canonical authority, optional AI, and stable lifecycle outcomes                            |
 | External MVP entry point                   | `DefaultMorningMeetingMvpApplicationApi` | Exactly-one canonical generation; no provider execution                                                                 |
 
-The current eight-package workspace graph is acyclic. Its relevant legal edges
-remain Morning Meeting -> AI -> Portfolio and OpenAI runtime -> AI. Package
-exports are root-only, concrete runtime details do not leak into provider-neutral
-declarations, and the canonical No-AI application path is runtime-independent.
+At the 10A.1 audit, the eight-package workspace graph was acyclic. The 10A.2
+gateway addition brought the workspace to nine packages without changing that
+property. Its relevant legal edges remain Morning Meeting -> AI -> Portfolio,
+OpenAI runtime -> AI, and Ritual gateway -> AI. Package exports are root-only,
+concrete runtime details do not leak into provider-neutral declarations, and
+the canonical No-AI application path is runtime-independent.
 
 ## Ritual architectural role
 
@@ -238,3 +240,54 @@ share no credential placeholder, request/result state, failure state, cache,
 registry, or provider selection. Runtime failure codes stay owned by this
 concrete package and cross the AI seam only as existing sanitized failed-result
 fields. No live transport or other 10A.4 capability has started.
+
+## Sprint 10A closure evidence
+
+| Stage | Objective and implementation boundary                                                                                                        | Closure evidence                                                                                                                                                       | Unresolved defects |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 10A.1 | Define Ritual as a concrete runtime/provider adapter outside AI, Portfolio, Morning Meeting, and the MVP facade.                             | Architecture, dependency, authority, trust, export, and security audit against the closed Sprint 9 baseline.                                                           | None               |
+| 10A.2 | Add private `@cryptodesk-ai/ritual-gateway`, the existing provider-neutral adapter seam, and one deterministic injected execution primitive. | Exact identity, opaque output, `untrusted_model_execution`, exactly-one invocation, sanitized failure, detachment, failed-call recovery, export, and dependency tests. | None               |
+| 10A.3 | Close direct request/configuration validation and make `completed`/`failed` terminal shapes mutually exclusive.                              | Hostile/prototype input, malformed/mixed result, timeout, sanitization, independent-instance, detachment, exactly-once, and recovery tests.                            | None               |
+| 10A.4 | Audit the complete runtime foundation without extending capability.                                                                          | Nine-package acyclic traversal, root/deep-export audit, source/declaration/artifact security scan, forced and regular builds, and the full 362-test suite.             | None               |
+
+Every Sprint 10A acceptance gate passes. Ritual remains a concrete,
+instance-scoped adapter with explicit configuration and one injected invocation.
+Invalid input invokes nothing; accepted input invokes exactly once. Execution,
+provider, optional model, and target identities remain exact. `completed` and
+`failed` are the only mutually exclusive terminal forms; timeout is a terminal
+failure, and external cancellation remains deferred. Runtime-specific failure
+codes cross the existing AI boundary only through sanitized provider-neutral
+failed results.
+
+The final legal foundation path is:
+
+```text
+validated provider-neutral AI request
+  -> @cryptodesk-ai/ritual-gateway adapter
+  -> detached, explicitly supplied runtime configuration
+  -> exactly one injected invocation
+  -> validated completed or failed terminal result
+  -> sanitized provider-neutral result
+  -> untrusted_model_execution
+```
+
+The factory, runtime configuration, injected invocation/result contracts, and
+closed terminal enums remain the only package-root surface. Validators and
+implementation helpers remain internal, deep imports remain blocked, and the
+generated declarations contain no concrete network, SDK, credential, wallet,
+or signing type. Inputs, results, invokers, targets, and failures remain isolated
+per instance with no module-level mutable state, cache, registry, persistence,
+or provider-selection state.
+
+Sprint 10A intentionally provides no live Ritual network/RPC call, chain
+transaction submission, SDK integration, wallet/private key/signing, receipt or
+attestation settlement, external cancellation, autonomous loop, scheduler,
+persistence, routing/fallback, provider auto-selection, autonomous trading,
+Portfolio mutation, recommendation authority, transport/server/UI/CLI,
+deployment, or publishing. Canonical Portfolio and Morning Meeting state remain
+authoritative; Ritual output remains optional and `untrusted_model_execution`.
+
+**Sprint 10A — Ritual Runtime Foundation: COMPLETE.** The verified closure
+baseline is 362 passing tests across nine acyclic workspace packages. Sprint
+10B has not started, live Ritual execution has not started, and no autonomous or
+on-chain capability has started.
