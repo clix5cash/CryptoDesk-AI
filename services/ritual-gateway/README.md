@@ -70,6 +70,18 @@ audits, and runtime security scans. No additional production or test change was
 required. The gateway remains private and instance-scoped; its transport stays
 internal and injected, and its public Sprint 10A contracts remain unchanged.
 
-**Sprint 10B — Ritual Execution Integration: COMPLETE.** Sprint 10C, live
-Ritual connectivity, SDK networking, wallet/signing, settlement, scheduling,
-persistence, routing, autonomy, deployment, and publishing have not started.
+**Sprint 10B — Ritual Execution Integration: COMPLETE.** At that checkpoint,
+Sprint 10C and live connectivity had not started.
+
+Sprint 10C.1 defines the existing `RitualInferenceInvoker` as the sole future
+live-connectivity seam. A later authorized gateway-owned invoker may own explicit
+instance-scoped endpoint/protocol configuration, one network attempt, private
+protocol serialization/decoding, timeout cleanup, and failure sanitization.
+`targetId` remains exact adapter configuration, while provider/model selection
+remains explicit and provider-neutral. Low-level transport, SDK, credential,
+header, response, and error types must stay internal.
+
+10C.1 adds no implementation or public export. Live RPC/network and SDK access,
+credentials/environment discovery, wallets/signing, chain settlement,
+retry/routing, persistence/scheduling, autonomy, deployment, and publishing
+remain absent. Sprint 10C.2 has not started.

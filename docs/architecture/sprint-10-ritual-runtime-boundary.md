@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C.1 connectivity boundary defined
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -518,6 +518,93 @@ Morning Meeting mutation, canonical or recommendation authority, deployment,
 server, UI, CLI, or publishing. Canonical Portfolio and Morning Meeting state
 remain authoritative; Ritual output remains `untrusted_model_execution`.
 
-**Sprint 10B — Ritual Execution Integration: COMPLETE.** Sprint 10C has not
-started. Live Ritual connectivity and autonomous/on-chain capability have not
+**Sprint 10B — Ritual Execution Integration: COMPLETE.** At that closure
+checkpoint Sprint 10C, live Ritual connectivity, and autonomous/on-chain
+capability had not started.
+
+## Sprint 10C.1 live-connectivity boundary
+
+Sprint 10C.1 authorizes architecture definition only. Repository evidence
+identifies the existing root-exported `RitualInferenceInvoker` as the narrowest
+future live-connectivity seam. A later explicitly authorized task may implement
+a gateway-owned invoker behind that unchanged function contract. It must not
+replace the adapter, expose a second provider-neutral execution interface, or
+move connectivity into AI, Portfolio, Morning Meeting, or OpenAI runtime.
+
+The proposed future path is:
+
+```text
+explicit caller composition
+  -> validated provider-neutral AI request
+  -> existing Ritual adapter and detached identity snapshot
+  -> existing gateway-local transport request preparation
+  -> exactly one configured RitualInferenceInvoker call
+  -> future gateway-owned live invoker implementation
+  -> exactly one runtime/network attempt
+  -> gateway-local protocol response decoding and sanitization
+  -> existing closed completed or failed terminal validation
+  -> existing provider-neutral Completed or Failed mapping
+  -> untrusted_model_execution
+```
+
+This path does not make the MVP facade or AI registry responsible for choosing
+or invoking Ritual autonomously. The caller must still explicitly construct and
+select the concrete adapter through the existing provider-neutral composition
+mechanism.
+
+### Connectivity ownership
+
+| Concern                                                          | Required future owner and rule                                                                                                                                                                              |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Provider and model selection                                     | Existing caller and provider-neutral AI validation; never inferred by the gateway                                                                                                                           |
+| Target identity                                                  | Existing detached `RitualRuntimeConfiguration.targetId`; copied exactly into each invocation and never discovered or repaired                                                                               |
+| Endpoint and protocol configuration                              | A future gateway-local, instance-scoped live-invoker configuration supplied explicitly by construction; never an AI contract or environment lookup                                                          |
+| Authentication or credentials, if a later protocol requires them | Explicit instance construction inside the concrete gateway only; held in the live-invoker closure and excluded from requests, results, errors, logs, and declarations outside its supported runtime surface |
+| Provider-neutral payload serialization                           | Existing Ritual adapter, which serializes only already validated repository-owned context or prompt data into opaque text                                                                                   |
+| Protocol/RPC request serialization                               | Future live invoker inside `@cryptodesk-ai/ritual-gateway`; chain-, SDK-, endpoint-, header-, and vendor-specific shapes remain private                                                                     |
+| Network/RPC invocation                                           | Future live invoker only, through one runtime-local operation per accepted invocation; no default is authorized in 10C.1                                                                                    |
+| Timeout                                                          | Future live-invoker configuration and operation scope; opt-in, instance-local, one terminal failure, cleaned in `finally`, and never a retry trigger                                                        |
+| External cancellation                                            | Deferred because the frozen provider-neutral and Ritual invoker contracts expose no caller cancellation signal                                                                                              |
+| Protocol response decoding                                       | Future live invoker first converts the private response to the existing closed Ritual terminal result; the existing internal transport decoder then validates terminal shape and exact identity             |
+| Failure sanitization                                             | Future live invoker removes protocol/network details; existing gateway mapping emits only the established fixed provider-neutral failure codes/messages                                                     |
+| Lifecycle and cleanup                                            | Future live invoker owns operation-local client response, abort/timer, authorization, and exception state and releases it at terminal settlement; existing adapter retains no call history                  |
+| Canonical facts and AI trust                                     | Existing Portfolio, Morning Meeting, and AI layers; connectivity can produce only opaque `untrusted_model_execution`                                                                                        |
+
+The future live invoker must validate its explicit configuration as a closed
+plain own-property record. Endpoint syntax and protocol constraints belong to
+that concrete implementation once the actual connectivity mechanism is
+authorized; 10C.1 deliberately does not choose an RPC URL, precompile, SDK,
+chain client, authentication scheme, receipt shape, or settlement model.
+Configuration must remain detached, immutable by convention, and local to one
+invoker instance. It may not use `process.env`, global discovery, a singleton,
+or a provider registry.
+
+One accepted adapter request must still create one invocation and one observable
+terminal mapping. The future invoker may perform only one selected network/RPC
+attempt. A transport exception, timeout, non-success response, malformed body,
+protocol error, or identity conflict must settle as one sanitized failure. It
+must not retry, fall back, route, switch endpoint/provider/model, enqueue work,
+or allow a late result to replace a terminal failure. Operation-local timers,
+abort mechanisms, response bodies, and exceptions must be released after
+settlement and must not contaminate later calls or another instance.
+
+No new public API is added by 10C.1. A later implementation should prefer one
+minimal additive gateway-root factory plus only the configuration type necessary
+to construct the live invoker. Low-level RPC/HTTP/SDK request and response types,
+clients, headers, credentials, decoders, error classes, and cleanup helpers must
+remain internal and blocked from deep import. The existing injected invoker path
+must remain available for deterministic tests and backward compatibility.
+
+Ritual execution provenance or future settlement evidence cannot promote model
+output beyond `untrusted_model_execution`. Existing parsing and grounding may
+still produce only `untrusted_candidate_interpretation` and
+`non_authoritative_interpretation`. Connectivity cannot mutate, repair, infer,
+or replace Portfolio or Morning Meeting identity, values, risk, coverage,
+timestamps, provenance, missing-data state, precision, ordering, or lifecycle.
+
+Sprint 10C.1 adds no live Ritual RPC/network call, SDK networking, credential or
+environment discovery, wallet/private key/signing, chain submission, receipt or
+attestation settlement, retry/fallback/routing, provider auto-selection,
+scheduler, persistence/cache, autonomous loop, canonical/trading/recommendation
+authority, deployment, server, UI, CLI, or publishing. Sprint 10C.2 has not
 started.

@@ -135,4 +135,13 @@ performs exactly one injected transport call, decodes one closed terminal
 result, and returns one sanitized provider-neutral result. Public gateway
 contracts remain unchanged and transport internals remain unexported. Sprint
 10C, live Ritual connectivity, autonomous/on-chain capability, deployment, and
-publishing have not started.
+publishing had not started at that closure checkpoint.
+
+Sprint 10C.1 defines the next connectivity contract without implementing it.
+Future live connectivity belongs solely in a gateway-owned implementation of
+the existing `RitualInferenceInvoker`, with explicit instance configuration,
+one network attempt, private protocol encoding/decoding, operation-local timeout
+cleanup, and sanitized failure mapping. Provider-neutral contracts and package
+exports are unchanged. No live RPC/network, SDK, credential, wallet/signing,
+settlement, routing, scheduling, persistence, or autonomy was added. Sprint
+10C.2 has not started.
