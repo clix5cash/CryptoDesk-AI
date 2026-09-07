@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
   RitualRpcConnectivityFailureKind,
@@ -185,27 +186,64 @@ test('keeps concurrent timeout and successful operations isolated with operation
   assert.equal(signals[1].aborted, false);
 });
 
-test('keeps timeout terminal when an abort-ignoring transport resolves late', async () => {
-  let settle;
+test('isolates overlapping success and failure settlements without shared response dispatch', async () => {
+  const pending = [];
+  const signals = [];
   let calls = 0;
   const checker = createRitualLiveRpcConnectivityCheckerWithTransport(
-    configuration({ timeoutMs: 5 }),
-    async () => {
+    configuration(),
+    async (request) => {
       calls += 1;
-      return new Promise((resolve) => {
-        settle = resolve;
-      });
+      signals.push(request.signal);
+      return new Promise((resolve, reject) => pending.push({ resolve, reject }));
     },
   );
 
-  const operation = checker.check();
-  assert.deepEqual(await operation, {
+  const first = checker.check();
+  const second = checker.check();
+  pending[1].resolve(response(rpcResult()));
+  pending[0].resolve(response(rpcResult()));
+  assert.deepEqual(await Promise.all([first, second]), [
+    { status: 'connected', chainId: 1979 },
+    { status: 'connected', chainId: 1979 },
+  ]);
+
+  const failed = checker.check();
+  const successful = checker.check();
+  pending[3].resolve(response(rpcResult()));
+  pending[2].reject(new Error('private concurrent failure'));
+  assert.deepEqual(await successful, { status: 'connected', chainId: 1979 });
+  assert.deepEqual(await failed, {
     status: 'failed',
-    failureKind: RitualRpcConnectivityFailureKind.Timeout,
+    failureKind: RitualRpcConnectivityFailureKind.TransportFailure,
   });
-  settle(response(rpcResult()));
-  await Promise.resolve();
-  assert.equal(calls, 1);
+  assert.equal(calls, 4);
+  assert.equal(new Set(signals).size, 4);
+});
+
+test('keeps timeout terminal when an abort-ignoring transport settles late', async () => {
+  for (const settlement of ['resolve', 'reject']) {
+    let settle;
+    let calls = 0;
+    const checker = createRitualLiveRpcConnectivityCheckerWithTransport(
+      configuration({ timeoutMs: 5 }),
+      async () => {
+        calls += 1;
+        return new Promise((resolve, reject) => {
+          settle = settlement === 'resolve' ? () => resolve(response(rpcResult())) : reject;
+        });
+      },
+    );
+
+    const operation = checker.check();
+    assert.deepEqual(await operation, {
+      status: 'failed',
+      failureKind: RitualRpcConnectivityFailureKind.Timeout,
+    });
+    settle(new Error('private late settlement'));
+    await Promise.resolve();
+    assert.equal(calls, 1);
+  }
 });
 
 test('applies the operation timeout through response-body consumption', async () => {
@@ -375,6 +413,11 @@ test('keeps live connectivity instances and failure history isolated', async () 
 test('keeps the native live factory public while HTTP and decoder contracts stay root-private', async () => {
   assert.equal(typeof createRitualLiveRpcConnectivityChecker, 'function');
   const root = await import('../dist/index.js');
+  const declaration = await readFile(
+    new URL('../dist/ritual-live-rpc-connectivity.d.ts', import.meta.url),
+    'utf8',
+  );
   assert.equal('createRitualLiveRpcConnectivityCheckerWithTransport' in root, false);
   assert.equal('decodeChainIdResponse' in root, false);
+  assert.equal(/RitualHttp|AbortSignal|ReadableStream|WithTransport/u.test(declaration), false);
 });

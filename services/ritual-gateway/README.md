@@ -122,5 +122,13 @@ Abort remains gateway-internal and timeout-owned. No caller cancellation signal
 is exposed through the public API or provider-neutral packages. The optional
 10C.3 read-only smoke request again timed out after 15 seconds without a
 protocol response, so external connectivity remains INCONCLUSIVE. Live
-inference, signing, and transactions remain unimplemented. Sprint 10C.4 has not
-started.
+inference, signing, and transactions remain unimplemented.
+
+**Sprint 10C — Ritual Live Connectivity Foundation: COMPLETE.** The final 10C.4
+audit passed with 379 workspace tests. It reused the authoritative configuration,
+endpoint, timeout, bounded-body, hostile JSON-RPC, failure-recovery, isolation,
+and export coverage, and added one focused overlapping-call test for the only
+missing behavioral closure invariant. The artifact audit also fixed an internal
+declaration leak by stripping the package-private injected HTTP test seam and
+its `AbortSignal` types from generated declarations. The public surface remains
+unchanged, the gateway remains private, and Sprint 10D has not started.

@@ -733,4 +733,62 @@ Sprint 10C.3 adds no live inference, wallet/private key/signing, transaction or
 chain mutation, settlement/receipt handling, credentials/environment discovery,
 retry/fallback/routing, provider auto-selection, scheduler, persistence/cache,
 autonomous/on-chain execution, canonical/trading/recommendation authority,
-deployment, server, UI, CLI, or publishing. Sprint 10C.4 has not started.
+deployment, server, UI, CLI, or publishing. Sprint 10C.4 had not started at that
+checkpoint.
+
+## Sprint 10C.4 final closure
+
+Sprint 10C traceability is closed as follows:
+
+| Stage | Objective and implementation boundary                                                                                                                                                                    | Acceptance evidence                                                                                                                                                                                                   | Defects and unresolved items                                                                                                                                                     |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10C.1 | Define live-connectivity ownership at the existing gateway seam without executable network capability. Endpoint, protocol, authentication, timeout, cleanup, and private/public ownership were recorded. | Architecture, dependency, authority, security, and export audit against the frozen Sprint 10B baseline.                                                                                                               | No defect. Live connectivity intentionally remained unimplemented.                                                                                                               |
+| 10C.2 | Add the gateway-owned read-only HTTP JSON-RPC checker with explicit configuration, one `eth_chainId` attempt, closed response validation, timeout, and sanitized results.                                | Deterministic endpoint, request, chain-ID, exactly-once, timeout, hostile-response, recovery, isolation, and export tests.                                                                                            | External smoke check timed out and remained INCONCLUSIVE. Live inference was correctly deferred.                                                                                 |
+| 10C.3 | Harden operation lifecycle, concurrency, endpoint validation, bounded response handling, finality, and failure isolation.                                                                                | Streaming-limit, strict UTF-8, response-read failure, concurrent timeout/success, late settlement, per-category recovery, configuration detachment, and security tests.                                               | Fixed the response-body defect where the old post-`text()` size check occurred after unbounded buffering. External smoke remained INCONCLUSIVE. No unresolved repository defect. |
+| 10C.4 | Audit and close the complete live-connectivity foundation without expanding protocol capability.                                                                                                         | 379-test workspace suite; overlapping success/success and success/failure coverage; forced nine-package build; dependency, export, declaration, artifact, private-package, source-security, and compatibility audits. | Fixed generated declaration leakage of the package-private injected HTTP test seam through TypeScript internal stripping. External verification remains INCONCLUSIVE.            |
+
+Every applicable Sprint 10C acceptance gate passes. The final verified path is:
+
+```text
+explicit detached RitualLiveRpcConfiguration
+  -> createRitualLiveRpcConnectivityChecker
+  -> operation-local JSON-RPC request, AbortController, and optional timer
+  -> exactly one native fetch POST
+  -> bounded streaming response read
+  -> closed JSON-RPC 2.0 decode
+  -> exact eth_chainId == 1979 validation
+  -> one sanitized connectivity result
+  -> operation-local cleanup
+```
+
+The response-body defect remains closed: no `response.text()` call exists in the
+live path; the 16 KiB bound is applied to stream chunks before they are copied,
+oversized streams are cancelled, raw content is not returned or retained, and a
+later valid check is unaffected. Timeout covers fetch and body consumption,
+aborts only its own signal, clears its timer in `finally`, and cannot be replaced
+by late resolution or rejection. Overlapping success/success, success/failure,
+and success/timeout calls use independent requests, controllers, readers, and
+terminal results. Separate instances preserve detached endpoints, timeouts,
+transports, and failure histories.
+
+The public root continues to expose only the supported adapter/invoker contracts
+and the minimal connectivity factory, configuration, checker, result, and fixed
+failure kinds. JSON-RPC records, fetch contracts, body reader, decoder, endpoint
+validator, timeout/controller machinery, and test transport remain internal;
+TypeScript internal stripping prevents the test-only injected transport and its
+HTTP/`AbortSignal` types from entering generated declarations, and deep imports
+remain blocked. The workspace remains acyclic with
+`ritual-gateway -> AI -> Portfolio`, and provider-neutral declarations remain
+free of Ritual implementation types.
+
+Sprint 10C intentionally provides no live inference, wallet/private key/signing,
+transaction submission, chain mutation, receipt/attestation settlement,
+external caller cancellation, credentials/environment discovery,
+retry/fallback/routing, provider auto-selection, scheduler, persistence/cache,
+autonomous/on-chain execution, canonical/trading/recommendation authority,
+deployment, server, UI, CLI, or publishing. The 10C.2 and 10C.3 external
+read-only smoke tests timed out without a protocol response, so externally
+verified live-chain success is not claimed.
+
+**Sprint 10C — Ritual Live Connectivity Foundation: COMPLETE.** Sprint 10D has
+not started.

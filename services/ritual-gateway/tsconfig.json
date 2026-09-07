@@ -6,6 +6,7 @@
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
+    "stripInternal": true,
     "lib": ["ES2022", "DOM"]
   },
   "include": ["src/**/*.ts"],

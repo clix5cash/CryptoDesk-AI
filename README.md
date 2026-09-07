@@ -162,4 +162,13 @@ failure, malformed UTF-8, hostile JSON-RPC, and every supported failure category
 remain sanitized and isolated. The single optional external `eth_chainId`
 smoke check timed out after 15 seconds without a response and is recorded as
 INCONCLUSIVE, not repository failure. Live inference remains unimplemented.
-Sprint 10C.4 has not started.
+
+**Sprint 10C — Ritual Live Connectivity Foundation: COMPLETE.** Sprint 10C.4
+revalidated the full gateway-owned path with 379 passing tests, including
+overlapping success/success, success/failure, and success/timeout isolation.
+The artifact audit also strips the package-private injected HTTP test seam and
+its `AbortSignal` types from generated declarations. The build, dependency,
+export, artifact, security, and backward-compatibility gates passed. External
+live-chain verification remains INCONCLUSIVE because the
+10C.2 and 10C.3 read-only smoke requests timed out; no externally verified
+live-chain success or live inference is claimed. Sprint 10D has not started.

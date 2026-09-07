@@ -32,17 +32,20 @@ export interface RitualRpcConnectivityChecker {
   check(): Promise<RitualRpcConnectivityResult>;
 }
 
+/** @internal */
 interface RitualHttpRequest {
   readonly endpoint: string;
   readonly body: string;
   readonly signal: AbortSignal;
 }
 
+/** @internal */
 interface RitualHttpResponse {
   readonly ok: boolean;
   readonly body: ReadableStream<Uint8Array> | null;
 }
 
+/** @internal */
 type RitualHttpTransport = (request: RitualHttpRequest) => Promise<RitualHttpResponse>;
 
 /**
@@ -55,7 +58,7 @@ export function createRitualLiveRpcConnectivityChecker(
   return createRitualLiveRpcConnectivityCheckerWithTransport(configuration, fetchTransport);
 }
 
-/** Gateway-internal deterministic transport seam used by focused tests. */
+/** @internal Gateway-internal deterministic transport seam used by focused tests. */
 export function createRitualLiveRpcConnectivityCheckerWithTransport(
   configuration: RitualLiveRpcConfiguration,
   transport: RitualHttpTransport,
