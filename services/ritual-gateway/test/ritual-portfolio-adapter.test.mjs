@@ -427,7 +427,7 @@ test('recovers cleanly after every lifecycle failure class', async () => {
   assert.equal(calls, failures.length * 2 + 1);
 });
 
-test('keeps the Ritual gateway concrete, root-exported, network-free, and inward-dependent', async () => {
+test('keeps the injected Ritual inference path network-free, root-contained, and inward-dependent', async () => {
   const [manifest, adapterSource, transportSource] = await Promise.all([
     readFile(new URL('../package.json', import.meta.url), 'utf8').then(JSON.parse),
     readFile(new URL('../src/ritual-portfolio-adapter.ts', import.meta.url), 'utf8'),
@@ -449,6 +449,10 @@ test('keeps the Ritual gateway concrete, root-exported, network-free, and inward
   );
   await assert.rejects(
     () => import('@cryptodesk-ai/ritual-gateway/ritual-inference-transport'),
+    (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED',
+  );
+  await assert.rejects(
+    () => import('@cryptodesk-ai/ritual-gateway/ritual-live-rpc-connectivity'),
     (error) => error?.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED',
   );
 });

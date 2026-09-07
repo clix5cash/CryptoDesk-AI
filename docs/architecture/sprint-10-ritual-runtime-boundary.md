@@ -606,5 +606,65 @@ Sprint 10C.1 adds no live Ritual RPC/network call, SDK networking, credential or
 environment discovery, wallet/private key/signing, chain submission, receipt or
 attestation settlement, retry/fallback/routing, provider auto-selection,
 scheduler, persistence/cache, autonomous loop, canonical/trading/recommendation
-authority, deployment, server, UI, CLI, or publishing. Sprint 10C.2 has not
-started.
+authority, deployment, server, UI, CLI, or publishing.
+
+## Sprint 10C.2 live HTTP RPC connectivity
+
+Sprint 10C.2 implements only the read-only connectivity portion of the 10C.1
+boundary. Authoritative protocol evidence used is:
+
+- Ritual's official developer skills identify Ritual Chain ID as decimal `1979`
+  and the public HTTP RPC as `https://rpc.ritualfoundation.org`;
+- Ethereum JSON-RPC defines `eth_chainId` as a read-only method returning the
+  current chain ID as a hexadecimal quantity;
+- Ritual's official overview and LLM guidance describe LLM precompile work as an
+  asynchronous transaction lifecycle involving commitment, executor
+  fulfillment, replay, and settlement.
+
+The first two facts permit a safe read-only connectivity check. The third means
+that live inference requires transaction/signing capability outside 10C.2.
+Consequently no precompile address, ABI, selector, inference request, receipt,
+or transaction behavior is implemented or guessed.
+
+The supported current operation is:
+
+```text
+explicit RitualLiveRpcConfiguration
+  -> createRitualLiveRpcConnectivityChecker
+  -> one operation-local POST eth_chainId JSON-RPC request
+  -> closed hostile-response validation
+  -> connected(chainId: 1979) or one sanitized fixed failure
+```
+
+`RitualLiveRpcConfiguration` is a closed, plain, detached, instance-owned
+record. It requires an explicit HTTPS endpoint with no embedded URL credentials
+or fragment, requires `expectedChainId: 1979`, and optionally accepts a positive
+integer `timeoutMs`. There is no default endpoint, environment discovery,
+authorization handling, mutable singleton, or cache. The configured endpoint is
+operator-owned runtime configuration, not caller-controlled analytical input.
+
+Each accepted `check()` creates one deterministic JSON-RPC request ID, performs
+exactly one POST, rejects redirects, and observes exactly one terminal result.
+Timeout uses an operation-local `AbortController` and timer that is cleared in
+`finally`; it cannot cause retry or late replacement. HTTP failure, transport
+exception, timeout, oversized response, malformed JSON, mismatched request ID,
+invalid JSON-RPC version, mixed/neither result and error, malformed RPC error,
+wrong chain, unknown fields, and prototype-shaped structures all fail closed.
+Public results contain only fixed status/failure enums and never the endpoint,
+headers, request body, response body, RPC message, exception, or stack.
+
+The only additive root surface is the live connectivity factory plus its small
+configuration/checker/result/failure contracts. HTTP shapes, fetch adapter,
+JSON-RPC records, decoder, timeout sentinel, response-size limit, and injected
+test transport remain gateway-private; package deep imports remain blocked.
+The existing injected inference adapter contract is unchanged.
+
+This checkpoint is **live RPC connectivity only**. It does not claim live
+Ritual inference. Inference is explicitly deferred because the authoritative
+documented path requires transaction submission/signing, which 10C.2 forbids.
+Also absent are WebSocket support, SDK networking, credentials, wallet/private
+key/signing, chain mutation, receipt/attestation settlement, external
+cancellation, retry/fallback/routing, provider auto-selection, polling,
+scheduler, persistence/cache, autonomous/on-chain execution, canonical or
+trading authority, deployment, server, UI, CLI, and publishing. Sprint 10C.3
+has not started.

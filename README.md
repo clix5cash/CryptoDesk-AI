@@ -144,4 +144,11 @@ one network attempt, private protocol encoding/decoding, operation-local timeout
 cleanup, and sanitized failure mapping. Provider-neutral contracts and package
 exports are unchanged. No live RPC/network, SDK, credential, wallet/signing,
 settlement, routing, scheduling, persistence, or autonomy was added. Sprint
-10C.2 has not started.
+Sprint 10C.2 adds one explicit, read-only live connectivity operation at the
+gateway root: `createRitualLiveRpcConnectivityChecker`. It validates Ritual
+chain ID `1979` through one `eth_chainId` HTTP JSON-RPC request with closed
+response validation and sanitized failure results. This is **live RPC
+connectivity only**: no live inference, transaction submission, wallet/signing,
+credential discovery, retry/fallback, or autonomous behavior was added. The
+existing provider adapter and injected `RitualInferenceInvoker` remain the only
+inference seam. Sprint 10C.3 has not started.

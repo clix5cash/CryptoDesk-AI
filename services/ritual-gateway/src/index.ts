@@ -7,3 +7,10 @@ export {
   type RitualInferenceInvoker,
   type RitualRuntimeConfiguration,
 } from './ritual-portfolio-adapter.js';
+export {
+  RitualRpcConnectivityFailureKind,
+  createRitualLiveRpcConnectivityChecker,
+  type RitualLiveRpcConfiguration,
+  type RitualRpcConnectivityChecker,
+  type RitualRpcConnectivityResult,
+} from './ritual-live-rpc-connectivity.js';

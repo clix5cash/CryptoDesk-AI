@@ -81,7 +81,26 @@ protocol serialization/decoding, timeout cleanup, and failure sanitization.
 remains explicit and provider-neutral. Low-level transport, SDK, credential,
 header, response, and error types must stay internal.
 
-10C.1 adds no implementation or public export. Live RPC/network and SDK access,
-credentials/environment discovery, wallets/signing, chain settlement,
-retry/routing, persistence/scheduling, autonomy, deployment, and publishing
-remain absent. Sprint 10C.2 has not started.
+Sprint 10C.2 adds the root-exported
+`createRitualLiveRpcConnectivityChecker(configuration)` as the first live,
+read-only gateway operation. Its closed `RitualLiveRpcConfiguration` requires an
+explicit HTTPS endpoint and the expected chain ID `1979`; an optional positive
+integer timeout is instance-scoped. Every `check()` performs exactly one POST
+request for `eth_chainId`, validates one closed JSON-RPC 2.0 terminal response,
+and returns either `{ status: "connected", chainId: 1979 }` or a fixed sanitized
+failure kind. It performs no retry, fallback, redirect, discovery, or polling.
+
+HTTP request/response types, JSON-RPC records, decoding, timers, and the injected
+test transport remain internal and are not package-root exports. Endpoint URLs,
+response bodies, RPC error messages, and thrown exception details never enter
+the public connectivity result.
+
+This is **live RPC connectivity only**. Official Ritual documentation describes
+LLM precompile inference as an asynchronous transaction lifecycle requiring
+transaction submission and executor fulfillment. Sprint 10C.2 does not have
+wallet, signing, or transaction authority, so no live Ritual inference is
+implemented or simulated. Existing injected `RitualInferenceInvoker` behavior
+remains unchanged. Credentials/environment discovery, WebSocket, SDK networking,
+wallets/signing, chain mutation or settlement, retry/routing,
+persistence/scheduling, autonomy, deployment, and publishing remain absent.
+Sprint 10C.3 has not started.
