@@ -143,7 +143,8 @@ the existing `RitualInferenceInvoker`, with explicit instance configuration,
 one network attempt, private protocol encoding/decoding, operation-local timeout
 cleanup, and sanitized failure mapping. Provider-neutral contracts and package
 exports are unchanged. No live RPC/network, SDK, credential, wallet/signing,
-settlement, routing, scheduling, persistence, or autonomy was added. Sprint
+settlement, routing, scheduling, persistence, or autonomy was added.
+
 Sprint 10C.2 adds one explicit, read-only live connectivity operation at the
 gateway root: `createRitualLiveRpcConnectivityChecker`. It validates Ritual
 chain ID `1979` through one `eth_chainId` HTTP JSON-RPC request with closed
@@ -151,4 +152,14 @@ response validation and sanitized failure results. This is **live RPC
 connectivity only**: no live inference, transaction submission, wallet/signing,
 credential discovery, retry/fallback, or autonomous behavior was added. The
 existing provider adapter and injected `RitualInferenceInvoker` remain the only
-inference seam. Sprint 10C.3 has not started.
+inference seam.
+
+Sprint 10C.3 hardens that connectivity lifecycle. The timeout now covers both
+the HTTP attempt and bounded streaming response consumption; response bytes are
+limited before full buffering. Concurrent calls use independent controllers,
+timers, response readers, and terminal results. Late settlement, response-read
+failure, malformed UTF-8, hostile JSON-RPC, and every supported failure category
+remain sanitized and isolated. The single optional external `eth_chainId`
+smoke check timed out after 15 seconds without a response and is recorded as
+INCONCLUSIVE, not repository failure. Live inference remains unimplemented.
+Sprint 10C.4 has not started.

@@ -667,4 +667,70 @@ key/signing, chain mutation, receipt/attestation settlement, external
 cancellation, retry/fallback/routing, provider auto-selection, polling,
 scheduler, persistence/cache, autonomous/on-chain execution, canonical or
 trading authority, deployment, server, UI, CLI, and publishing. Sprint 10C.3
-has not started.
+had not started at that checkpoint.
+
+## Sprint 10C.3 connectivity lifecycle hardening
+
+Sprint 10C.3 preserves the 10C.2 public contract and hardens its private
+operation lifecycle:
+
+```text
+detached instance configuration
+  -> operation-local request + AbortController + optional timer
+  -> exactly one HTTP transport call
+  -> one bounded streaming body-read path
+  -> one closed JSON-RPC decode
+  -> one sanitized terminal connectivity result
+  -> timer/reader/request state released
+```
+
+The timeout races the complete RPC attempt, including response-body
+consumption—not merely receipt of HTTP headers. It aborts only that operation,
+is cleared in `finally`, cannot trigger retry or fallback, and cannot be
+replaced by a late transport resolution. An injected transport that ignores
+abort may settle its own Promise later, but the already-returned public result
+is immutable by ownership and no second decode or mapping is observed.
+
+Response size is now enforced while streaming. The reader counts bytes before
+copying each chunk, cancels once the 16 KiB bound is exceeded, buffers at most
+the accepted limit, and uses fatal UTF-8 decoding. This closes the 10C.2 defect
+where `response.text()` could allocate an unbounded body before the length check.
+Null bodies, invalid chunks, malformed UTF-8, read exceptions, malformed JSON,
+and hostile JSON-RPC remain deterministic sanitized failures. HTTP failure
+bodies are cancelled without being parsed or exposed.
+
+Concurrent checks share only immutable detached configuration and the supplied
+transport function. Each creates its own request object, controller, timeout,
+reader, response body, and terminal result. The constant operation-local
+JSON-RPC ID is safe because each check owns a distinct one-request HTTP exchange
+and there is no multiplexed/global response dispatcher. No mutable request
+counter, registry, cache, failure history, or provider-selection state is
+introduced.
+
+Internal abort is solely a gateway-owned timeout mechanism. The public checker
+does not expose `AbortSignal` or `AbortController`, and no cancellation contract
+enters AI, Portfolio, Morning Meeting, or OpenAI runtime. External caller
+cancellation remains deferred.
+
+Endpoint validation remains a deliberately narrow operator-configuration
+boundary: explicit HTTPS only, non-empty hostname, no whitespace/control
+characters, URL username/password, fragment, redirect following, environment
+lookup, or default endpoint. This is not a generic DNS/IP SSRF firewall and no
+allowlist was added.
+
+Focused tests prove concurrent timeout/success isolation, independent abort
+state, late-settlement finality, timeout across body consumption, bounded-body
+cancellation, strict UTF-8 rejection, response-reader failure sanitization,
+configuration detachment, endpoint rejection, per-category recovery, instance
+isolation, exact one-call accounting, and root-export containment.
+
+The single optional external 10C.3 smoke request used only `eth_chainId` against
+the documented Ritual RPC and timed out after 15 seconds without a protocol
+response. Its status is **INCONCLUSIVE** and independent of deterministic
+repository validation; no successful live-chain result is claimed.
+
+Sprint 10C.3 adds no live inference, wallet/private key/signing, transaction or
+chain mutation, settlement/receipt handling, credentials/environment discovery,
+retry/fallback/routing, provider auto-selection, scheduler, persistence/cache,
+autonomous/on-chain execution, canonical/trading/recommendation authority,
+deployment, server, UI, CLI, or publishing. Sprint 10C.4 has not started.

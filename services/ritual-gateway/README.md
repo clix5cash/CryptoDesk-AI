@@ -103,4 +103,24 @@ implemented or simulated. Existing injected `RitualInferenceInvoker` behavior
 remains unchanged. Credentials/environment discovery, WebSocket, SDK networking,
 wallets/signing, chain mutation or settlement, retry/routing,
 persistence/scheduling, autonomy, deployment, and publishing remain absent.
-Sprint 10C.3 has not started.
+
+Sprint 10C.3 hardens the operation-local lifecycle without changing the public
+surface. Timeout now covers the complete attempt, including streaming response
+consumption. The private body reader stops and cancels once more than 16 KiB is
+observed, copies only bounded chunks, and decodes UTF-8 strictly before JSON
+validation. Response-read exceptions and malformed text remain sanitized.
+
+Overlapping `check()` calls have independent `AbortController` instances,
+timers, body readers, and results. The deterministic request ID may remain
+constant because every check is a separate single-request HTTP JSON-RPC
+exchange; no multiplexed connection or shared response dispatcher associates
+responses globally. Timeout is terminal even if an injected transport ignores
+abort and settles late. Configuration remains detached, and failure history is
+not retained across calls or instances.
+
+Abort remains gateway-internal and timeout-owned. No caller cancellation signal
+is exposed through the public API or provider-neutral packages. The optional
+10C.3 read-only smoke request again timed out after 15 seconds without a
+protocol response, so external connectivity remains INCONCLUSIVE. Live
+inference, signing, and transactions remain unimplemented. Sprint 10C.4 has not
+started.

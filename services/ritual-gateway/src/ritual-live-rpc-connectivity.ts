@@ -40,7 +40,7 @@ interface RitualHttpRequest {
 
 interface RitualHttpResponse {
   readonly ok: boolean;
-  text(): Promise<string>;
+  readonly body: ReadableStream<Uint8Array> | null;
 }
 
 type RitualHttpTransport = (request: RitualHttpRequest) => Promise<RitualHttpResponse>;
@@ -89,26 +89,18 @@ async function checkConnectivity(
       }),
       signal: controller.signal,
     };
-    const operation = invokeTransport(transport, request);
-    const response =
-      runtime.timeoutMs === undefined
-        ? await operation
-        : await Promise.race([
-            operation,
-            new Promise<never>((_, reject) => {
-              timeout = setTimeout(() => {
-                controller.abort();
-                reject(TIMEOUT);
-              }, runtime.timeoutMs);
-            }),
-          ]);
-
-    if (!response.ok) return failed(RitualRpcConnectivityFailureKind.RpcFailure);
-    if (response.body.length > MAX_RESPONSE_BYTES) {
-      return failed(RitualRpcConnectivityFailureKind.ResponseInvalid);
-    }
-
-    return decodeChainIdResponse(response.body, runtime.expectedChainId);
+    const operation = executeRpcAttempt(transport, request, runtime.expectedChainId);
+    return runtime.timeoutMs === undefined
+      ? await operation
+      : await Promise.race([
+          operation,
+          new Promise<never>((_, reject) => {
+            timeout = setTimeout(() => {
+              controller.abort();
+              reject(TIMEOUT);
+            }, runtime.timeoutMs);
+          }),
+        ]);
   } catch (error) {
     return failed(
       error === TIMEOUT
@@ -120,22 +112,36 @@ async function checkConnectivity(
   }
 }
 
+async function executeRpcAttempt(
+  transport: RitualHttpTransport,
+  request: RitualHttpRequest,
+  expectedChainId: typeof RITUAL_CHAIN_ID,
+): Promise<RitualRpcConnectivityResult> {
+  const response = await invokeTransport(transport, request);
+  if (!response.ok) {
+    cancelBody(response.body);
+    return failed(RitualRpcConnectivityFailureKind.RpcFailure);
+  }
+  const body = await readBoundedBody(response.body);
+  return body === undefined
+    ? failed(RitualRpcConnectivityFailureKind.ResponseInvalid)
+    : decodeChainIdResponse(body, expectedChainId);
+}
+
 async function invokeTransport(
   transport: RitualHttpTransport,
   request: RitualHttpRequest,
-): Promise<{ readonly ok: boolean; readonly body: string }> {
+): Promise<RitualHttpResponse> {
   const response = await transport({ ...request });
   if (
     response === null ||
     typeof response !== 'object' ||
     typeof response.ok !== 'boolean' ||
-    typeof response.text !== 'function'
+    (response.body !== null && !(response.body instanceof ReadableStream))
   ) {
     throw new TypeError('Ritual RPC response is invalid.');
   }
-  const body = await response.text();
-  if (typeof body !== 'string') throw new TypeError('Ritual RPC response is invalid.');
-  return { ok: response.ok, body };
+  return { ok: response.ok, body: response.body };
 }
 
 async function fetchTransport(request: RitualHttpRequest): Promise<RitualHttpResponse> {
@@ -208,15 +214,80 @@ function validateAndDetachConfiguration(
 }
 
 function isSafeEndpoint(value: unknown): value is string {
-  if (typeof value !== 'string' || value.trim() !== value || value.length === 0) return false;
+  if (
+    typeof value !== 'string' ||
+    value.trim() !== value ||
+    value.length === 0 ||
+    hasAsciiControlOrSpace(value)
+  ) {
+    return false;
+  }
   try {
     const url = new URL(value);
     return (
-      url.protocol === 'https:' && url.username === '' && url.password === '' && url.hash === ''
+      url.protocol === 'https:' &&
+      url.hostname.length > 0 &&
+      url.username === '' &&
+      url.password === '' &&
+      url.hash === ''
     );
   } catch {
     return false;
   }
+}
+
+function hasAsciiControlOrSpace(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 32 || code === 127;
+  });
+}
+
+async function readBoundedBody(
+  body: ReadableStream<Uint8Array> | null,
+): Promise<string | undefined> {
+  if (body === null) return undefined;
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+  try {
+    while (true) {
+      const next = await reader.read();
+      if (next.done) break;
+      if (!(next.value instanceof Uint8Array)) return undefined;
+      byteLength += next.value.byteLength;
+      if (byteLength > MAX_RESPONSE_BYTES) {
+        try {
+          await reader.cancel();
+        } catch {
+          // The bounded result remains invalid even when transport cleanup fails.
+        }
+        return undefined;
+      }
+      chunks.push(next.value.slice());
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    return undefined;
+  }
+}
+
+function cancelBody(body: ReadableStream<Uint8Array> | null): void {
+  if (body === null) return;
+  void body.cancel().catch(() => {
+    // HTTP failure remains sanitized regardless of response cleanup behavior.
+  });
 }
 
 function isJsonRpcQuantity(value: unknown): value is string {
