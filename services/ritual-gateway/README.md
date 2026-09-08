@@ -146,3 +146,16 @@ submit, broadcast, receipt handling, settlement, inference trust, and canonical
 authority. No real wallet signing or network operation is implemented.
 **Sprint 10D.1 — Transaction & Signing Boundary: COMPLETE.** Sprint 10D.2 has
 not started.
+
+Sprint 10D.2 adds the root-exported
+`createRitualInferenceTransactionConstructor`. It validates explicit chain ID
+`1979`, target, signer, execution, and opaque payload input and returns a
+detached deterministic gateway envelope plus a 10D.1-compatible signing
+request. Construction is pure and performs no signer invocation or network
+operation. It assumes no ABI, selector, precompile address, nonce, gas, fee, or
+wallet implementation.
+
+Construction is not signing authorization, and signing is not submission
+authorization. Broadcast, receipt handling, settlement, and live inference
+remain unimplemented. **Sprint 10D.2 — Ritual Inference Transaction
+Construction: COMPLETE.** Sprint 10D.3 has not started.

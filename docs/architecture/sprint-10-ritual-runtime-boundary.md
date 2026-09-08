@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D.1 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D.1–10D.2 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -925,3 +925,49 @@ with no reverse Ritual dependency.
 
 **Sprint 10D.1 — Transaction & Signing Boundary: COMPLETE.** Sprint 10D remains
 open and Sprint 10D.2 has not started.
+
+## Sprint 10D.2 deterministic transaction construction
+
+Sprint 10D.2 adds `createRitualInferenceTransactionConstructor` inside the
+gateway as a pure, instance-scoped constructor. Its closed configuration fixes
+the exact expected Ritual chain ID `1979`, target identity, and signer identity.
+Its closed input supplies execution identity, the same chain and target, and an
+opaque inference payload. No value is discovered, generated, defaulted,
+repaired, or fetched.
+
+One accepted call produces a detached
+`RitualInferenceTransactionConstructionResult` containing exact execution,
+chain, and target identity plus a `RitualTransactionSigningRequest` compatible
+with the existing 10D.1 boundary. The signing request payload is a deterministic
+gateway envelope with fixed property order:
+
+```text
+{"chainId":1979,"targetId":"<explicit-target>","payload":"<opaque-payload>"}
+```
+
+This envelope is deliberately not an ABI, function call, blockchain transaction
+encoding, or broadcastable transaction claim. No precompile address, selector,
+nonce, gas, fee, wallet address, or settlement rule is assumed. Those details
+require separately authorized and authoritative protocol evidence.
+
+Construction performs no signing. A caller may explicitly pass the resulting
+signing request to the completed 10D.1 boundary in a later, separate operation;
+invalid construction therefore invokes the signer zero times. Construction is
+not signing authorization, signing is not submission authorization, and neither
+operation changes analytical trust or canonical authority.
+
+Closed own-property validation rejects malformed configuration, wrong chain,
+wrong target, absent identities or payloads, unknown fields, and inherited or
+prototype-shaped records. Configuration, inputs, and results are detached;
+failed, concurrent, repeated, and separate-instance calls retain no shared
+state. Errors contain only fixed gateway-owned text.
+
+Sprint 10D.2 adds no live broadcast, RPC submission, receipt polling,
+settlement/finality lifecycle, live inference, contract execution, chain
+mutation, wallet/private key implementation, nonce/gas/fee discovery,
+environment discovery, provider selection, retry/fallback/routing, scheduler,
+persistence/cache, or autonomy. The dependency graph remains
+`ritual-gateway -> AI -> Portfolio` with no reverse Ritual edge.
+
+**Sprint 10D.2 — Ritual Inference Transaction Construction: COMPLETE.** Sprint
+10D remains open and Sprint 10D.3 has not started.

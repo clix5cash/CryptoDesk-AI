@@ -23,3 +23,10 @@ export {
   type RitualTransactionSigningRequest,
   type RitualTransactionSigningResult,
 } from './ritual-transaction-signing-boundary.js';
+export {
+  createRitualInferenceTransactionConstructor,
+  type RitualInferenceTransactionConfiguration,
+  type RitualInferenceTransactionConstructionInput,
+  type RitualInferenceTransactionConstructionResult,
+  type RitualInferenceTransactionConstructor,
+} from './ritual-inference-transaction-construction.js';

@@ -191,3 +191,11 @@ broadcast, receipt handling, settlement, or live inference. The boundary is
 closed, detached, exactly-once, sanitized, and independent of provider-neutral
 and canonical domains. **Sprint 10D.1 — Transaction & Signing Boundary:
 COMPLETE.** Sprint 10D remains open and Sprint 10D.2 has not started.
+
+Sprint 10D.2 adds deterministic gateway-owned construction from explicit chain,
+target, signer, execution, and opaque payload input into a detached signable
+gateway envelope compatible with the 10D.1 boundary. It performs no signing,
+broadcast, network lookup, nonce/gas/fee discovery, receipt handling,
+settlement, or inference. **Sprint 10D.2 — Ritual Inference Transaction
+Construction: COMPLETE.** Sprint 10D remains open and Sprint 10D.3 has not
+started.
