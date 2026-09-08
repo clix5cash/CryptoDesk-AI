@@ -64,3 +64,16 @@ export {
   type RitualLiveInferenceInvocationConfiguration,
   type RitualLiveInferenceInvoker,
 } from './ritual-live-inference-invocation.js';
+export {
+  RitualInferenceResultRetrievalFailureKind,
+  createRitualInferenceResultVerifier,
+  type RitualInferenceProvenanceVerificationCapability,
+  type RitualInferenceProvenanceVerificationRequest,
+  type RitualInferenceResultRetrievalCapability,
+  type RitualInferenceResultRetrievalRequest,
+  type RitualInferenceResultRetrievalResult,
+  type RitualInferenceResultVerificationCapabilities,
+  type RitualInferenceResultVerificationConfiguration,
+  type RitualInferenceResultVerificationRequest,
+  type RitualInferenceResultVerifier,
+} from './ritual-inference-result-verification.js';

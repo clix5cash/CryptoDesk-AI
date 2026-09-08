@@ -227,3 +227,26 @@ RPC/precompile implementation, result-retrieval reconciliation, wallet, key,
 credential, receipt polling, or canonical authority was added. **Sprint 10E.2 —
 Inference Invocation: COMPLETE.** Sprint 10E.3 has not started, and external
 Ritual verification remains **INCONCLUSIVE**.
+
+Sprint 10E.3 adds `createRitualInferenceResultVerifier` as the gateway-owned
+post-invocation retrieval and verification boundary. Its caller supplies the
+original 10E.1 mapping request and explicit submission, settlement, and
+invocation identities. One injected retrieval capability returns a closed
+opaque output and provenance identity; one separately injected provenance
+capability verifies exact lifecycle correlation. No raw receipt or provider
+object crosses the boundary.
+
+Execution, provider, optional model, target, inference-request, submission,
+settlement, invocation, and provenance identities must match exactly. Timeout
+is optional, bounded, operation-local, terminal, and non-retrying. Malformed,
+stale, substituted, hostile, thrown, and timed-out results map to fixed
+sanitized provider-neutral failures. Inputs and outputs are detached, and
+parallel calls and instances retain no shared state.
+
+Settlement verification in 10E.3 is structural correlation only. No receipt
+schema, confirmation depth, chain-finality rule, event ABI, attestation format,
+polling, live retrieval transport, or analytical trust claim is inferred. A
+successful result still maps through 10E.1 only as
+`untrusted_model_execution`. **Sprint 10E.3 — Result Settlement & Verification:
+COMPLETE.** Sprint 10E.4 has not started, and external Ritual verification
+remains **INCONCLUSIVE**.

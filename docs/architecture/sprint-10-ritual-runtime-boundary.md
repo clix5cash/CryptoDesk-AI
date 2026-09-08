@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E.1–10E.2 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E.1–10E.3 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1149,3 +1149,44 @@ retain isolated snapshots, timers, capabilities, and terminal results.
 **Sprint 10E.2 — Inference Invocation: COMPLETE.** Sprint 10E remains open,
 Sprint 10E.3 has not started, and external Ritual verification remains
 **INCONCLUSIVE**.
+
+## Sprint 10E.3 result settlement and verification
+
+Sprint 10E.3 adds `createRitualInferenceResultVerifier` as a distinct
+gateway-owned stage after 10E.2 invocation. It extends the established path
+without replacing or collapsing construction, authorization, signing,
+submission, settlement, or invocation:
+
+```text
+10E.2 completed invocation correlation
+  -> detached original 10E.1 mapping request
+  -> exactly one injected result retrieval
+  -> closed lifecycle identity correlation
+  -> exactly one injected structural provenance verification
+  -> closed opaque output
+  -> 10E.1 provider-neutral mapping
+  -> untrusted_model_execution
+```
+
+The retrieval request carries only execution, provider, optional model, target,
+inference-request, submission, settlement, and invocation identities. The
+closed completed result adds a sanitized provenance identity and opaque output.
+All identities must match exactly; no missing, stale, substituted, or conflicting
+identity is repaired. The provenance capability confirms only that the result
+correlates to this explicit lifecycle. It does not inspect or endorse model
+content.
+
+Retrieval and provenance verification are separate required injections. Each is
+called at most once. Invalid input invokes neither; invalid retrieval invokes no
+provenance check. Optional timeout is a positive platform-bounded integer,
+operation-local, terminal, and cleaned in `finally`; late completion cannot
+replace timeout or cause a second public result. Calls and instances retain no
+registry, cache, history, timer, or mutable global state.
+
+10E.3 deliberately defines no Ritual receipt schema, confirmation count,
+finality depth, event ABI, attestation or fulfillment format, polling rule,
+replay semantic, or live retrieval transport. Failures are fixed and sanitized,
+and successful structural verification creates no analytical or canonical
+authority. **Sprint 10E.3 — Result Settlement & Verification: COMPLETE.**
+Sprint 10E remains open, Sprint 10E.4 has not started, and external Ritual
+verification remains **INCONCLUSIVE**.

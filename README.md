@@ -240,3 +240,14 @@ non-retrying. Completed output returns only as `untrusted_model_execution`.
 **Sprint 10E.2 — Inference Invocation: COMPLETE.** Sprint 10E remains open and
 Sprint 10E.3 has not started. External Ritual verification remains
 **INCONCLUSIVE**.
+
+Sprint 10E.3 adds a separate gateway-owned result verifier after invocation. It
+accepts the original provider-neutral mapping request plus explicit submission,
+settlement, and invocation identities, performs exactly one injected retrieval
+and one structural provenance verification, and maps only a closed correlated
+opaque output through the 10E.1 contract. Verification establishes lifecycle
+traceability, not analytical truth; output remains `untrusted_model_execution`.
+No receipt schema, polling, retry, live retrieval transport, finality rule, or
+trust promotion was introduced. **Sprint 10E.3 — Result Settlement &
+Verification: COMPLETE.** Sprint 10E remains open and Sprint 10E.4 has not
+started. External Ritual verification remains **INCONCLUSIVE**.
