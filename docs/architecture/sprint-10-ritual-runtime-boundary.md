@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D NOT STARTED
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D.1 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -876,3 +876,52 @@ it records authorized future scope and does not start Sprint 10D.
 At this governance checkpoint, Sprint 10D, including Sprint 10D.1, remains
 **NOT STARTED**. No production or test capability is introduced by freezing the
 roadmap.
+
+## Sprint 10D.1 transaction and signing boundary
+
+Sprint 10D.1 assigns transaction lifecycle and signing-boundary ownership
+exclusively to `@cryptodesk-ai/ritual-gateway`. It introduces the smallest
+capability-based signing surface for an already prepared opaque payload:
+
+- `createRitualTransactionSigningBoundary`;
+- closed `RitualTransactionSigningConfiguration` containing only a `signerId`;
+- closed `RitualTransactionSigningRequest` containing the signing-request and
+  signer identities plus an opaque payload;
+- an explicitly injected `RitualTransactionSignerCapability` function;
+- a closed sanitized `RitualTransactionSigningResult`.
+
+The boundary snapshots configuration and each accepted request, invokes exactly
+the supplied capability once, validates exact signing-request and signer
+identity, rejects malformed or extra result material, and maps thrown capability
+failures to a fixed result without propagating exception details. It has no
+default signer, wallet discovery, registry, shared state, hidden selection,
+retry, fallback, or routing. Concurrent calls and separate instances retain
+independent requests, capabilities, and results.
+
+This capability contract contains no private key, seed phrase, mnemonic, wallet
+file, credential, endpoint, or environment configuration. The implementation of
+the supplied capability owns any future credential material outside public,
+provider-neutral, and canonical contracts. The gateway never logs or returns
+that material.
+
+The authorization boundaries are intentionally distinct:
+
+```text
+prepared opaque payload
+  != authorization to sign
+explicit signing capability invocation
+  != authorization to submit
+signed opaque payload
+  != broadcast, settlement, inference trust, or canonical authority
+```
+
+Sprint 10D.1 constructs no Ritual transaction, uses no real wallet, signs with no
+real credential, performs no RPC broadcast, polls no receipt, and implements no
+settlement or live inference. Those capabilities remain governed by 10D.2,
+10D.3, and 10E respectively. Ritual model output remains
+`untrusted_model_execution`; Portfolio and Morning Meeting remain authoritative.
+The workspace dependency direction remains `ritual-gateway -> AI -> Portfolio`,
+with no reverse Ritual dependency.
+
+**Sprint 10D.1 — Transaction & Signing Boundary: COMPLETE.** Sprint 10D remains
+open and Sprint 10D.2 has not started.

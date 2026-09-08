@@ -183,3 +183,11 @@ Integration, and Sprint 10F — Autonomous Runtime Safety Foundation. The exact
 
 This governance update starts none of that work: Sprint 10D and Sprint 10D.1
 remain **NOT STARTED**.
+
+Sprint 10D.1 now establishes the gateway-owned transaction/signing boundary
+using only an explicitly injected signer capability over an already prepared
+opaque payload. It adds no transaction construction, real wallet/key signing,
+broadcast, receipt handling, settlement, or live inference. The boundary is
+closed, detached, exactly-once, sanitized, and independent of provider-neutral
+and canonical domains. **Sprint 10D.1 — Transaction & Signing Boundary:
+COMPLETE.** Sprint 10D remains open and Sprint 10D.2 has not started.

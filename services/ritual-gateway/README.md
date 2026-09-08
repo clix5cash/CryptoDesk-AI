@@ -132,3 +132,17 @@ missing behavioral closure invariant. The artifact audit also fixed an internal
 declaration leak by stripping the package-private injected HTTP test seam and
 its `AbortSignal` types from generated declarations. The public surface remains
 unchanged, the gateway remains private, and Sprint 10D has not started.
+
+Sprint 10D.1 adds the root-exported
+`createRitualTransactionSigningBoundary` as the gateway-owned capability seam
+for an already prepared opaque payload. Configuration contains only an explicit
+signer identity; the signer is a required injected function, and the boundary
+performs one detached call with closed identity/result validation and sanitized
+failure mapping. No key, mnemonic, wallet file, credential, endpoint, default
+signer, wallet discovery, registry, or shared state enters the contract.
+
+Signing remains separate from transaction construction, authorization to
+submit, broadcast, receipt handling, settlement, inference trust, and canonical
+authority. No real wallet signing or network operation is implemented.
+**Sprint 10D.1 — Transaction & Signing Boundary: COMPLETE.** Sprint 10D.2 has
+not started.

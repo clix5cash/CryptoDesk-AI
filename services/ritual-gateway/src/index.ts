@@ -14,3 +14,12 @@ export {
   type RitualRpcConnectivityChecker,
   type RitualRpcConnectivityResult,
 } from './ritual-live-rpc-connectivity.js';
+export {
+  RitualTransactionSigningFailureKind,
+  createRitualTransactionSigningBoundary,
+  type RitualTransactionSignerCapability,
+  type RitualTransactionSigningBoundary,
+  type RitualTransactionSigningConfiguration,
+  type RitualTransactionSigningRequest,
+  type RitualTransactionSigningResult,
+} from './ritual-transaction-signing-boundary.js';
