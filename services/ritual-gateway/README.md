@@ -176,3 +176,17 @@ or live inference. Signed material and raw settlement/provider details never
 enter public results. Construction, signing, submission authorization,
 submission, and settlement remain distinct. **Sprint 10D.3 — Submission &
 Settlement Lifecycle: COMPLETE.** Sprint 10D.4 has not started.
+
+Sprint 10D.4 audits the complete construction, signing, submission, and
+settlement foundation. One release defect was corrected: `timeoutMs` now rejects
+values above the platform-supported 2,147,483,647 ms timer range, so the runtime
+cannot convert an oversized configured timeout into an immediate timeout.
+Regression coverage also proves concurrent success/failure and success/timeout
+isolation.
+
+The package remains private and root-only. Generated declarations expose only
+the intentional capability contracts; concrete wallets, credentials,
+broadcasters, receipt schemas, polling, and lifecycle helpers remain absent or
+private. No external transaction was attempted, and external Ritual transaction
+verification remains **INCONCLUSIVE**. **Sprint 10D — Ritual Inference
+Transaction Foundation: COMPLETE.** Sprint 10E has not started.

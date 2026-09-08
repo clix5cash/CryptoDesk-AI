@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D.1–10D.3 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1017,3 +1017,44 @@ canonical promotion. External Ritual verification therefore remains
 
 **Sprint 10D.3 — Submission & Settlement Lifecycle: COMPLETE.** Sprint 10D
 remains open and Sprint 10D.4 has not started.
+
+## Sprint 10D.4 closure and release audit
+
+Sprint 10D.4 verifies one gateway-owned transaction foundation with no competing
+path. Its authority boundaries remain structurally separate:
+
+```text
+construction
+  != authorization to sign
+  != signing
+  != authorization to submit
+  != submission
+  != settlement
+  != inference, canonical, or autonomous authority
+```
+
+The closure audit found one production defect in the otherwise valid 10D.3
+timeout boundary. Configuration accepted safe integers beyond the platform's
+2,147,483,647 ms timer limit; Node can reduce such values to an immediate
+timeout. The smallest correction keeps the limit private and rejects values
+above it. A focused regression extends invalid-configuration coverage, and one
+additional focused test proves concurrent success/failure and success/timeout
+operations remain isolated.
+
+The completed foundation preserves deterministic detached construction, one
+explicitly injected signer capability, separate submission authorization, at
+most one injected submission, one closed settlement observation, fixed
+sanitized failures, terminal timeout behavior, failed-call recovery, and
+instance isolation. No guessed ABI, precompile, nonce, gas, fee, receipt,
+confirmation, event, attestation, or finality rule exists.
+
+The nine-package dependency graph remains acyclic with
+`ritual-gateway -> AI -> Portfolio` and no reverse Ritual dependency. The
+gateway remains private with one package-root export map; internal deep imports
+remain blocked. Generated JavaScript, declarations, and declaration maps contain
+no credential fixture or concrete wallet/broadcaster implementation. No live
+transaction, live signing, or live inference was attempted or claimed.
+External Ritual transaction verification remains **INCONCLUSIVE**.
+
+**Sprint 10D — Ritual Inference Transaction Foundation: COMPLETE.** Sprint 10E
+has not started.

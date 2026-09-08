@@ -99,6 +99,7 @@ test('rejects malformed input and configuration before authorization or submissi
   for (const configuration of [
     { timeoutMs: 0 },
     { timeoutMs: 1.5 },
+    { timeoutMs: 2_147_483_648 },
     { extra: true },
     Object.assign(Object.create({ timeoutMs: 5 }), {}),
   ]) {
@@ -285,6 +286,80 @@ test('snapshots caller material and isolates concurrent calls and instances', as
   assert.equal(independent.status, 'settled');
   resultA.submissionId = 'mutated-result';
   assert.equal((await second.execute(request())).submissionId, 'opaque-submission-1');
+});
+
+test('isolates overlapping success, failure, and timeout operations', async () => {
+  const successAndFailure = createRitualTransactionSubmissionLifecycle(
+    {},
+    async (input) => authorized(input),
+    async (input) =>
+      input.executionId === 'failed'
+        ? Promise.reject(new Error('provider-secret'))
+        : submitted(input, `submission-${input.executionId}`),
+    async (input) => settled(input),
+  );
+  const [success, failure] = await Promise.all([
+    successAndFailure.execute(
+      request({
+        executionId: 'success',
+        signedTransaction: { ...request().signedTransaction, signingRequestId: 'success' },
+      }),
+    ),
+    successAndFailure.execute(
+      request({
+        executionId: 'failed',
+        signedTransaction: { ...request().signedTransaction, signingRequestId: 'failed' },
+      }),
+    ),
+  ]);
+  assert.deepEqual(success, {
+    status: 'settled',
+    executionId: 'success',
+    submissionId: 'submission-success',
+  });
+  assert.deepEqual(failure, {
+    status: 'failed',
+    executionId: 'failed',
+    failureKind: RitualTransactionLifecycleFailureKind.SubmissionFailed,
+  });
+
+  const timedOutExecutionIds = [];
+  const successAndTimeout = createRitualTransactionSubmissionLifecycle(
+    { timeoutMs: 5 },
+    async (input) => authorized(input),
+    async (input) => {
+      if (input.executionId === 'timed-out') {
+        timedOutExecutionIds.push(input.executionId);
+        return new Promise(() => {});
+      }
+      return submitted(input, `submission-${input.executionId}`);
+    },
+    async (input) => settled(input),
+  );
+  const [concurrentSuccess, timeout] = await Promise.all([
+    successAndTimeout.execute(
+      request({
+        executionId: 'concurrent-success',
+        signedTransaction: {
+          ...request().signedTransaction,
+          signingRequestId: 'concurrent-success',
+        },
+      }),
+    ),
+    successAndTimeout.execute(
+      request({
+        executionId: 'timed-out',
+        signedTransaction: { ...request().signedTransaction, signingRequestId: 'timed-out' },
+      }),
+    ),
+  ]);
+  assert.equal(concurrentSuccess.status, 'settled');
+  assert.deepEqual(timeout, {
+    status: 'failed',
+    executionId: 'timed-out',
+    failureKind: RitualTransactionLifecycleFailureKind.Timeout,
+  });
+  assert.deepEqual(timedOutExecutionIds, ['timed-out']);
 });
 
 test('recovers after every lifecycle failure without retrying the failed operation', async () => {

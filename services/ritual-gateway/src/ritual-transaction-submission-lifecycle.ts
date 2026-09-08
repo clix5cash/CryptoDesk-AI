@@ -2,6 +2,8 @@ import type { RitualTransactionSigningResult } from './ritual-transaction-signin
 
 type SignedTransaction = Extract<RitualTransactionSigningResult, { readonly status: 'signed' }>;
 
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
 export interface RitualTransactionSubmissionLifecycleConfiguration {
   readonly timeoutMs?: number;
 }
@@ -238,7 +240,8 @@ function validateAndDetachConfiguration(
     (value.timeoutMs !== undefined &&
       (typeof value.timeoutMs !== 'number' ||
         !Number.isSafeInteger(value.timeoutMs) ||
-        value.timeoutMs <= 0))
+        value.timeoutMs <= 0 ||
+        value.timeoutMs > MAX_TIMEOUT_MS))
   ) {
     throw new TypeError('Ritual transaction lifecycle configuration is invalid.');
   }
