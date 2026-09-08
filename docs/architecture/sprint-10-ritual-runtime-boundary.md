@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E.1–10E.3 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1190,3 +1190,60 @@ and successful structural verification creates no analytical or canonical
 authority. **Sprint 10E.3 — Result Settlement & Verification: COMPLETE.**
 Sprint 10E remains open, Sprint 10E.4 has not started, and external Ritual
 verification remains **INCONCLUSIVE**.
+
+## Sprint 10E.4 closure and release audit
+
+Sprint 10E.4 verifies the completed live-inference foundation without changing
+production or test behavior. Final traceability is:
+
+| Stage | Owned boundary                                                                      | Closure evidence                                                                                                      |
+| ----- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 10E.1 | Detached provider-neutral request mapping and completed-result mapping              | Exact execution/provider/model/target/inference-request identity; output maps only to `untrusted_model_execution`     |
+| 10E.2 | Composition of existing 10D lifecycle with one injected inference invocation        | Explicit signing and submission authorization; exactly one invocation; terminal timeout; no hidden selection or retry |
+| 10E.3 | One injected result retrieval and one structural provenance verification            | Exact submission/settlement/invocation/provenance correlation; sanitized output; recovery and concurrency isolation   |
+| 10E.4 | Regression, architecture, security, dependency, export, artifact, and release audit | 418 passing tests, including 64 gateway tests; all closure gates pass with no production fix required                 |
+
+The authority separation remains:
+
+```text
+connectivity
+  != transaction construction
+  != signing authorization
+  != signing
+  != submission authorization
+  != submission
+  != settlement
+  != inference invocation
+  != result retrieval
+  != provenance verification
+  != analytical authority
+  != canonical authority
+  != autonomous authority
+```
+
+`@cryptodesk-ai/ritual-gateway` remains the exclusive Ritual-specific owner and
+depends inward on provider-neutral AI and Portfolio. AI owns provider-neutral
+execution and the existing trust progression; Portfolio and Morning Meeting
+remain canonical. No reverse Ritual dependency or competing lifecycle exists.
+The nine-package graph is acyclic.
+
+The uncached audit passes all 418 tests. The gateway contributes 64 tests that
+cover closed validation, exact identities, exactly-once/at-most-once lifecycle
+operations, timeout finality, late-settlement resistance, mutation safety,
+concurrency and instance isolation, sanitization, and failed-call recovery.
+Package-root exports resolve, internal deep imports remain blocked, and the
+forced build produces 131 JavaScript files, 131 declarations, and 131
+declaration maps with zero invalid maps. Provider-neutral declarations contain
+no Ritual implementation types, and generated artifacts contain no credential
+fixture or private signer/wallet implementation.
+
+Sprint 10E adds no provider/model auto-selection, wallet/private-key management,
+environment credential discovery, concrete live transaction broadcaster,
+receipt polling, retry, fallback, routing, scheduler, persistence, cache,
+autonomous execution, trust promotion, canonical mutation, or invented Ritual
+protocol semantics. External live Ritual inference verification remains
+**INCONCLUSIVE**; injected deterministic capabilities are not live evidence and
+no external success is claimed.
+
+**Sprint 10E — Ritual Live Inference Integration: COMPLETE.** Sprint 10F has
+not started.
