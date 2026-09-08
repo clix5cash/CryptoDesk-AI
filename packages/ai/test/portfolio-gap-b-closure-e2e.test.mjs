@@ -334,7 +334,7 @@ test('passes the Gap B architecture, dependency, and backward-compatibility clos
   );
   assert.equal(aiPackage.dependencies['@cryptodesk-ai/portfolio'], 'workspace:*');
   assert.equal(portfolioPackage.dependencies?.['@cryptodesk-ai/ai'], undefined);
-  assert.equal(morningMeetingPackage.dependencies?.['@cryptodesk-ai/ai'], undefined);
+  assert.equal(morningMeetingPackage.dependencies?.['@cryptodesk-ai/ai'], 'workspace:*');
 
   for (const api of [
     parsePortfolioAiStructuredOutput,

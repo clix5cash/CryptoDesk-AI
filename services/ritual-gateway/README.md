@@ -206,3 +206,24 @@ transport type enters this contract. Sprint 10E.1 performs no live inference or
 10D lifecycle invocation. **Sprint 10E.1 — Live Inference Contract: COMPLETE.**
 Sprint 10E.2 has not started, and external Ritual verification remains
 **INCONCLUSIVE**.
+
+Sprint 10E.2 adds `createRitualLiveInferenceInvoker`, the sole explicit
+integration path from a validated 10E.1 mapping request through the existing
+10D construction, separately authorized signing, separately authorized
+submission/settlement, and exactly one injected inference capability. The
+factory requires every capability explicitly; it has no default provider,
+model, signer, submitter, or inference implementation.
+
+Every accepted request is mapped and detached before asynchronous work. Exact
+execution, provider `ritual`, optional model, target, inference-request, signer,
+and submission identity is retained. Any mapping, authorization, signing,
+submission, or settlement failure causes zero inference attempts. Inference
+results are closed terminal `completed` or sanitized `failed` shapes; optional
+inference timeout is bounded, operation-local, final, and cleaned in `finally`.
+No retry, fallback, routing, replay, or late-success promotion exists.
+
+The mapped provider-neutral result remains `untrusted_model_execution`. No live
+RPC/precompile implementation, result-retrieval reconciliation, wallet, key,
+credential, receipt polling, or canonical authority was added. **Sprint 10E.2 —
+Inference Invocation: COMPLETE.** Sprint 10E.3 has not started, and external
+Ritual verification remains **INCONCLUSIVE**.

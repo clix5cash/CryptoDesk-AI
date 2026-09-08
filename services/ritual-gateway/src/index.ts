@@ -52,3 +52,15 @@ export {
   type RitualLiveInferenceMappingRequest,
   type RitualLiveInferenceOperation,
 } from './ritual-live-inference-contract.js';
+export {
+  RitualLiveInferenceCapabilityFailureKind,
+  createRitualLiveInferenceInvoker,
+  type RitualInferenceSigningAuthorizationRequest,
+  type RitualInferenceSigningAuthorizer,
+  type RitualLiveInferenceCapability,
+  type RitualLiveInferenceCapabilityRequest,
+  type RitualLiveInferenceCapabilityResult,
+  type RitualLiveInferenceInvocationCapabilities,
+  type RitualLiveInferenceInvocationConfiguration,
+  type RitualLiveInferenceInvoker,
+} from './ritual-live-inference-invocation.js';

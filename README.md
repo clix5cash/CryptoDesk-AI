@@ -229,3 +229,14 @@ back to the existing provider-neutral `untrusted_model_execution` result. It
 performs no inference, transaction, signing, submission, settlement, or result
 retrieval. **Sprint 10E.1 — Live Inference Contract: COMPLETE.** Sprint 10E
 remains open and Sprint 10E.2 has not started.
+
+Sprint 10E.2 adds one gateway-owned invocation orchestrator that composes the
+10E.1 mapper with the existing 10D constructor, explicit signing authorization,
+injected signer, explicit submission authorization, single submission,
+settlement, and one injected inference capability. Provider/model identity stays
+caller-selected and exact. Failure at any earlier boundary causes zero inference
+attempts; inference timeout is bounded, operation-local, terminal, and
+non-retrying. Completed output returns only as `untrusted_model_execution`.
+**Sprint 10E.2 — Inference Invocation: COMPLETE.** Sprint 10E remains open and
+Sprint 10E.3 has not started. External Ritual verification remains
+**INCONCLUSIVE**.

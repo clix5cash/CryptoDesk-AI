@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E.1 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E.1–10E.2 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1103,4 +1103,49 @@ implementation-free.
 
 **Sprint 10E.1 — Live Inference Contract: COMPLETE.** Sprint 10E remains open,
 Sprint 10E.2 has not started, and external Ritual verification remains
+**INCONCLUSIVE**.
+
+## Sprint 10E.2 inference invocation
+
+Sprint 10E.2 adds `createRitualLiveInferenceInvoker` as the single gateway-owned
+orchestrator. It composes the frozen contracts rather than introducing a second
+transaction or inference pipeline:
+
+```text
+validated provider-neutral descriptor
+  -> 10E.1 detached Ritual mapping
+  -> 10D.2 deterministic construction
+  -> explicit signing authorization
+  -> 10D.1 injected signing
+  -> explicit submission authorization
+  -> 10D.3 one submission and settlement
+  -> exactly one injected Ritual inference capability
+  -> closed opaque result
+  -> 10E.1 provider-neutral mapping
+  -> untrusted_model_execution
+```
+
+The construction, signing, submission, settlement, and inference capabilities
+remain separate required injections. No capability is discovered or defaulted.
+Provider ID must be exactly `ritual`; model identity remains optional but, when
+present, is preserved exactly. Execution, target, inference-request, signing,
+and opaque submission identity are checked at their owning boundaries. Failure
+before inference causes zero inference attempts.
+
+The inference capability receives only a detached operation identity, opaque
+validated prompt payload, and opaque settled submission identity. It returns one
+closed terminal completed or failed result. Completed output is mapped through
+the 10E.1 contract; malformed or substituted output and thrown provider text map
+to fixed sanitized provider-neutral failures. Optional inference timeout is a
+positive platform-bounded integer, operation-local, terminal, and cleaned in
+`finally`; late completion cannot replace timeout or trigger another invocation.
+
+The implementation adds no live RPC/precompile, ABI, selector, transaction
+broadcast, result-retrieval reconciliation, receipt polling, wallet, credential,
+retry, fallback, routing, provider/model selection, scheduler, persistence,
+autonomy, or canonical authority. Concurrent and separate invoker operations
+retain isolated snapshots, timers, capabilities, and terminal results.
+
+**Sprint 10E.2 — Inference Invocation: COMPLETE.** Sprint 10E remains open,
+Sprint 10E.3 has not started, and external Ritual verification remains
 **INCONCLUSIVE**.
