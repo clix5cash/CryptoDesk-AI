@@ -190,3 +190,19 @@ broadcasters, receipt schemas, polling, and lifecycle helpers remain absent or
 private. No external transaction was attempted, and external Ritual transaction
 verification remains **INCONCLUSIVE**. **Sprint 10D — Ritual Inference
 Transaction Foundation: COMPLETE.** Sprint 10E has not started.
+
+Sprint 10E.1 adds the root-exported `createRitualLiveInferenceContract`. The
+contract is a pure, instance-scoped mapper: AI retains ownership of the validated
+provider-neutral request descriptor, while the gateway owns explicit Ritual
+target and inference-lifecycle identity and the opaque operation payload. A
+closed completed Ritual result can re-enter AI only as the existing
+`PortfolioAiModelExecutionResult` with `untrusted_model_execution` authority.
+
+Configuration, requests, operations, and results are closed and detached. Exact
+execution, provider, optional model, target, and inference-request identity is
+required without defaults, repair, substitution, selection, or routing. No
+transaction hash, receipt, endpoint, signer, credential, ABI, precompile, or
+transport type enters this contract. Sprint 10E.1 performs no live inference or
+10D lifecycle invocation. **Sprint 10E.1 — Live Inference Contract: COMPLETE.**
+Sprint 10E.2 has not started, and external Ritual verification remains
+**INCONCLUSIVE**.

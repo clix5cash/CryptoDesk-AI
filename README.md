@@ -220,3 +220,12 @@ inference, retry, fallback, routing, persistence, or autonomous authority exists
 External Ritual transaction verification remains **INCONCLUSIVE**. **Sprint
 10D — Ritual Inference Transaction Foundation: COMPLETE.** Sprint 10E has not
 started.
+
+Sprint 10E.1 adds a pure gateway-owned live-inference contract mapper. The AI
+package continues to own the provider-neutral descriptor; Ritual Gateway maps a
+validated descriptor plus explicit inference and target identity into a detached
+opaque operation contract, then maps only a closed matching completed result
+back to the existing provider-neutral `untrusted_model_execution` result. It
+performs no inference, transaction, signing, submission, settlement, or result
+retrieval. **Sprint 10E.1 — Live Inference Contract: COMPLETE.** Sprint 10E
+remains open and Sprint 10E.2 has not started.

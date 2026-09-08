@@ -44,3 +44,11 @@ export {
   type RitualTransactionSubmissionLifecycleConfiguration,
   type RitualTransactionSubmissionRequest,
 } from './ritual-transaction-submission-lifecycle.js';
+export {
+  createRitualLiveInferenceContract,
+  type RitualLiveInferenceCompletedResult,
+  type RitualLiveInferenceContract,
+  type RitualLiveInferenceContractConfiguration,
+  type RitualLiveInferenceMappingRequest,
+  type RitualLiveInferenceOperation,
+} from './ritual-live-inference-contract.js';

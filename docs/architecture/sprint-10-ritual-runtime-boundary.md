@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E.1 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1058,3 +1058,49 @@ External Ritual transaction verification remains **INCONCLUSIVE**.
 
 **Sprint 10D — Ritual Inference Transaction Foundation: COMPLETE.** Sprint 10E
 has not started.
+
+## Sprint 10E.1 live inference contract
+
+Sprint 10E.1 freezes the ownership and mapping seam without executing live
+inference. Provider-neutral AI continues to own
+`PortfolioAiProviderRequestDescriptor` and the existing raw execution result and
+trust contracts. `@cryptodesk-ai/ritual-gateway` alone owns the Ritual mapping,
+explicit target, inference-lifecycle identity, opaque operation payload, and
+closed Ritual result validation.
+
+The root-exported `createRitualLiveInferenceContract` provides two pure steps:
+
+```text
+validated AI-owned provider descriptor
+  + explicit gateway-owned inference request ID and target ID
+  -> detached RitualLiveInferenceOperation
+
+closed matching RitualLiveInferenceCompletedResult
+  -> PortfolioAiModelExecutionResult(untrusted_model_execution)
+```
+
+The operation preserves exact execution ID, provider ID `ritual`, optional model
+ID, target ID, and caller-supplied inference-request ID. Its opaque payload is a
+deterministic serialization of the already validated provider-neutral prompt
+document. No semantic identity is rewritten, and no provider, model, target, or
+lifecycle identity is generated or selected.
+
+Configuration, mapping requests, operations, and completed results use closed
+own-property validation and detached copies. Unknown fields, inherited or
+prototype-shaped records, malformed values, provider/model/target/execution/
+inference identity conflicts, and empty output fail with fixed gateway-owned
+errors. The mapped result contains only provider-neutral identity, opaque output,
+and the existing `untrusted_model_execution` authority. Settlement, chain
+inclusion, or Ritual provenance does not establish analytical truth.
+
+This contract does not call the completed 10D construction, signing, submission,
+or settlement boundaries and does not collapse them. It adds no invocation,
+transaction, broadcast, result retrieval, ABI, precompile, receipt, endpoint,
+wallet, credential, retry, fallback, routing, selection, scheduler, persistence,
+autonomy, or canonical authority. The dependency graph remains
+`ritual-gateway -> AI -> Portfolio`; provider-neutral declarations remain Ritual
+implementation-free.
+
+**Sprint 10E.1 — Live Inference Contract: COMPLETE.** Sprint 10E remains open,
+Sprint 10E.2 has not started, and external Ritual verification remains
+**INCONCLUSIVE**.
