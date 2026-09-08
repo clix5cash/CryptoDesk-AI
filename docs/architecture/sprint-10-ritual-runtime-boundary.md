@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C.1 connectivity boundary defined
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D NOT STARTED
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -792,3 +792,87 @@ verified live-chain success is not claimed.
 
 **Sprint 10C — Ritual Live Connectivity Foundation: COMPLETE.** Sprint 10D has
 not started.
+
+## Frozen remaining Sprint 10 roadmap
+
+The Owner and Tech Lead approved and froze the remaining Sprint 10 roadmap at
+the Sprint 10C closure baseline. This section governs Sprint 10D through 10F;
+it records authorized future scope and does not start Sprint 10D.
+
+### Sprint 10D — Ritual Inference Transaction Foundation
+
+- **10D.1 — Transaction & Signing Boundary:** define transaction lifecycle
+  ownership and the minimum signer/wallet abstraction. Signing and private-key
+  capability must remain isolated from AI, Portfolio, Morning Meeting, and the
+  OpenAI runtime. No live transaction submission is authorized. Freeze the
+  security, trust, dependency, credential, and canonical-authority boundaries.
+- **10D.2 — Ritual Inference Transaction Construction:** implement
+  deterministic transaction/request construction; validate chain, target, and
+  payload; and fail closed on malformed configuration. Signing remains isolated
+  and explicitly supplied. No live broadcast is authorized.
+- **10D.3 — Submission & Settlement Lifecycle:** implement exactly-once
+  submission semantics and the receipt/settlement lifecycle, including timeout,
+  failure, finality, sanitization, recovery, and isolation. Hidden retry,
+  fallback, routing, and provider selection remain forbidden.
+- **10D.4 — Closure & Release Audit:** perform the complete behavioral,
+  regression, security, dependency, export, generated-artifact,
+  credential-containment, and release audit. Live transaction success may be
+  claimed only when it has actually been verified.
+
+### Sprint 10E — Ritual Live Inference Integration
+
+- **10E.1 — Live Inference Contract:** freeze provider-neutral request/result
+  ownership and its mapping into Ritual inference without changing canonical AI
+  or Portfolio contracts.
+- **10E.2 — Inference Invocation:** connect the authorized Sprint 10D
+  transaction lifecycle to Ritual inference with exactly-once invocation and no
+  hidden provider/model selection.
+- **10E.3 — Result Settlement & Verification:** implement receipt/result
+  retrieval, identity, provenance, and lifecycle validation, plus sanitization,
+  failure handling, recovery, and concurrency isolation. Ritual model output
+  remains `untrusted_model_execution`.
+- **10E.4 — Live Inference Closure:** perform the full regression, security,
+  and release audit and an external live smoke test when infrastructure permits.
+  If official Ritual infrastructure is unavailable, external verification is
+  reported as **INCONCLUSIVE**, never simulated or claimed successful.
+
+### Sprint 10F — Autonomous Runtime Safety Foundation
+
+- **10F.1 — Autonomous Authority Boundary:** define what the autonomous runtime
+  may propose versus execute while preserving explicit operator authorization
+  and canonical Portfolio and Morning Meeting authority.
+- **10F.2 — Policy & Execution Guardrails:** implement explicit action
+  authorization, allowlists, bounded budget/risk policy, and fail-closed
+  execution gates. No implicit signing or trading authority is permitted.
+- **10F.3 — Controlled Autonomous Runtime:** implement bounded orchestration
+  with explicit authorization, cancellation/finality, recovery, isolation, and
+  auditability. Uncontrolled recursion, hidden retry, and unrestricted execution
+  remain forbidden.
+- **10F.4 — Sprint 10 / Phase Closure:** perform complete security, adversarial,
+  autonomous-authority, dependency, export, release, and Sprint 8–10 regression
+  audits. Update the authoritative architecture, roadmap, Sprint History, and
+  Project Bible documentation where those records exist and apply. Sprint 10
+  may be declared complete only when every authorized gate passes.
+
+### Global frozen constraints
+
+- `@cryptodesk-ai/ritual-gateway` remains the sole Ritual connectivity and
+  runtime owner.
+- Required dependency direction remains Ritual Gateway -> AI -> Portfolio. AI,
+  Portfolio, Morning Meeting, and the OpenAI runtime must not acquire a reverse
+  Ritual dependency.
+- Canonical Portfolio and Morning Meeting state remain authoritative. Ritual
+  model output remains `untrusted_model_execution` unless a future explicitly
+  authorized governance decision changes that rule.
+- Hidden `process.env` discovery, credentials, provider auto-selection, routing,
+  fallback, retry, scheduler, persistence, and global mutable state remain
+  forbidden unless a future frozen scope explicitly authorizes them.
+- Credentials and private keys must never enter public results, logs, generated
+  artifacts, fixtures, or provider-neutral contracts.
+- Mocks and injected transports are never evidence of external Ritual success.
+- Valid Sprint 8, Sprint 9, Sprint 10A, Sprint 10B, and Sprint 10C behavior
+  remains backward compatible.
+
+At this governance checkpoint, Sprint 10D, including Sprint 10D.1, remains
+**NOT STARTED**. No production or test capability is introduced by freezing the
+roadmap.

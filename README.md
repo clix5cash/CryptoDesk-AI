@@ -172,3 +172,14 @@ export, artifact, security, and backward-compatibility gates passed. External
 live-chain verification remains INCONCLUSIVE because the
 10C.2 and 10C.3 read-only smoke requests timed out; no externally verified
 live-chain success or live inference is claimed. Sprint 10D has not started.
+
+## Frozen remaining Sprint 10 roadmap
+
+The Owner and Tech Lead have frozen the remaining roadmap as Sprint 10D —
+Ritual Inference Transaction Foundation, Sprint 10E — Ritual Live Inference
+Integration, and Sprint 10F — Autonomous Runtime Safety Foundation. The exact
+10D.1–10F.4 scope and global governance constraints are recorded in the
+[Sprint 10 Ritual Runtime Boundary](docs/architecture/sprint-10-ritual-runtime-boundary.md#frozen-remaining-sprint-10-roadmap).
+
+This governance update starts none of that work: Sprint 10D and Sprint 10D.1
+remain **NOT STARTED**.
