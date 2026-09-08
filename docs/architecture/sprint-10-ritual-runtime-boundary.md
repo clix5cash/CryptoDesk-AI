@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D.1–10D.2 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D.1–10D.3 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -971,3 +971,49 @@ persistence/cache, or autonomy. The dependency graph remains
 
 **Sprint 10D.2 — Ritual Inference Transaction Construction: COMPLETE.** Sprint
 10D remains open and Sprint 10D.3 has not started.
+
+## Sprint 10D.3 submission and settlement lifecycle
+
+Sprint 10D.3 adds `createRitualTransactionSubmissionLifecycle` inside the sole
+Ritual-owned `@cryptodesk-ai/ritual-gateway` boundary. It consumes an explicitly
+signed 10D.1 result only after a separately injected caller-owned authorization
+capability approves the exact execution identity. Possession of signed material
+does not authorize submission.
+
+The legal lifecycle is deliberately narrow:
+
+1. validate and detach the lifecycle configuration and signed request;
+2. invoke the explicit authorization capability once;
+3. on authorization, invoke the injected submission capability exactly once;
+4. validate its closed opaque submission identity;
+5. invoke the injected settlement capability exactly once;
+6. accept one closed `settled` or `failed` terminal observation;
+7. map to a minimal sanitized terminal result and clean up operation-local timer
+   state.
+
+Invalid input or denied/malformed authorization causes zero submission and zero
+settlement attempts. A submission failure never starts settlement. Submission
+and settlement exceptions, malformed values, identity substitution, explicit
+terminal failure, and timeout map to fixed gateway-owned failure kinds. Provider
+text, signed material, raw receipts, endpoints, exception messages, and stacks
+are never reflected into public results.
+
+The optional timeout is explicit, bounded, operation-local, and terminal. The
+gateway stores only an operation-local finality guard; it exposes no public
+cancel signal. A capability that settles after timeout cannot cause another
+mapping, submission, settlement, or terminal result. Separate and concurrent
+operations have independent snapshots, timers, authorization, submission,
+settlement, and result objects. No registry, cache, persistence, retry,
+fallback, routing, replay, or global mutable lifecycle state exists.
+
+The public root exposes only the construction factory and minimum configuration,
+capability, request, terminal-result, and stable failure-kind contracts. Concrete
+broadcast/RPC machinery, raw receipt schemas, polling, controllers, timers,
+decoders, and signed-material helpers remain absent or private. This stage adds
+no live transaction broadcast, wallet/private-key implementation, nonce/gas/fee
+discovery, chain settlement semantics, live inference, autonomous authority, or
+canonical promotion. External Ritual verification therefore remains
+**INCONCLUSIVE** and is not required for this injected deterministic boundary.
+
+**Sprint 10D.3 — Submission & Settlement Lifecycle: COMPLETE.** Sprint 10D
+remains open and Sprint 10D.4 has not started.

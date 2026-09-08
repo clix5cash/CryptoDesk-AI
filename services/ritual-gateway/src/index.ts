@@ -30,3 +30,17 @@ export {
   type RitualInferenceTransactionConstructionResult,
   type RitualInferenceTransactionConstructor,
 } from './ritual-inference-transaction-construction.js';
+export {
+  RitualTransactionLifecycleFailureKind,
+  createRitualTransactionSubmissionLifecycle,
+  type RitualTransactionLifecycleResult,
+  type RitualTransactionSettlementCapability,
+  type RitualTransactionSettlementRequest,
+  type RitualTransactionSubmissionAuthorizationRequest,
+  type RitualTransactionSubmissionAuthorizer,
+  type RitualTransactionSubmissionCapability,
+  type RitualTransactionSubmissionCapabilityRequest,
+  type RitualTransactionSubmissionLifecycle,
+  type RitualTransactionSubmissionLifecycleConfiguration,
+  type RitualTransactionSubmissionRequest,
+} from './ritual-transaction-submission-lifecycle.js';

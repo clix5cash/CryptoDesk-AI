@@ -159,3 +159,20 @@ Construction is not signing authorization, and signing is not submission
 authorization. Broadcast, receipt handling, settlement, and live inference
 remain unimplemented. **Sprint 10D.2 — Ritual Inference Transaction
 Construction: COMPLETE.** Sprint 10D.3 has not started.
+
+Sprint 10D.3 adds the root-exported
+`createRitualTransactionSubmissionLifecycle`. It accepts separately injected
+authorization, submission, and settlement capabilities. Valid accepted inputs
+are snapshotted before asynchronous work; authorization precedes exactly one
+submission, and a successful opaque submission identity is observed through
+exactly one closed settlement operation. The only public terminal results are a
+minimal `settled` identity or a fixed sanitized `failed` kind. Optional timeout
+is operation-local and terminal, with cleanup in `finally`; late capability
+settlement cannot replace the timeout result.
+
+The lifecycle provides no default authorization, concrete broadcaster, RPC
+method, wallet, private key, receipt schema, polling, retry, fallback, routing,
+or live inference. Signed material and raw settlement/provider details never
+enter public results. Construction, signing, submission authorization,
+submission, and settlement remain distinct. **Sprint 10D.3 — Submission &
+Settlement Lifecycle: COMPLETE.** Sprint 10D.4 has not started.

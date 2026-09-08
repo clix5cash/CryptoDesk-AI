@@ -199,3 +199,13 @@ broadcast, network lookup, nonce/gas/fee discovery, receipt handling,
 settlement, or inference. **Sprint 10D.2 — Ritual Inference Transaction
 Construction: COMPLETE.** Sprint 10D remains open and Sprint 10D.3 has not
 started.
+
+Sprint 10D.3 adds the gateway-owned submission and settlement lifecycle behind
+explicit caller-owned submission authorization. An accepted operation snapshots
+the signed request, authorizes once, invokes one injected submission capability,
+and observes one injected closed terminal settlement. Operation-local timeout
+is final, failures are fixed and sanitized, and no retry, fallback, routing, live
+broadcaster, receipt polling, or inference is introduced. Construction, signing,
+authorization to submit, submission, and settlement remain separate authority
+boundaries. **Sprint 10D.3 — Submission & Settlement Lifecycle: COMPLETE.**
+Sprint 10D remains open and Sprint 10D.4 has not started.
