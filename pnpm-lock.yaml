@@ -74,6 +74,8 @@ importers:
 
   packages/portfolio: {}
 
+  packages/runtime-safety: {}
+
   services/ritual-gateway:
     dependencies:
       '@cryptodesk-ai/ai':

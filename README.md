@@ -261,3 +261,18 @@ Ritual leakage. No production or test change was required. External live Ritual
 inference verification remains **INCONCLUSIVE**, and no live-success claim is
 made. **Sprint 10E — Ritual Live Inference Integration: COMPLETE.** Sprint 10F
 has not started.
+
+Sprint 10F.1 introduces the provider-neutral private package
+`@cryptodesk-ai/runtime-safety`. Its sole factory constructs deterministic,
+detached action candidates from explicit execution, action, target, policy,
+authority, interpretation, and candidate identities. The intentionally narrow
+initial action kind is `prepare_operator_review`; every result is
+`candidate_only`, `not_authorized`, and `executable: false`.
+
+Candidate construction performs no authorization decision and executes no
+action. The package has no dependencies on Ritual Gateway, AI, Portfolio, or
+Morning Meeting and adds no callback, credential, wallet, transaction,
+scheduler, persistence, cache, canonical mutation, or trust promotion. Sprint
+10F remains open, and Sprint 10F.2 retains ownership of future bounded policy
+authorization and execution guardrails. **Sprint 10F.1 — Autonomous Runtime
+Safety Contract: COMPLETE.**

@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E COMPLETE; Sprint 10F.1 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1247,3 +1247,56 @@ no external success is claimed.
 
 **Sprint 10E — Ritual Live Inference Integration: COMPLETE.** Sprint 10F has
 not started.
+
+## Sprint 10F.1 autonomous runtime safety contract
+
+Sprint 10F.1 adds `@cryptodesk-ai/runtime-safety` as the provider-neutral owner
+of autonomous action-candidate safety contracts. General autonomous policy does
+not belong to Ritual Gateway, AI interpretation, Portfolio, or Morning Meeting.
+The package has no workspace dependency, while the existing Ritual dependency
+direction remains unchanged and acyclic.
+
+`createAutonomousRuntimeSafetyContract` receives one explicit closed policy
+descriptor containing policy and authority identities. It constructs only a
+closed candidate with caller-supplied execution, action, target, policy,
+authority, interpretation, and originating-candidate identities. The sole
+initial action kind is the non-mutating `prepare_operator_review`. No identity,
+timestamp, UUID, policy, provider, or default is generated or discovered.
+
+Every accepted output is fixed as:
+
+```text
+candidateAuthority = candidate_only
+authorizationState = not_authorized
+executable = false
+```
+
+The authority separation is therefore explicit:
+
+```text
+model output
+  != interpretation
+  != recommendation
+  != authorization
+  != action intent
+  != executable action
+  != execution
+  != canonical mutation
+  != autonomous authority
+```
+
+Construction validates closed own-property records, exact policy binding, the
+closed action kind, and non-empty identities. It rejects unknown, inherited,
+prototype-shaped, unsupported, empty, and conflicting material with one fixed
+sanitized error. Configuration, input, and results are detached; calls and
+instances retain no registry, policy store, cache, counter, session, history,
+or mutable global state.
+
+10F.1 performs no authorization decision or autonomous action. It adds no
+Ritual type, provider/model selection, callback, executable payload, wallet,
+credential, transaction, network call, scheduler, persistence, cache, canonical
+mutation, or trust promotion. Sprint 10F.2 remains responsible for future
+explicit bounded authorization and execution guardrails. **Sprint 10F.1 —
+Autonomous Runtime Safety Contract: COMPLETE.** Sprint 10F remains open and
+Sprint 10F.2 has not started. External Ritual verification remains
+**INCONCLUSIVE**.

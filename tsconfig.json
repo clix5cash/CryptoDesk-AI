@@ -9,6 +9,7 @@
     { "path": "./packages/data" },
     { "path": "./packages/integrations" },
     { "path": "./packages/openai-runtime" },
+    { "path": "./packages/runtime-safety" },
     { "path": "./services/ritual-gateway" }
   ]
 }
