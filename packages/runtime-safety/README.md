@@ -32,3 +32,23 @@ details. No permission registry, persistent authorization, default authorizer,
 default executor, network action, wallet, transaction, trade, scheduler,
 persistence, cache, routing, or autonomous loop exists. **Sprint 10F.2 — Policy
 & Execution Guardrails: COMPLETE.** Sprint 10F.3 has not started.
+
+Sprint 10F.3 adds `createControlledAutonomousRuntime`, a thin single-operation
+orchestrator over the existing 10F.1 candidate contract and 10F.2 guardrail.
+Every run begins with one explicit caller request containing a caller-owned
+runtime operation ID and one complete candidate input. The runtime snapshots
+that request, constructs the candidate through 10F.1, delegates authorization
+and execution exclusively to 10F.2, maps one closed terminal result, and stops.
+
+The runtime does not authorize itself, execute directly, discover candidates,
+select policy, authority, executor, provider, or model, or create a second
+timeout layer. Denial reaches no executor; authorized work retains the
+guardrail's single-attempt permission and operation-local terminal timeout.
+There is no batch, plan, action chain, recursive run, scheduler, queue, daemon,
+poller, retry, fallback, persistence, registry, cache, or history.
+
+The only action remains the non-mutating `prepare_operator_review`. Runtime
+success grants no analytical, canonical, trading, or autonomous authority and
+cannot mutate Portfolio or Morning Meeting state. **Sprint 10F.3 — Controlled
+Autonomous Runtime: COMPLETE.** Sprint 10F remains open, Sprint 10F.4 has not
+started, and external Ritual verification remains **INCONCLUSIVE**.

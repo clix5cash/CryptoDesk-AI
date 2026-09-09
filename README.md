@@ -290,3 +290,18 @@ adds no default executor, persistent permission, network action, transaction,
 wallet, trade, scheduler, persistence, routing, or autonomous loop. **Sprint
 10F.2 — Policy & Execution Guardrails: COMPLETE.** Sprint 10F remains open and
 Sprint 10F.3 has not started.
+
+Sprint 10F.3 adds an explicitly started controlled runtime to
+`@cryptodesk-ai/runtime-safety`. One caller request supplies one runtime
+operation identity and one complete action-candidate input. The runtime creates
+that candidate through 10F.1 and delegates its sole authorization and possible
+single execution attempt to the 10F.2 guardrail, then returns one closed
+terminal result.
+
+The runtime does not discover work, plan, schedule, retry, recurse, select an
+authorizer/executor/provider/model, persist permission, or create another
+action. Its only action kind remains the non-mutating
+`prepare_operator_review`; success adds no analytical, canonical, trading, or
+autonomous authority. **Sprint 10F.3 — Controlled Autonomous Runtime:
+COMPLETE.** Sprint 10F remains open and Sprint 10F.4 has not started. External
+Ritual verification remains **INCONCLUSIVE**.

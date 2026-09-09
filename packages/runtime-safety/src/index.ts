@@ -24,3 +24,10 @@ export {
   type BoundedActionExecutionResult,
   type BoundedActionIdentity,
 } from './bounded-action-execution-guardrail.js';
+export {
+  createControlledAutonomousRuntime,
+  type ControlledAutonomousRuntime,
+  type ControlledAutonomousRuntimeConfiguration,
+  type ControlledAutonomousRuntimeRequest,
+  type ControlledAutonomousRuntimeResult,
+} from './controlled-autonomous-runtime.js';

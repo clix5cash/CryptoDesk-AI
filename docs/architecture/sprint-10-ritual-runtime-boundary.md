@@ -1346,3 +1346,44 @@ routing, scheduler, persistence, cache, trust promotion, or new analytical
 authority. **Sprint 10F.2 — Policy & Execution Guardrails: COMPLETE.** Sprint
 10F remains open, Sprint 10F.3 has not started, and external Ritual verification
 remains **INCONCLUSIVE**.
+
+## Sprint 10F.3 controlled autonomous runtime
+
+Sprint 10F.3 adds one provider-neutral controlled orchestration entry point to
+`@cryptodesk-ai/runtime-safety`:
+
+```text
+explicit caller request
+  -> detached runtime-operation and candidate identity
+  -> 10F.1 candidate construction
+  -> 10F.2 explicit injected authorization
+  -> 10F.2 bounded single-attempt permission
+  -> 10F.2 exactly-once injected execution when authorized
+  -> one closed detached runtime result
+  -> stop
+```
+
+Each explicit `run` accepts exactly one caller-supplied runtime operation ID and
+one complete candidate input. No identity or work is generated or discovered.
+The runtime owns only orchestration: 10F.1 continues to own candidate
+validation, and 10F.2 continues to own authorization, permission derivation,
+execution, timeout, and capability-result validation. The runtime is neither an
+authorizer nor an executor and creates no competing timeout or execution path.
+
+Invalid requests reach neither capability; denial and malformed authorization
+reach no executor; an authorized operation receives at most one execution
+attempt. The runtime maps exactly one terminal result and stops. It has no
+pending registry, resumable token, batch, action graph, planner, recursion,
+retry, fallback, scheduler, cron, queue, daemon, poller, discovery, persistence,
+cache, session, history, or shared mutable state. Concurrent operations and
+separate configured instances remain isolated through detached operation-local
+inputs and the existing 10F.2 finality semantics.
+
+The only action kind remains `prepare_operator_review`. Runtime success does
+not create analytical truth, canonical truth, recommendation/trading authority,
+or autonomous sovereignty and cannot mutate Portfolio or Morning Meeting. The
+existing trust progression is unchanged. No Ritual dependency, transaction,
+wallet/key capability, credential discovery, provider/model selection, or live
+external action was added. **Sprint 10F.3 — Controlled Autonomous Runtime:
+COMPLETE.** Sprint 10F remains open, Sprint 10F.4 has not started, and external
+Ritual verification remains **INCONCLUSIVE**.
