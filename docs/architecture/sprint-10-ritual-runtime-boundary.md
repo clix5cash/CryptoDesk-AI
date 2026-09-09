@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E COMPLETE; Sprint 10F.1–10F.2 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E COMPLETE; Sprint 10F COMPLETE; Sprint 10 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1387,3 +1387,75 @@ wallet/key capability, credential discovery, provider/model selection, or live
 external action was added. **Sprint 10F.3 — Controlled Autonomous Runtime:
 COMPLETE.** Sprint 10F remains open, Sprint 10F.4 has not started, and external
 Ritual verification remains **INCONCLUSIVE**.
+
+## Sprint 10F.4 and Sprint 10 closure
+
+Sprint 10F.4 performs the final architecture, authority, lifecycle, security,
+dependency, export, artifact, regression, and release audit without adding
+runtime behavior.
+
+### Sprint 10F traceability
+
+| Stage | Objective and implemented boundary                                                                               | Public API and authority implications                                                                                                                         | Acceptance evidence and defect status                                                                                                                                                                  |
+| ----- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 10F.1 | Define a provider-neutral, deterministic, detached action candidate from explicit identity and policy.           | Added the candidate factory and closed candidate types; every candidate remains `candidate_only`, `not_authorized`, and non-executable.                       | Closed validation, mutation, isolation, recovery, export, and forbidden-capability tests pass. No unresolved defect.                                                                                   |
+| 10F.2 | Add explicit injected authorization, one operation-local permission, and one injected bounded execution attempt. | Added only authorizer, permission, executor, terminal-result, and guardrail contracts. Authorization is neither execution nor analytical/canonical authority. | Denial, identity, malformed result, timeout, late completion, concurrency, recovery, sanitization, and containment tests pass. No unresolved defect.                                                   |
+| 10F.3 | Orchestrate one explicitly requested candidate through the existing 10F.1 and 10F.2 boundaries.                  | Added one controlled runtime factory and request/result contracts. The runtime owns neither policy, authorization, executor selection, nor canonical state.   | Explicit-start, exactly-once, terminal failure, mutation, concurrent mixed-outcome, instance, recovery, export, and forbidden-capability tests pass. No unresolved defect.                             |
+| 10F.4 | Close Sprint 10F and Sprint 10 through a full release audit.                                                     | No production or test API change. Closure documentation only.                                                                                                 | The full 438-test suite and forced build pass; dependency, security, export, generated-artifact, declaration-map, secret, private-package, and forbidden-capability audits pass. No unresolved defect. |
+
+The final controlled path remains:
+
+```text
+explicit caller request
+  -> validated non-authorized action candidate
+  -> explicit injected authorization
+  -> operation-local permission bounded to one attempt
+  -> at most one injected execution
+  -> one terminal detached result
+  -> stop
+```
+
+The authority boundary remains:
+
+```text
+model output
+  != interpretation
+  != recommendation
+  != action candidate
+  != authorization
+  != bounded execution permission
+  != execution
+  != canonical mutation
+  != autonomous authority
+```
+
+Runtime success is not analytical truth, recommendation/trading authority,
+canonical authority, or autonomous sovereignty. The trust progression remains
+exactly `untrusted_model_execution` to `untrusted_candidate_interpretation` to
+`non_authoritative_interpretation`. Portfolio and Morning Meeting remain
+canonical.
+
+Runtime Safety remains private, dependency-free, provider-neutral, and
+Ritual-free. Ritual Gateway remains the private owner of Ritual-specific
+connectivity, transaction/signing, submission/settlement, inference invocation,
+and retrieval/provenance verification. AI remains provider-neutral and owns
+model and interpretation semantics. The ten-package dependency graph is
+acyclic, and no AI, Portfolio, Morning Meeting, OpenAI Runtime, or Runtime Safety
+reverse dependency into Ritual Gateway exists.
+
+The only action kind remains `prepare_operator_review`. There is no free-running
+agent, candidate/work discovery, planner, recursive execution, second action,
+scheduler, cron, queue, daemon, polling loop, retry, fallback, routing,
+provider/model selection, persistent permission, registry, cache, session,
+history, wallet/key implementation, credential discovery, transaction/trade,
+canonical mutation, or trust promotion.
+
+External Ritual verification remains **INCONCLUSIVE**. Deterministic injected
+capabilities are not external evidence; no live transaction, externally
+verified live inference, or external autonomous action is claimed.
+
+**Sprint 10F.4 — Sprint 10 / Phase Closure: COMPLETE.**
+
+**Sprint 10F — Autonomous Runtime Safety Foundation: COMPLETE.**
+
+**Sprint 10 — Ritual & Autonomous Runtime Expansion: COMPLETE.**

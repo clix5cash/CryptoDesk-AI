@@ -52,3 +52,21 @@ success grants no analytical, canonical, trading, or autonomous authority and
 cannot mutate Portfolio or Morning Meeting state. **Sprint 10F.3 — Controlled
 Autonomous Runtime: COMPLETE.** Sprint 10F remains open, Sprint 10F.4 has not
 started, and external Ritual verification remains **INCONCLUSIVE**.
+
+Sprint 10F.4 completes the release audit without changing production or test
+behavior. All action-candidate, authorization, permission, execution, timeout,
+mutation, concurrency, instance-isolation, recovery, sanitization, export, and
+forbidden-capability gates remain passing. The package remains private,
+dependency-free, provider-neutral, and Ritual-free.
+
+The final runtime continues to require an explicit caller request, handles one
+candidate and at most one execution, returns one terminal result, and stops. It
+cannot discover or generate work, authorize itself, choose an executor,
+schedule, retry, recurse, persist state, or mutate canonical data. The sole
+action kind remains `prepare_operator_review`, and runtime success grants no
+analytical, canonical, trading, or autonomous authority.
+
+External Ritual verification remains **INCONCLUSIVE**; no external runtime or
+transaction execution was performed. **Sprint 10F — Autonomous Runtime Safety
+Foundation: COMPLETE.** **Sprint 10 — Ritual & Autonomous Runtime Expansion:
+COMPLETE.**

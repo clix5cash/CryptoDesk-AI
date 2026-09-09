@@ -305,3 +305,23 @@ action. Its only action kind remains the non-mutating
 autonomous authority. **Sprint 10F.3 — Controlled Autonomous Runtime:
 COMPLETE.** Sprint 10F remains open and Sprint 10F.4 has not started. External
 Ritual verification remains **INCONCLUSIVE**.
+
+Sprint 10F.4 closes the Autonomous Runtime Safety Foundation and Sprint 10
+without adding production behavior. The complete release audit verifies that
+Runtime Safety remains a private, dependency-free, provider-neutral,
+Ritual-free package and that the ten-package workspace graph remains acyclic.
+
+The controlled runtime still begins only with one explicit caller request,
+processes one `prepare_operator_review` candidate through explicit injected
+authorization and at most one injected execution, returns one terminal result,
+and stops. It has no work discovery, planner, recursion, retry, fallback,
+routing, scheduler, queue, daemon, poller, persistence, registry, cache,
+wallet/key capability, transaction/trade execution, canonical mutation, or
+trust promotion.
+
+External Ritual verification remains **INCONCLUSIVE**; deterministic injected
+capabilities are not external evidence, and no live transaction, externally
+verified live inference, or external autonomous action is claimed. **Sprint
+10F.4 — Sprint 10 / Phase Closure: COMPLETE.** **Sprint 10F — Autonomous
+Runtime Safety Foundation: COMPLETE.** **Sprint 10 — Ritual & Autonomous
+Runtime Expansion: COMPLETE.**
