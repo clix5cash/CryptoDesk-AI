@@ -16,3 +16,19 @@ The package contains no Ritual dependency, provider discovery, model selection,
 wallet, credential, callback, transaction, scheduler, persistence, cache,
 autonomous loop, canonical mutation, or trust promotion. No autonomous action
 is executed by this package.
+
+Sprint 10F.2 adds `createBoundedActionExecutionGuardrail`. It validates an
+existing 10F.1 candidate, calls one explicitly injected authorizer, and only
+after an exact `authorized` result derives an operation-local permission fixed
+to one attempt. One explicitly injected executor receives that detached
+identity-only permission. Denial or malformed authorization performs zero
+execution calls; execution is never retried.
+
+Candidate construction, authorization, permission, execution, canonical
+mutation, and autonomous authority remain distinct. Optional execution timeout
+is bounded, operation-local, terminal, and cleaned in `finally`. Capability
+exceptions and hostile results map to fixed failure kinds without reflecting
+details. No permission registry, persistent authorization, default authorizer,
+default executor, network action, wallet, transaction, trade, scheduler,
+persistence, cache, routing, or autonomous loop exists. **Sprint 10F.2 — Policy
+& Execution Guardrails: COMPLETE.** Sprint 10F.3 has not started.

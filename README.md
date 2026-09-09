@@ -276,3 +276,17 @@ scheduler, persistence, cache, canonical mutation, or trust promotion. Sprint
 10F remains open, and Sprint 10F.2 retains ownership of future bounded policy
 authorization and execution guardrails. **Sprint 10F.1 — Autonomous Runtime
 Safety Contract: COMPLETE.**
+
+Sprint 10F.2 adds one provider-neutral bounded guardrail in
+`@cryptodesk-ai/runtime-safety`. A validated 10F.1 candidate is evaluated once
+by an explicit injected authorizer. Exact authorization derives only a
+single-attempt, operation-local permission for one explicit injected executor.
+Denied or malformed authorization executes nothing; failures and timeout never
+retry.
+
+The only action kind remains `prepare_operator_review`. Authorization and
+execution grant no analytical or canonical authority, and the implementation
+adds no default executor, persistent permission, network action, transaction,
+wallet, trade, scheduler, persistence, routing, or autonomous loop. **Sprint
+10F.2 — Policy & Execution Guardrails: COMPLETE.** Sprint 10F remains open and
+Sprint 10F.3 has not started.

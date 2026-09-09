@@ -1,6 +1,6 @@
 # Sprint 10 Ritual Runtime Boundary
 
-Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E COMPLETE; Sprint 10F.1 COMPLETE
+Status: Sprint 10A COMPLETE; Sprint 10B COMPLETE; Sprint 10C COMPLETE; Sprint 10D COMPLETE; Sprint 10E COMPLETE; Sprint 10F.1–10F.2 COMPLETE
 
 Architecture authority: [ADR-001](./ADR-001-modular-ai-first-architecture.md)
 
@@ -1300,3 +1300,49 @@ explicit bounded authorization and execution guardrails. **Sprint 10F.1 —
 Autonomous Runtime Safety Contract: COMPLETE.** Sprint 10F remains open and
 Sprint 10F.2 has not started. External Ritual verification remains
 **INCONCLUSIVE**.
+
+## Sprint 10F.2 bounded authorization and execution guardrails
+
+Sprint 10F.2 adds `createBoundedActionExecutionGuardrail` to the provider-neutral
+`@cryptodesk-ai/runtime-safety` package. It composes the 10F.1 candidate
+contract with two explicit capability injections:
+
+```text
+validated non-authorized candidate
+  -> exactly one explicit authorization evaluation
+  -> exact closed authorized or denied result
+  -> operation-local permission bounded to one attempt
+  -> exactly one explicit injected execution capability
+  -> one closed completed or sanitized failed result
+```
+
+Authorization input retains exact execution, action, action-kind, target,
+policy, authority, interpretation, and originating-candidate identity. The
+authorizer must return the same complete identity with only `authorized` or
+`denied`. An authorized response derives an internal permission fixed as
+`authorized_for_single_attempt` with `maximumAttempts: 1`; it is neither stored
+nor reusable. Denied, malformed, substituted, inherited, or thrown
+authorization reaches no executor.
+
+The executor is explicitly supplied and receives only the detached bounded
+permission. Its terminal result is closed as completed with minimal opaque
+output or failed with a recognized fixed kind. It cannot receive an arbitrary
+action payload, callback, credential, provider, wallet, transaction, network,
+or canonical-state reference. Exceptions, malformed results, identity
+substitution, and timeouts map to fixed sanitized failures without retry.
+
+Optional execution timeout is a positive platform-bounded integer,
+operation-local, terminal, and cleaned in `finally`; late completion cannot
+replace timeout. Candidate/configuration mutation cannot alter accepted work,
+and concurrent calls and separately configured instances retain no shared
+permission, policy, executor, result, timer, registry, cache, or history.
+
+The only allowed action kind remains the non-mutating
+`prepare_operator_review`. Candidate construction is not authorization;
+authorization is not execution; execution is not canonical mutation or
+autonomous authority. 10F.2 adds no autonomous loop, live trade, transfer,
+transaction, wallet/key handling, environment discovery, retry, fallback,
+routing, scheduler, persistence, cache, trust promotion, or new analytical
+authority. **Sprint 10F.2 — Policy & Execution Guardrails: COMPLETE.** Sprint
+10F remains open, Sprint 10F.3 has not started, and external Ritual verification
+remains **INCONCLUSIVE**.

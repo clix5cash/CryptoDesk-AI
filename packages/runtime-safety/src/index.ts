@@ -10,3 +10,17 @@ export {
   type AutonomousRuntimeSafetyConfiguration,
   type AutonomousRuntimeSafetyContract,
 } from './runtime-safety-contract.js';
+export {
+  BoundedActionCapabilityFailureKind,
+  BoundedActionExecutionFailureKind,
+  createBoundedActionExecutionGuardrail,
+  type BoundedActionAuthorizationResult,
+  type BoundedActionAuthorizer,
+  type BoundedActionCapabilityResult,
+  type BoundedActionExecutionCapability,
+  type BoundedActionExecutionGuardrail,
+  type BoundedActionExecutionGuardrailConfiguration,
+  type BoundedActionExecutionPermission,
+  type BoundedActionExecutionResult,
+  type BoundedActionIdentity,
+} from './bounded-action-execution-guardrail.js';
