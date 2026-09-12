@@ -115,13 +115,43 @@ test('fails explicitly when CoinGecko omits a configured market', async () => {
 });
 
 test('raises an adapter error for non-2xx CoinGecko responses', async () => {
-  const provider = createProvider(async () => jsonResponse({ error: 'rate limit exceeded' }, 429));
+  const providerControlledText =
+    'synthetic-token and https://user:password@private.invalid/provider-stack';
+  const provider = createProvider(async () =>
+    jsonResponse({ error: providerControlledText }, 429),
+  );
 
   await assert.rejects(
     () => provider.getSnapshots({}),
-    (error) =>
-      error instanceof CoinGeckoProviderError &&
-      /status 429: rate limit exceeded/.test(error.message),
+    (error) => {
+      assert.ok(error instanceof CoinGeckoProviderError);
+      assert.equal(error.message, 'CoinGecko market request failed with status 429.');
+      assert.equal(error.message.includes(providerControlledText), false);
+      assert.equal(error.message.includes('user:password'), false);
+      return true;
+    },
+  );
+});
+
+test('sanitizes arbitrary transport exceptions and credential-shaped URLs', async () => {
+  const providerControlledText =
+    'synthetic authorization and https://user:password@private.invalid/provider-stack';
+  const provider = createProvider(async () => {
+    throw new Error(providerControlledText);
+  });
+
+  await assert.rejects(
+    () => provider.getSnapshots({}),
+    (error) => {
+      assert.ok(error instanceof CoinGeckoProviderError);
+      assert.equal(
+        error.message,
+        'CoinGecko market request failed before receiving a response.',
+      );
+      assert.equal(error.message.includes(providerControlledText), false);
+      assert.equal(error.message.includes('user:password'), false);
+      return true;
+    },
   );
 });
 
@@ -135,18 +165,23 @@ test('raises an adapter error for malformed CoinGecko responses', async () => {
 });
 
 test('raises an adapter error for malformed CoinGecko JSON', async () => {
+  const providerControlledText = 'synthetic-token from malformed provider body and stack';
   const provider = createProvider(async () => ({
     ok: true,
     status: 200,
     json: async () => {
-      throw new SyntaxError('Unexpected token');
+      throw new SyntaxError(providerControlledText);
     },
   }));
 
   await assert.rejects(
     () => provider.getSnapshots({ assetIds: ['bitcoin'] }),
-    (error) =>
-      error instanceof CoinGeckoProviderError && error.message.includes('returned malformed JSON'),
+    (error) => {
+      assert.ok(error instanceof CoinGeckoProviderError);
+      assert.equal(error.message, 'CoinGecko market request returned malformed JSON.');
+      assert.equal(error.message.includes(providerControlledText), false);
+      return true;
+    },
   );
 });
 

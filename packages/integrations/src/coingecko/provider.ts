@@ -186,9 +186,9 @@ export class CoinGeckoMarketSnapshotProvider
 
     try {
       response = await this.config.fetch(url, { headers: this.createHeaders() });
-    } catch (error) {
+    } catch {
       throw new CoinGeckoProviderError(
-        `CoinGecko ${requestName} failed before receiving a response: ${toErrorMessage(error)}.`,
+        `CoinGecko ${requestName} failed before receiving a response.`,
       );
     }
 
@@ -196,7 +196,7 @@ export class CoinGeckoMarketSnapshotProvider
 
     if (!response.ok) {
       throw new CoinGeckoProviderError(
-        `CoinGecko ${requestName} failed with status ${response.status}: ${getCoinGeckoErrorMessage(payload)}.`,
+        `CoinGecko ${requestName} failed with status ${response.status}.`,
       );
     }
 
@@ -271,24 +271,9 @@ async function parseJson(
 ): Promise<unknown> {
   try {
     return await response.json();
-  } catch (error) {
-    throw new CoinGeckoProviderError(
-      `CoinGecko ${requestName} returned malformed JSON: ${toErrorMessage(error)}.`,
-    );
+  } catch {
+    throw new CoinGeckoProviderError(`CoinGecko ${requestName} returned malformed JSON.`);
   }
-}
-
-function getCoinGeckoErrorMessage(payload: unknown): string {
-  if (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'error' in payload &&
-    typeof payload.error === 'string'
-  ) {
-    return payload.error;
-  }
-
-  return 'No provider error message was supplied.';
 }
 
 function toUnixSeconds(value: string, field: string): number {
@@ -299,8 +284,4 @@ function toUnixSeconds(value: string, field: string): number {
   }
 
   return Math.floor(milliseconds / 1000);
-}
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
