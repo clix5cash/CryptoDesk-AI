@@ -175,6 +175,128 @@ test('normalizes fetch, body, parser, and mapping failures as adapter errors', a
   );
 });
 
+test('sanitizes transport and body failures without reflecting endpoint or exception data', async () => {
+  const hostileUrl = 'https://user:password@private.invalid/feed.xml?token=synthetic-token';
+  const hostileText = 'synthetic authorization, provider stack, and private endpoint';
+  const feed = definition({ url: hostileUrl, sourceId: 'source' });
+
+  await assert.rejects(
+    () => createProvider([feed], { [feed.url]: new Error(hostileText) }).getArticles({}),
+    (error) => {
+      assert.ok(error instanceof RssNewsProviderError);
+      assert.equal(error.message, 'RSS/Atom feed request failed before receiving a response.');
+      assert.equal(error.message.includes(hostileUrl), false);
+      assert.equal(error.message.includes(hostileText), false);
+      return true;
+    },
+  );
+
+  const bodyProvider = new RssNewsProvider({
+    feeds: [feed],
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      text: async () => {
+        throw new Error(hostileText);
+      },
+    }),
+    parser: new XmlNewsFeedParser(),
+    clock: { now: () => '2026-08-04T02:00:00.000Z' },
+  });
+  await assert.rejects(
+    () => bodyProvider.getArticles({}),
+    (error) => {
+      assert.ok(error instanceof RssNewsProviderError);
+      assert.equal(error.message, 'RSS/Atom feed response body could not be read.');
+      assert.equal(error.message.includes(hostileUrl), false);
+      assert.equal(error.message.includes(hostileText), false);
+      return true;
+    },
+  );
+
+  let readFailedBody = false;
+  const httpProvider = new RssNewsProvider({
+    feeds: [feed],
+    fetch: async () => ({
+      ok: false,
+      status: 503,
+      text: async () => {
+        readFailedBody = true;
+        return hostileText;
+      },
+    }),
+    parser: new XmlNewsFeedParser(),
+    clock: { now: () => '2026-08-04T02:00:00.000Z' },
+  });
+  await assert.rejects(
+    () => httpProvider.getArticles({}),
+    (error) => {
+      assert.ok(error instanceof RssNewsProviderError);
+      assert.equal(error.message, 'RSS/Atom feed request failed with status 503.');
+      assert.equal(error.message.includes(hostileUrl), false);
+      assert.equal(error.message.includes(hostileText), false);
+      return true;
+    },
+  );
+  assert.equal(readFailedBody, false);
+});
+
+test('sanitizes parser exceptions and hostile malformed feed content deterministically', async () => {
+  const hostileText = 'https://user:password@private.invalid/parser-stack synthetic-token';
+  const feed = definition({ url: 'https://rss.example/feed.xml', sourceId: 'source' });
+  const parserProvider = new RssNewsProvider({
+    feeds: [feed],
+    fetch: async () => response(rssFeed),
+    parser: {
+      parse() {
+        throw new RssNewsFeedParseError(hostileText);
+      },
+    },
+    clock: { now: () => '2026-08-04T02:00:00.000Z' },
+  });
+
+  await assert.rejects(
+    () => parserProvider.getArticles({}),
+    (error) => {
+      assert.ok(error instanceof RssNewsProviderError);
+      assert.equal(error.message, 'RSS/Atom feed could not be parsed.');
+      assert.equal(error.message.includes(hostileText), false);
+      return true;
+    },
+  );
+
+  const arbitraryParserProvider = new RssNewsProvider({
+    feeds: [feed],
+    fetch: async () => response(rssFeed),
+    parser: {
+      parse() {
+        throw new Error(hostileText);
+      },
+    },
+    clock: { now: () => '2026-08-04T02:00:00.000Z' },
+  });
+  await assert.rejects(
+    () => arbitraryParserProvider.getArticles({}),
+    (error) => {
+      assert.ok(error instanceof RssNewsProviderError);
+      assert.equal(error.message, 'RSS/Atom feed parser failed.');
+      assert.equal(error.message.includes(hostileText), false);
+      return true;
+    },
+  );
+
+  const malformed = `<rss><channel><title>${hostileText}</title>`;
+  await assert.rejects(
+    () => createProvider([feed], { [feed.url]: response(malformed) }).getArticles({}),
+    (error) => {
+      assert.ok(error instanceof RssNewsProviderError);
+      assert.equal(error.message, 'RSS/Atom feed could not be parsed.');
+      assert.equal(error.message.includes(hostileText), false);
+      return true;
+    },
+  );
+});
+
 test('uses deterministic source, structured association, time-range, and limit filtering', async () => {
   const feeds = [
     definition({

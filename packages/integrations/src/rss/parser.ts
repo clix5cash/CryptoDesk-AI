@@ -39,9 +39,7 @@ export class XmlNewsFeedParser implements NewsFeedParser {
         throw error;
       }
 
-      throw new RssNewsFeedParseError(
-        `Unable to parse RSS/Atom feed XML: ${toErrorMessage(error)}.`,
-      );
+      throw new RssNewsFeedParseError('Unable to parse RSS/Atom feed XML.');
     }
   }
 }
@@ -203,8 +201,4 @@ function firstTextValue(value: unknown): string | undefined {
   }
 
   return undefined;
-}
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'unknown error';
 }

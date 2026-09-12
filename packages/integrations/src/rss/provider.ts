@@ -41,15 +41,13 @@ export class RssNewsProvider implements NewsProvider {
 
     try {
       response = await this.config.fetch(feed.url, {});
-    } catch (error) {
-      throw new RssNewsProviderError(
-        `RSS/Atom feed "${feed.url}" failed before receiving a response: ${toErrorMessage(error)}.`,
-      );
+    } catch {
+      throw new RssNewsProviderError('RSS/Atom feed request failed before receiving a response.');
     }
 
     if (!response.ok) {
       throw new RssNewsProviderError(
-        `RSS/Atom feed "${feed.url}" failed with status ${response.status}.`,
+        `RSS/Atom feed request failed with status ${response.status}.`,
       );
     }
 
@@ -57,14 +55,12 @@ export class RssNewsProvider implements NewsProvider {
 
     try {
       body = await response.text();
-    } catch (error) {
-      throw new RssNewsProviderError(
-        `RSS/Atom feed "${feed.url}" body could not be read: ${toErrorMessage(error)}.`,
-      );
+    } catch {
+      throw new RssNewsProviderError('RSS/Atom feed response body could not be read.');
     }
 
     if (!body.trim()) {
-      throw new RssNewsProviderError(`RSS/Atom feed "${feed.url}" returned an empty body.`);
+      throw new RssNewsProviderError('RSS/Atom feed returned an empty body.');
     }
 
     let document;
@@ -73,14 +69,10 @@ export class RssNewsProvider implements NewsProvider {
       document = this.config.parser.parse(body);
     } catch (error) {
       if (error instanceof RssNewsFeedParseError) {
-        throw new RssNewsProviderError(
-          `RSS/Atom feed "${feed.url}" could not be parsed: ${error.message}`,
-        );
+        throw new RssNewsProviderError('RSS/Atom feed could not be parsed.');
       }
 
-      throw new RssNewsProviderError(
-        `RSS/Atom feed "${feed.url}" parser failed: ${toErrorMessage(error)}.`,
-      );
+      throw new RssNewsProviderError('RSS/Atom feed parser failed.');
     }
 
     const observedAt = this.config.clock.now();
@@ -89,12 +81,10 @@ export class RssNewsProvider implements NewsProvider {
       return document.items.map((item) => mapNewsFeedItemToArticle(feed, item, observedAt));
     } catch (error) {
       if (error instanceof RssNewsMappingError) {
-        throw new RssNewsProviderError(
-          `RSS/Atom feed "${feed.url}" contains an invalid item: ${error.message}`,
-        );
+        throw new RssNewsProviderError('RSS/Atom feed contains an invalid item.');
       }
 
-      throw error;
+      throw new RssNewsProviderError('RSS/Atom feed item mapping failed.');
     }
   }
 
@@ -170,8 +160,4 @@ function compareTuple(left: ReadonlyArray<string>, right: ReadonlyArray<string>)
 
 function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
-}
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'unknown error';
 }

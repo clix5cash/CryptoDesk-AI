@@ -18,8 +18,9 @@ or deployment artifact.
 
 - Phase I engineering is complete through Sprint 10.
 - Phase II public-release preparation is in progress through Sprint 11.
-- The GitHub repository remains private until the public-release gate passes.
-- The current repository baseline is 439 passing tests.
+- The GitHub repository remains private; any visibility change requires a
+  separately authorized public-release step.
+- The current repository baseline is 441 passing tests.
 - External Ritual verification remains **INCONCLUSIVE**. Injected and local
   tests are not evidence of externally verified live Ritual inference or action.
 

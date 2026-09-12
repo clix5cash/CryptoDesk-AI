@@ -257,9 +257,9 @@ the classification:
   fixed or bounded public failures instead of returning credential or raw
   provider details where their current contracts enforce sanitization.
 
-There is no hidden retry or provider/model substitution. The RSS provider/parser
-exception-reflection behavior remains a known item for the final public-release
-security gate and is not represented as resolved here.
+There is no hidden retry or provider/model substitution. The RSS provider and
+parser use fixed public failures rather than reflecting configured feed URLs,
+upstream exception text, or malformed feed content.
 
 ## 11. Security posture
 
@@ -303,7 +303,8 @@ testing expectations.
 - Wallet/private-key custody, asset transfer, or live trading execution.
 - Autonomous scheduling, polling, work discovery, planning, retry, or fallback.
 
-The repository remains private, and public release is not yet authorized.
+The repository remains private. A visibility change requires a separately
+authorized public-release step.
 
 ## 13. Project evolution
 
