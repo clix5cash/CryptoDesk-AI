@@ -1,327 +1,153 @@
-# CryptoDesk-AI
+# CryptoDesk AI
 
-AI Crypto Copilot built on Ritual.
+CryptoDesk AI is a TypeScript monorepo for deterministic crypto market, news,
+portfolio, and Morning Meeting intelligence with explicitly bounded AI and
+runtime integration. Its long-term conceptual flow is **Observe → Think →
+Remember → Decide → Act**, but the repository currently implements only the
+foundations and controlled boundaries described below.
 
-Architecture documentation:
+## Overview
 
-- [ADR-001: Modular, AI-First Architecture](docs/architecture/ADR-001-modular-ai-first-architecture.md)
-- [Sprint 9 MVP Architecture Inventory](docs/architecture/sprint-9-mvp-architecture-inventory.md)
-- [Sprint 9 MVP Component and Dependency Map](docs/architecture/sprint-9-mvp-component-map.md)
-- [Sprint 9 MVP Integration Contract](docs/architecture/sprint-9-mvp-integration-contract.md)
-- [Sprint 9 MVP Closure Evidence](docs/architecture/sprint-9-mvp-closure-evidence.md)
-- [Sprint 9A MVP Architecture Closure](docs/architecture/sprint-9a-mvp-architecture-closure.md)
-- [Sprint 10 Ritual Runtime Boundary](docs/architecture/sprint-10-ritual-runtime-boundary.md)
+The project keeps canonical financial state and deterministic analysis separate
+from model output. Provider-neutral contracts sit between domain packages and
+concrete OpenAI or Ritual runtime boundaries. All workspace packages are
+currently private, and the repository contains no application server, CLI, UI,
+or deployment artifact.
 
-## MVP release surface
+## Current status
 
-The transport-neutral MVP application entry point is
-`DefaultMorningMeetingMvpApplicationApi` from
-`@cryptodesk-ai/morning-meeting`. Workspace packages are currently private
-build artifacts and expose only their package-root `dist/index` entry points;
-no network server, CLI, or publishable deployment artifact is included.
+- Phase I engineering is complete through Sprint 10.
+- Phase II public-release preparation is in progress through Sprint 11.
+- The GitHub repository remains private until the public-release gate passes.
+- The current repository baseline is 439 passing tests.
+- External Ritual verification remains **INCONCLUSIVE**. Injected and local
+  tests are not evidence of externally verified live Ritual inference or action.
 
-The facade generates one authoritative deterministic Morning Meeting and may
-include an explicitly caller-supplied Portfolio AI composition through the
-existing non-authoritative lifecycle. It never invokes a provider itself.
+## Core capabilities
 
-Production-like release-candidate tests compose the existing injected
-provider-neutral execution seam through parsing, candidate validation,
-grounding, caller-supplied composition, and the MVP facade without live
-credentials or network access. This repository still provides no deployment,
-publishing, server, CLI, or UI artifact. At that checkpoint Sprint 9F remained
-open.
+- Deterministic market indicators and signals.
+- CoinGecko market data and RSS/Atom news adapters behind injected boundaries.
+- Normalized news classification, grouping, impact, and market-intelligence
+  composition.
+- Canonical portfolio identity, valuation, allocation, risk, insight, and
+  presentation models.
+- Deterministic Morning Meeting reports and optional, separately labeled AI
+  narration and Portfolio interpretation composition.
+- Provider-neutral AI execution, parsing, grounding, and traceability contracts.
+- A concrete OpenAI Responses adapter with explicit runtime configuration.
+- Ritual-owned connectivity, transaction lifecycle, inference invocation, and
+  result-verification boundaries with injected capabilities.
+- Provider-neutral Runtime Safety contracts for one explicitly requested,
+  explicitly authorized, single-attempt operation.
 
-Sprint 9F is CLOSED after its release-candidate integration, security,
-production-like E2E, artifact, compatibility, and repository validation gates
-passed. Sprint 9G owns the final MVP release audit and closure; it has not
-started. No package was published or deployed, and Sprint 10 remains out of
-scope.
+CryptoDesk AI does **not** autonomously trade or transfer assets, manage wallets
+or private keys, discover actions, run autonomous loops, schedule itself, or
+provide guaranteed investment recommendations. It has no autonomous trading
+authority and makes no externally verified live Ritual execution claim.
 
-Sprint 9G.1 records the final MVP architecture and release baseline without
-changing the implementation: one transport-neutral facade, private package-root
-artifacts, an acyclic one-way dependency graph, authoritative canonical output,
-and optional caller-supplied non-authoritative AI. Sprint 9G and Sprint 9 remain
-open for the later closure increments; Sprint 10 has not started.
+## Safety and authority model
 
-Sprint 9G.2 revalidates final MVP acceptance across the public application path,
-canonical/AI authority boundary, failure and security matrix, data integrity,
-instance isolation, dependency graph, and generated release artifacts. All
-acceptance gates pass without a production or test change. Sprint 9G and Sprint
-9 remain open for the next planned closure step; no deployment or publishing
-has occurred.
+AI trust progresses only through explicit validation:
 
-Sprint 9G.3 consolidates the complete 9A-9G.2 objective, gap, contract,
-security, dependency, artifact, and compatibility evidence without changing
-production or test code. It records the caller-owned composition preparation
-seam separately from facade execution. Sprint 9G.4 still owns final Sprint 9
-closure; Sprint 9 is not yet complete and Sprint 10 has not started.
+```text
+untrusted_model_execution
+→ untrusted_candidate_interpretation
+→ non_authoritative_interpretation
+```
 
-## Sprint 9 final status
+Portfolio owns canonical Portfolio state. Morning Meeting owns canonical report
+and application state. AI output remains non-authoritative. Ritual Gateway owns
+Ritual-specific connectivity and execution logic. Runtime Safety remains
+provider-neutral, dependency-free, and Ritual-free.
 
-**Sprint 9 — MVP Integration & Release: COMPLETE.**
+The controlled runtime path is deliberately finite:
 
-**Sprint 9G — Final MVP Release Audit & Closure: COMPLETE.** Every final
-architecture, integration, authority, trust, security, failure, isolation,
-dependency, compatibility, and release-artifact gate passed against the
-354-test baseline. No production or test change was required for final closure.
+```text
+explicit request
+→ candidate
+→ explicit authorization
+→ single-attempt permission
+→ at-most-one execution
+→ terminal result
+→ stop
+```
 
-The repository is ready to enter the next frozen roadmap stage, **Sprint 10 —
-Ritual & Autonomous Runtime Expansion**, but Sprint 10 has not started. Sprint
-9 performed no deployment or publishing and added no transport/server/CLI/UI,
-persistence/cache/scheduler, or autonomous/on-chain runtime.
+## Repository structure
 
-## Sprint 10A.1 architecture boundary
+| Path                           | Package                              | Responsibility                                                                          |
+| ------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------- |
+| `packages/portfolio`           | `@cryptodesk-ai/portfolio`           | Canonical portfolio identity, valuation, allocation, risk, insights, and presentation.  |
+| `packages/market-intelligence` | `@cryptodesk-ai/market-intelligence` | Deterministic market snapshots, indicators, and signals.                                |
+| `packages/news-intelligence`   | `@cryptodesk-ai/news-intelligence`   | Provider-neutral news normalization, classification, grouping, impact, and composition. |
+| `packages/integrations`        | `@cryptodesk-ai/integrations`        | Concrete CoinGecko and RSS/Atom adapters.                                               |
+| `packages/ai`                  | `@cryptodesk-ai/ai`                  | Provider-neutral model execution and grounded interpretation contracts.                 |
+| `packages/openai-runtime`      | `@cryptodesk-ai/openai-runtime`      | Explicitly configured OpenAI Responses runtime adapter.                                 |
+| `packages/morning-meeting`     | `@cryptodesk-ai/morning-meeting`     | Canonical Morning Meeting reports and application composition.                          |
+| `packages/data`                | `@cryptodesk-ai/data`                | Reserved data-access package; no public API is defined yet.                             |
+| `packages/runtime-safety`      | `@cryptodesk-ai/runtime-safety`      | Bounded candidate, authorization, execution, and controlled-runtime contracts.          |
+| `services/ritual-gateway`      | `@cryptodesk-ai/ritual-gateway`      | Ritual-specific connectivity and injected transaction/inference lifecycle boundaries.   |
 
-Sprint 10A.1 defines future Ritual integration as a dedicated concrete
-`ritual-gateway` service/provider adapter behind the existing AI-owned
-provider-neutral execution contract. The future dependency points inward from
-the gateway to `@cryptodesk-ai/ai`; Portfolio, AI, Morning Meeting, and the MVP
-facade do not depend on Ritual. Ritual execution provenance does not promote AI
-trust or canonical authority.
+Only package-root exports are supported. Internal deep imports are not part of
+the package contract.
 
-This audit adds no Ritual runtime implementation, network call, credential,
-wallet, chain transaction, scheduler, persistence, autonomous behavior,
-deployment, publishing, or public transport. Sprint 10A.2 has not started.
+## Requirements
 
-Sprint 10A.2 implements the first private `@cryptodesk-ai/ritual-gateway`
-service package. Its adapter factory uses only an explicitly injected,
-network-independent invocation primitive and maps closed terminal results to
-the existing provider-neutral `untrusted_model_execution` contract. It adds no
-live Ritual connection, chain transaction, credential, wallet, autonomous
-behavior, or change to canonical authority. This established the Sprint 10A.2
-baseline.
+- Node.js 22 or later
+- pnpm 11.17.0, as declared by the repository `packageManager` field
 
-Sprint 10A.3 closed direct request and runtime configuration validation,
-enforced mutually exclusive `completed`/`failed` terminal shapes, and verified
-hostile-input rejection, sanitized failure mapping, exactly-once invocation,
-detachment, recovery, and independent gateway instances.
+## Installation
 
-**Sprint 10A — Ritual Runtime Foundation: COMPLETE.** The 10A.4 closure audit
-passed with 362 tests across nine acyclic workspace packages. Ritual remains an
-explicitly injected, network-independent concrete adapter; canonical state
-remains authoritative and Ritual output remains `untrusted_model_execution`.
-At the Sprint 10A closure checkpoint, Sprint 10B, live Ritual execution,
-wallets/signing, scheduling/persistence, autonomous/on-chain execution,
-deployment, and publishing had not started.
+```sh
+pnpm install
+```
 
-Sprint 10B.1 defines the next integration boundary without adding execution
-capability. Future explicitly authorized 10B implementation attaches only
-behind the existing `RitualInferenceInvoker` inside the private gateway: one
-caller-selected request, one gateway-owned invocation, one validated terminal
-result, and sanitized `untrusted_model_execution` mapping. No live transport,
-credential, wallet/signing, settlement, persistence, scheduling, routing,
-autonomy, deployment, or publishing was added. That was the Sprint 10B.1
-checkpoint.
+The standard build and test workflow does not require live credentials or
+network access beyond installing dependencies.
 
-Sprint 10B.2 implements the first gateway-internal, injected transport adapter
-behind that unchanged boundary. It deterministically prepares one detached
-closed request, performs exactly one supplied transport call, and decodes one
-closed terminal response into the existing sanitized result model. The module
-is not package-root exported, and no live Ritual RPC/network, SDK, credential,
-wallet, signing, retry, routing, persistence, scheduler, autonomous capability,
-deployment, or publishing was added. That was the Sprint 10B.2 checkpoint.
+## Development
 
-Sprint 10B.3 hardens the internal execution lifecycle around a single Promise
-settlement and one provider-neutral mapping. The gateway now snapshots validated
-request identity before asynchronous dispatch, ignores structurally impossible
-late competing Promise settlements, retains no pending or terminal cache, and
-recovers cleanly after every supported failure class. No public export or new
-capability was added. That was the Sprint 10B.3 checkpoint.
+Run the repository checks from the workspace root:
 
-**Sprint 10B — Ritual Execution Integration: COMPLETE.** The 10B.4 closure
-audit passed with 367 tests across nine acyclic private workspace packages. The
-final path snapshots validated identity, prepares one gateway-local request,
-performs exactly one injected transport call, decodes one closed terminal
-result, and returns one sanitized provider-neutral result. Public gateway
-contracts remain unchanged and transport internals remain unexported. Sprint
-10C, live Ritual connectivity, autonomous/on-chain capability, deployment, and
-publishing had not started at that closure checkpoint.
+```sh
+pnpm lint
+pnpm typecheck
+pnpm build --force
+```
 
-Sprint 10C.1 defines the next connectivity contract without implementing it.
-Future live connectivity belongs solely in a gateway-owned implementation of
-the existing `RitualInferenceInvoker`, with explicit instance configuration,
-one network attempt, private protocol encoding/decoding, operation-local timeout
-cleanup, and sanitized failure mapping. Provider-neutral contracts and package
-exports are unchanged. No live RPC/network, SDK, credential, wallet/signing,
-settlement, routing, scheduling, persistence, or autonomy was added.
+Formatting can be checked with `pnpm format:check`. The repository does not
+currently define a development server command.
 
-Sprint 10C.2 adds one explicit, read-only live connectivity operation at the
-gateway root: `createRitualLiveRpcConnectivityChecker`. It validates Ritual
-chain ID `1979` through one `eth_chainId` HTTP JSON-RPC request with closed
-response validation and sanitized failure results. This is **live RPC
-connectivity only**: no live inference, transaction submission, wallet/signing,
-credential discovery, retry/fallback, or autonomous behavior was added. The
-existing provider adapter and injected `RitualInferenceInvoker` remain the only
-inference seam.
+## Testing
 
-Sprint 10C.3 hardens that connectivity lifecycle. The timeout now covers both
-the HTTP attempt and bounded streaming response consumption; response bytes are
-limited before full buffering. Concurrent calls use independent controllers,
-timers, response readers, and terminal results. Late settlement, response-read
-failure, malformed UTF-8, hostile JSON-RPC, and every supported failure category
-remain sanitized and isolated. The single optional external `eth_chainId`
-smoke check timed out after 15 seconds without a response and is recorded as
-INCONCLUSIVE, not repository failure. Live inference remains unimplemented.
+```sh
+pnpm test
+```
 
-**Sprint 10C — Ritual Live Connectivity Foundation: COMPLETE.** Sprint 10C.4
-revalidated the full gateway-owned path with 379 passing tests, including
-overlapping success/success, success/failure, and success/timeout isolation.
-The artifact audit also strips the package-private injected HTTP test seam and
-its `AbortSignal` types from generated declarations. The build, dependency,
-export, artifact, security, and backward-compatibility gates passed. External
-live-chain verification remains INCONCLUSIVE because the
-10C.2 and 10C.3 read-only smoke requests timed out; no externally verified
-live-chain success or live inference is claimed. Sprint 10D has not started.
+Tests use deterministic fixtures and injected capabilities; they do not perform
+live credential discovery, trading, transfers, or externally verified Ritual
+inference.
 
-## Frozen remaining Sprint 10 roadmap
+## Architecture documentation
 
-The Owner and Tech Lead have frozen the remaining roadmap as Sprint 10D —
-Ritual Inference Transaction Foundation, Sprint 10E — Ritual Live Inference
-Integration, and Sprint 10F — Autonomous Runtime Safety Foundation. The exact
-10D.1–10F.4 scope and global governance constraints are recorded in the
-[Sprint 10 Ritual Runtime Boundary](docs/architecture/sprint-10-ritual-runtime-boundary.md#frozen-remaining-sprint-10-roadmap).
+- [Architecture decision record](docs/architecture/ADR-001-modular-ai-first-architecture.md)
+- [MVP component and dependency map](docs/architecture/sprint-9-mvp-component-map.md)
+- [MVP integration contract](docs/architecture/sprint-9-mvp-integration-contract.md)
+- [Sprint 10 Ritual runtime boundary](docs/architecture/sprint-10-ritual-runtime-boundary.md)
 
-This governance update starts none of that work: Sprint 10D and Sprint 10D.1
-remain **NOT STARTED**.
+These records include historical roadmap context; the current status above is
+authoritative for this release-preparation stage.
 
-Sprint 10D.1 now establishes the gateway-owned transaction/signing boundary
-using only an explicitly injected signer capability over an already prepared
-opaque payload. It adds no transaction construction, real wallet/key signing,
-broadcast, receipt handling, settlement, or live inference. The boundary is
-closed, detached, exactly-once, sanitized, and independent of provider-neutral
-and canonical domains. **Sprint 10D.1 — Transaction & Signing Boundary:
-COMPLETE.** Sprint 10D remains open and Sprint 10D.2 has not started.
+## Security
 
-Sprint 10D.2 adds deterministic gateway-owned construction from explicit chain,
-target, signer, execution, and opaque payload input into a detached signable
-gateway envelope compatible with the 10D.1 boundary. It performs no signing,
-broadcast, network lookup, nonce/gas/fee discovery, receipt handling,
-settlement, or inference. **Sprint 10D.2 — Ritual Inference Transaction
-Construction: COMPLETE.** Sprint 10D remains open and Sprint 10D.3 has not
-started.
+Review [SECURITY.md](SECURITY.md) before reporting a vulnerability. Do not place
+credentials or unresolved vulnerability details in a public issue.
 
-Sprint 10D.3 adds the gateway-owned submission and settlement lifecycle behind
-explicit caller-owned submission authorization. An accepted operation snapshots
-the signed request, authorizes once, invokes one injected submission capability,
-and observes one injected closed terminal settlement. Operation-local timeout
-is final, failures are fixed and sanitized, and no retry, fallback, routing, live
-broadcaster, receipt polling, or inference is introduced. Construction, signing,
-authorization to submit, submission, and settlement remain separate authority
-boundaries. **Sprint 10D.3 — Submission & Settlement Lifecycle: COMPLETE.**
-Sprint 10D remains open and Sprint 10D.4 has not started.
+## Contributing
 
-Sprint 10D.4 completes the behavioral, security, dependency, export,
-generated-artifact, credential-containment, and release audit. It found and
-fixed one bounded-timeout defect: lifecycle configuration now rejects values
-above the platform-supported 2,147,483,647 ms timer range, preventing oversized
-values from becoming immediate timeouts. Focused coverage also closes concurrent
-success/failure and success/timeout isolation. No live broadcaster, wallet,
-inference, retry, fallback, routing, persistence, or autonomous authority exists.
-External Ritual transaction verification remains **INCONCLUSIVE**. **Sprint
-10D — Ritual Inference Transaction Foundation: COMPLETE.** Sprint 10E has not
-started.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, validation, architecture, and
+pull-request expectations. Participation is governed by the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
-Sprint 10E.1 adds a pure gateway-owned live-inference contract mapper. The AI
-package continues to own the provider-neutral descriptor; Ritual Gateway maps a
-validated descriptor plus explicit inference and target identity into a detached
-opaque operation contract, then maps only a closed matching completed result
-back to the existing provider-neutral `untrusted_model_execution` result. It
-performs no inference, transaction, signing, submission, settlement, or result
-retrieval. **Sprint 10E.1 — Live Inference Contract: COMPLETE.** Sprint 10E
-remains open and Sprint 10E.2 has not started.
+## License
 
-Sprint 10E.2 adds one gateway-owned invocation orchestrator that composes the
-10E.1 mapper with the existing 10D constructor, explicit signing authorization,
-injected signer, explicit submission authorization, single submission,
-settlement, and one injected inference capability. Provider/model identity stays
-caller-selected and exact. Failure at any earlier boundary causes zero inference
-attempts; inference timeout is bounded, operation-local, terminal, and
-non-retrying. Completed output returns only as `untrusted_model_execution`.
-**Sprint 10E.2 — Inference Invocation: COMPLETE.** Sprint 10E remains open and
-Sprint 10E.3 has not started. External Ritual verification remains
-**INCONCLUSIVE**.
-
-Sprint 10E.3 adds a separate gateway-owned result verifier after invocation. It
-accepts the original provider-neutral mapping request plus explicit submission,
-settlement, and invocation identities, performs exactly one injected retrieval
-and one structural provenance verification, and maps only a closed correlated
-opaque output through the 10E.1 contract. Verification establishes lifecycle
-traceability, not analytical truth; output remains `untrusted_model_execution`.
-No receipt schema, polling, retry, live retrieval transport, finality rule, or
-trust promotion was introduced. **Sprint 10E.3 — Result Settlement &
-Verification: COMPLETE.** Sprint 10E remains open and Sprint 10E.4 has not
-started. External Ritual verification remains **INCONCLUSIVE**.
-
-Sprint 10E.4 completes the regression, architecture, security, dependency,
-export, generated-artifact, trust-boundary, and release audit for the entire
-live-inference foundation. All 418 tests pass, including 64 Ritual Gateway
-tests; the nine-package graph remains acyclic and all generated JavaScript,
-declarations, and declaration maps validate without credential or internal
-Ritual leakage. No production or test change was required. External live Ritual
-inference verification remains **INCONCLUSIVE**, and no live-success claim is
-made. **Sprint 10E — Ritual Live Inference Integration: COMPLETE.** Sprint 10F
-has not started.
-
-Sprint 10F.1 introduces the provider-neutral private package
-`@cryptodesk-ai/runtime-safety`. Its sole factory constructs deterministic,
-detached action candidates from explicit execution, action, target, policy,
-authority, interpretation, and candidate identities. The intentionally narrow
-initial action kind is `prepare_operator_review`; every result is
-`candidate_only`, `not_authorized`, and `executable: false`.
-
-Candidate construction performs no authorization decision and executes no
-action. The package has no dependencies on Ritual Gateway, AI, Portfolio, or
-Morning Meeting and adds no callback, credential, wallet, transaction,
-scheduler, persistence, cache, canonical mutation, or trust promotion. Sprint
-10F remains open, and Sprint 10F.2 retains ownership of future bounded policy
-authorization and execution guardrails. **Sprint 10F.1 — Autonomous Runtime
-Safety Contract: COMPLETE.**
-
-Sprint 10F.2 adds one provider-neutral bounded guardrail in
-`@cryptodesk-ai/runtime-safety`. A validated 10F.1 candidate is evaluated once
-by an explicit injected authorizer. Exact authorization derives only a
-single-attempt, operation-local permission for one explicit injected executor.
-Denied or malformed authorization executes nothing; failures and timeout never
-retry.
-
-The only action kind remains `prepare_operator_review`. Authorization and
-execution grant no analytical or canonical authority, and the implementation
-adds no default executor, persistent permission, network action, transaction,
-wallet, trade, scheduler, persistence, routing, or autonomous loop. **Sprint
-10F.2 — Policy & Execution Guardrails: COMPLETE.** Sprint 10F remains open and
-Sprint 10F.3 has not started.
-
-Sprint 10F.3 adds an explicitly started controlled runtime to
-`@cryptodesk-ai/runtime-safety`. One caller request supplies one runtime
-operation identity and one complete action-candidate input. The runtime creates
-that candidate through 10F.1 and delegates its sole authorization and possible
-single execution attempt to the 10F.2 guardrail, then returns one closed
-terminal result.
-
-The runtime does not discover work, plan, schedule, retry, recurse, select an
-authorizer/executor/provider/model, persist permission, or create another
-action. Its only action kind remains the non-mutating
-`prepare_operator_review`; success adds no analytical, canonical, trading, or
-autonomous authority. **Sprint 10F.3 — Controlled Autonomous Runtime:
-COMPLETE.** Sprint 10F remains open and Sprint 10F.4 has not started. External
-Ritual verification remains **INCONCLUSIVE**.
-
-Sprint 10F.4 closes the Autonomous Runtime Safety Foundation and Sprint 10
-without adding production behavior. The complete release audit verifies that
-Runtime Safety remains a private, dependency-free, provider-neutral,
-Ritual-free package and that the ten-package workspace graph remains acyclic.
-
-The controlled runtime still begins only with one explicit caller request,
-processes one `prepare_operator_review` candidate through explicit injected
-authorization and at most one injected execution, returns one terminal result,
-and stops. It has no work discovery, planner, recursion, retry, fallback,
-routing, scheduler, queue, daemon, poller, persistence, registry, cache,
-wallet/key capability, transaction/trade execution, canonical mutation, or
-trust promotion.
-
-External Ritual verification remains **INCONCLUSIVE**; deterministic injected
-capabilities are not external evidence, and no live transaction, externally
-verified live inference, or external autonomous action is claimed. **Sprint
-10F.4 — Sprint 10 / Phase Closure: COMPLETE.** **Sprint 10F — Autonomous
-Runtime Safety Foundation: COMPLETE.** **Sprint 10 — Ritual & Autonomous
-Runtime Expansion: COMPLETE.**
+Licensed under the [Apache License 2.0](LICENSE).
