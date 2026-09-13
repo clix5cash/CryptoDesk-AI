@@ -384,6 +384,76 @@ main > section:not(.hero) {
   background: var(--quiet);
 }
 
+.layer-map {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 3rem;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.layer-node {
+  position: relative;
+  min-width: 0;
+  padding: 1.5rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(150deg, rgb(17 25 37 / 64%), rgb(9 14 21 / 24%));
+}
+
+.node-meta {
+  display: flex;
+  min-height: 4.5rem;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--quiet);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.node-meta p {
+  max-width: 12rem;
+  margin-bottom: 0;
+  text-align: right;
+}
+
+.layer-node h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.layer-node > p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+
+.node-connector {
+  position: absolute;
+  right: -0.6rem;
+  bottom: 1.45rem;
+  z-index: 1;
+  display: grid;
+  width: 1.2rem;
+  height: 1.2rem;
+  place-items: center;
+  background: var(--background);
+  color: var(--accent);
+  font-size: 0.72rem;
+}
+
+.diagram-caption {
+  max-width: 58rem;
+  margin: 1rem 0 0;
+  color: var(--quiet);
+  font-size: 0.7rem;
+  line-height: 1.65;
+}
+
 .split-heading {
   display: grid;
   max-width: none;
@@ -441,6 +511,24 @@ main > section:not(.hero) {
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.65;
+}
+
+.capability-card .capability-boundary {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+  color: var(--quiet);
+  font-size: 0.7rem;
+}
+
+.capability-boundary span {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .safety-section {
@@ -529,6 +617,190 @@ main > section:not(.hero) {
   content: '';
 }
 
+.authority-map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: clamp(3rem, 7vw, 5rem);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.authority-map article {
+  min-width: 0;
+  padding: 1.5rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: rgb(13 18 26 / 55%);
+}
+
+.authority-map .non-authority-card {
+  background: transparent;
+}
+
+.model-label {
+  margin-bottom: 1.6rem;
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.authority-map h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.authority-map article > p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+.ritual-section {
+  background: linear-gradient(135deg, rgb(124 232 191 / 3%), transparent 45%);
+}
+
+.lifecycle-track,
+.runtime-path {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  list-style: none;
+}
+
+.lifecycle-track {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.lifecycle-track li,
+.runtime-path li {
+  position: relative;
+  min-width: 0;
+  padding: 1.25rem 0.8rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.lifecycle-track span,
+.runtime-path span {
+  display: block;
+  margin-bottom: 2.4rem;
+  color: var(--quiet);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.58rem;
+}
+
+.lifecycle-track strong,
+.runtime-path strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: clamp(0.66rem, 1vw, 0.78rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.lifecycle-track i,
+.runtime-path i {
+  position: absolute;
+  right: -0.55rem;
+  bottom: 1.1rem;
+  z-index: 1;
+  display: grid;
+  width: 1.1rem;
+  height: 1.1rem;
+  place-items: center;
+  background: var(--background);
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-style: normal;
+}
+
+.ritual-boundary-note {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+  gap: 1px;
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+  background: var(--border);
+}
+
+.ritual-boundary-note > div {
+  padding: 1.5rem;
+  background: var(--surface);
+}
+
+.ritual-boundary-note .model-label {
+  margin-bottom: 1rem;
+}
+
+.ritual-boundary-note p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.ritual-boundary-note code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.verification-callout span {
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--quiet);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.verification-callout strong {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.runtime-section {
+  background: linear-gradient(180deg, transparent, rgb(124 232 191 / 2%));
+}
+
+.runtime-path {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.runtime-properties {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+  background: var(--border);
+}
+
+.runtime-properties > div {
+  padding: 1.5rem;
+  background: var(--surface);
+}
+
+.runtime-properties .model-label {
+  margin-bottom: 0.8rem;
+}
+
+.runtime-properties p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
 .open-source-section {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
@@ -578,7 +850,8 @@ main > section:not(.hero) {
   .hero,
   .safety-layout,
   .split-heading,
-  .open-source-section {
+  .open-source-section,
+  .ritual-boundary-note {
     grid-template-columns: 1fr;
   }
 
@@ -601,6 +874,18 @@ main > section:not(.hero) {
 
   .capability-card:last-child {
     grid-column: span 2;
+  }
+
+  .layer-map,
+  .lifecycle-track,
+  .runtime-path {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .layer-node:nth-child(2n) .node-connector,
+  .lifecycle-track li:nth-child(2n) i,
+  .runtime-path li:nth-child(2n) i {
+    display: none;
   }
 
   .open-source-actions {
@@ -643,6 +928,45 @@ main > section:not(.hero) {
 
   .conceptual-flow {
     grid-template-columns: 1fr;
+  }
+
+  .layer-map,
+  .lifecycle-track,
+  .runtime-path,
+  .authority-map,
+  .runtime-properties {
+    grid-template-columns: 1fr;
+  }
+
+  .layer-node,
+  .lifecycle-track li,
+  .runtime-path li {
+    padding: 1.1rem;
+  }
+
+  .node-meta,
+  .lifecycle-track span,
+  .runtime-path span {
+    min-height: 0;
+    margin-bottom: 1.25rem;
+  }
+
+  .node-connector,
+  .layer-node:nth-child(2n) .node-connector,
+  .lifecycle-track i,
+  .lifecycle-track li:nth-child(2n) i,
+  .runtime-path i,
+  .runtime-path li:nth-child(2n) i {
+    right: 1rem;
+    bottom: -0.55rem;
+    display: grid;
+    transform: rotate(90deg);
+  }
+
+  .layer-node:last-child .node-connector,
+  .lifecycle-track li:last-child i,
+  .runtime-path li:last-child i {
+    display: none;
   }
 
   .conceptual-flow li {
