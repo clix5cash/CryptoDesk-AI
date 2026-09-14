@@ -52,3 +52,17 @@ an explicit unavailable state rather than synthetic or apparently live prices.
 The route performs no indicator calculation, provider selection, polling,
 fallback, consensus, or trading action. Market Intelligence remains the domain
 contract owner; the website only presents supplied validated results.
+
+## News view
+
+`/app/news` separates normalized source records, deterministic system metadata,
+and any future non-authoritative interpretation into distinct semantic regions.
+It can present only fields exposed by News Intelligence package-root contracts,
+including article/source identity, source-supplied text, safe references,
+publication and observation time, classifications, impacts, event groups, and
+their evidence.
+
+No feed or interpretation is connected in the website runtime, so both regions
+show explicit unavailable states. The route fabricates no headline or apparently
+live content. RSS/provider/parser failures must remain bounded presentation
+states; raw upstream text is not a public error contract.
