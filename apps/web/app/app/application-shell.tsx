@@ -5,7 +5,7 @@ const navigation = [
   ['/app/market', 'Market'],
   ['/app/news', 'News'],
   ['/app/portfolio', 'Portfolio'],
-  ['/app#morning_meeting', 'Morning Meeting'],
+  ['/app/morning-meeting', 'Morning Meeting'],
 ] as const;
 
 export function ApplicationShell({

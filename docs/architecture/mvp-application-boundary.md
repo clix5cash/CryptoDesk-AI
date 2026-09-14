@@ -81,3 +81,18 @@ so the route reports an unavailable state with unknown freshness and absent
 provenance. It fabricates no holdings, balance, valuation, performance, or
 financial advice and exposes no wallet, signing, transaction, transfer, trading,
 or portfolio-editing control.
+
+## Morning Meeting view
+
+`/app/morning-meeting` presents a validated canonical Morning Meeting report as
+structured report fields, contributor evidence, and a separately labeled
+optional AI narrative. Market views and sections remain deterministic report
+material. A News brief is optional and appears only when request-scoped News
+Intelligence was supplied. Portfolio is optional canonical context for the
+separate AI composition boundary, not an invented native report section.
+
+No report or AI composition is connected in the website runtime, so the route
+keeps the report, contributors, evidence, and interpretation unavailable. The
+web layer does not generate, merge, recompute, or mutate report state. Missing
+contributors remain explicit; no report content, recommendation, or action is
+fabricated.
