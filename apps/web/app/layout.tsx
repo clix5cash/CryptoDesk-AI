@@ -3,16 +3,23 @@ import type { ReactNode } from 'react';
 
 import './globals.css';
 
+const productionOrigin = new URL('https://cryptodesk-ai.vercel.app');
+
 export const metadata: Metadata = {
+  metadataBase: productionOrigin,
   applicationName: 'CryptoDesk AI',
   title: 'CryptoDesk AI — Bounded crypto intelligence architecture',
   description:
     'An open-source, multi-package crypto intelligence architecture with explicit trust, authority, and execution boundaries.',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'CryptoDesk AI',
     description: 'Open-source crypto intelligence with non-authoritative AI and bounded execution.',
     siteName: 'CryptoDesk AI',
     type: 'website',
+    url: '/',
   },
   twitter: {
     card: 'summary',
