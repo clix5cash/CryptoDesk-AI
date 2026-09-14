@@ -40,3 +40,15 @@ The application exposes no trading, transaction, transfer, signing, wallet,
 credential, live Ritual, autonomous research, or autonomous decision control.
 It does not invoke Runtime Safety. External Ritual verification remains
 **INCONCLUSIVE**.
+
+## Market view
+
+`/app/market` is the first domain route. It can present fields already exposed
+by the Market Intelligence package-root contracts: normalized snapshots,
+indicator snapshots, signals, their timestamps, and provenance metadata. The
+website currently has no configured market provider, so the public route shows
+an explicit unavailable state rather than synthetic or apparently live prices.
+
+The route performs no indicator calculation, provider selection, polling,
+fallback, consensus, or trading action. Market Intelligence remains the domain
+contract owner; the website only presents supplied validated results.

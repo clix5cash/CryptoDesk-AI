@@ -1109,6 +1109,12 @@ main > section:not(.hero) {
   background: var(--surface);
 }
 
+.app-sidebar nav a[aria-current='page'] {
+  border-color: var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
 .app-sidebar nav span,
 .app-overline {
   color: var(--accent);
@@ -1372,6 +1378,151 @@ main > section:not(.hero) {
   color: var(--accent);
 }
 
+/* Market Intelligence view */
+.market-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(17rem, 0.7fr);
+  gap: 3rem;
+  align-items: end;
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+}
+
+.market-intro h1 {
+  max-width: 14ch;
+  margin: 0;
+  font-size: clamp(2.8rem, 6vw, 5.8rem);
+}
+
+.market-intro > p,
+.market-state > p,
+.market-contract .app-section-heading > p:last-child,
+.market-field-grid p,
+.market-intelligence-grid p,
+.market-provenance p,
+.market-exclusions > p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.market-state {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid #735f40;
+  background: linear-gradient(140deg, rgb(169 134 78 / 9%), var(--surface));
+}
+
+.market-state-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.market-state-heading h2,
+.market-contract h2,
+.market-provenance h2,
+.market-exclusions h2 {
+  margin-bottom: 0.75rem;
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+  letter-spacing: -0.04em;
+}
+
+.market-state-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 2rem 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.market-state-meta div {
+  min-width: 0;
+  padding: 1.1rem 1rem 0 0;
+}
+
+.market-state-meta dt,
+.market-intelligence-grid span {
+  margin-bottom: 0.45rem;
+  color: var(--quiet);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.market-state-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+}
+
+.market-contract,
+.market-provenance,
+.market-exclusions {
+  margin-top: clamp(3rem, 7vw, 6rem);
+}
+
+.market-contract .app-section-heading {
+  display: grid;
+  grid-template-columns: 1fr minmax(17rem, 0.65fr);
+  gap: 0 3rem;
+  align-items: end;
+  margin-bottom: 2rem;
+}
+
+.market-contract .app-section-heading .app-overline {
+  grid-column: 1 / -1;
+}
+
+.market-field-grid,
+.market-intelligence-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  background: var(--border);
+}
+
+.market-field-grid article,
+.market-intelligence-grid article {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: var(--surface);
+}
+
+.market-field-grid h3,
+.market-intelligence-grid h3 {
+  margin-bottom: 0.7rem;
+}
+
+.market-intelligence-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.market-intelligence-grid span {
+  display: block;
+  color: var(--accent);
+}
+
+.market-provenance {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 3rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid var(--border);
+  background: linear-gradient(140deg, var(--surface-raised), var(--surface));
+}
+
+.market-provenance p + p {
+  margin-top: 1rem;
+}
+
+.market-exclusions {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border-left: 2px solid var(--accent);
+  background: rgb(124 232 191 / 5%);
+}
+
 @media (max-width: 60rem) {
   .app-frame {
     grid-template-columns: 1fr;
@@ -1395,8 +1546,15 @@ main > section:not(.hero) {
   }
 
   .app-intro,
-  .app-boundary {
+  .app-boundary,
+  .market-intro,
+  .market-provenance,
+  .market-contract .app-section-heading {
     grid-template-columns: 1fr;
+  }
+
+  .market-field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1411,12 +1569,16 @@ main > section:not(.hero) {
 
   .app-contract-grid,
   .app-trust ol,
-  .app-view-meta {
+  .app-view-meta,
+  .market-state-meta,
+  .market-field-grid,
+  .market-intelligence-grid {
     grid-template-columns: 1fr;
   }
 
   .app-view-heading,
-  .app-footer {
+  .app-footer,
+  .market-state-heading {
     align-items: flex-start;
     flex-direction: column;
   }
