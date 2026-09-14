@@ -319,6 +319,7 @@ engineering foundations for public review.
 
 Detailed historical evidence remains available in:
 
+- [MVP application boundary](mvp-application-boundary.md)
 - [ADR-001: Modular, AI-First Architecture](ADR-001-modular-ai-first-architecture.md)
 - [MVP architecture inventory](sprint-9-mvp-architecture-inventory.md)
 - [MVP component and dependency map](sprint-9-mvp-component-map.md)
