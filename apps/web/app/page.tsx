@@ -91,6 +91,9 @@ const runtimePath = [
 export default function Home() {
   return (
     <div className="site-shell">
+      <a className="skip-link" href="#top">
+        Skip to main content
+      </a>
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="CryptoDesk AI home">
           <span className="wordmark-mark" aria-hidden="true">

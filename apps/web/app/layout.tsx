@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
+  applicationName: 'CryptoDesk AI',
   title: 'CryptoDesk AI — Bounded crypto intelligence architecture',
   description:
     'An open-source, multi-package crypto intelligence architecture with explicit trust, authority, and execution boundaries.',
@@ -12,6 +13,15 @@ export const metadata: Metadata = {
     description: 'Open-source crypto intelligence with non-authoritative AI and bounded execution.',
     siteName: 'CryptoDesk AI',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'CryptoDesk AI',
+    description: 'Open-source crypto intelligence with non-authoritative AI and bounded execution.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
