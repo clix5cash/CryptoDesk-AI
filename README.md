@@ -10,16 +10,16 @@ foundations and controlled boundaries described below.
 
 The project keeps canonical financial state and deterministic analysis separate
 from model output. Provider-neutral contracts sit between domain packages and
-concrete OpenAI or Ritual runtime boundaries. All workspace packages are
-currently private, and the repository contains no application server, CLI, UI,
-or deployment artifact.
+concrete OpenAI or Ritual runtime boundaries. All workspace packages remain
+non-publishable. A static-first public website and read-only MVP intelligence
+application live in `apps/web`; they do not invoke domain runtimes or own state.
 
 ## Current status
 
 - Phase I engineering is complete through Sprint 10.
-- Phase II public-release preparation is in progress through Sprint 11.
-- The GitHub repository remains private; any visibility change requires a
-  separately authorized public-release step.
+- The public source release `v0.1.0-mvp` and production website are available.
+- The Sprint 13 read-only MVP intelligence application is under final
+  integration review.
 - The current repository baseline is 441 passing tests.
 - External Ritual verification remains **INCONCLUSIVE**. Injected and local
   tests are not evidence of externally verified live Ritual inference or action.
@@ -87,6 +87,7 @@ explicit request
 | `packages/data`                | `@cryptodesk-ai/data`                | Reserved data-access package; no public API is defined yet.                             |
 | `packages/runtime-safety`      | `@cryptodesk-ai/runtime-safety`      | Bounded candidate, authorization, execution, and controlled-runtime contracts.          |
 | `services/ritual-gateway`      | `@cryptodesk-ai/ritual-gateway`      | Ritual-specific connectivity and injected transaction/inference lifecycle boundaries.   |
+| `apps/web`                     | `@cryptodesk-ai/web`                 | Static-first public website and read-only intelligence presentation application.        |
 
 Only package-root exports are supported. Internal deep imports are not part of
 the package contract.
@@ -115,8 +116,9 @@ pnpm typecheck
 pnpm build --force
 ```
 
-Formatting can be checked with `pnpm format:check`. The repository does not
-currently define a development server command.
+Formatting can be checked with `pnpm format:check`. The web application can be
+run locally with `pnpm --filter @cryptodesk-ai/web dev`; no environment variable
+is required for its current presentation-only routes.
 
 ## Testing
 

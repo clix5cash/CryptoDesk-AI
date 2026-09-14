@@ -4,6 +4,15 @@ The CryptoDesk AI MVP application is a read-only presentation layer at `/app`.
 It does not own Market, News, Portfolio, or Morning Meeting domain state and it
 does not execute provider, AI, Ritual, or Runtime Safety capabilities.
 
+Its completed Sprint 13 route surface is:
+
+- `/app` — application contract, status, and domain overview.
+- `/app/market` — deterministic Market contract presentation.
+- `/app/news` — normalized source and deterministic News presentation.
+- `/app/portfolio` — canonical Portfolio presentation.
+- `/app/morning-meeting` — canonical report and separated interpretation
+  presentation.
+
 ## Presentation envelope
 
 `apps/web/app/app/presentation.ts` defines immutable display metadata around a
@@ -96,3 +105,12 @@ keeps the report, contributors, evidence, and interpretation unavailable. The
 web layer does not generate, merge, recompute, or mutate report state. Missing
 contributors remain explicit; no report content, recommendation, or action is
 fabricated.
+
+## Later-sprint boundaries
+
+The presentation envelope is compatible with replacing an immutable snapshot
+with a newer validated snapshot, but Sprint 13 implements no update transport.
+Multi-provider federation, ranking, consensus, fallback, and provider-health
+routing belong to Sprint 14. Autonomous research, planning, recommendations,
+and decisions belong to Sprint 15. System-wide observability, scaling, caching,
+deployment infrastructure, and production hardening belong to Sprint 16.
