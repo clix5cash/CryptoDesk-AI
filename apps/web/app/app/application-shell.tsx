@@ -4,7 +4,7 @@ const navigation = [
   ['/app', 'Overview'],
   ['/app/market', 'Market'],
   ['/app/news', 'News'],
-  ['/app#portfolio', 'Portfolio'],
+  ['/app/portfolio', 'Portfolio'],
   ['/app#morning_meeting', 'Morning Meeting'],
 ] as const;
 

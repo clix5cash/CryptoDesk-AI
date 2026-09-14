@@ -66,3 +66,18 @@ No feed or interpretation is connected in the website runtime, so both regions
 show explicit unavailable states. The route fabricates no headline or apparently
 live content. RSS/provider/parser failures must remain bounded presentation
 states; raw upstream text is not a public error contract.
+
+## Portfolio view
+
+`/app/portfolio` presents the public, immutable Portfolio contract without
+becoming a second portfolio model. Portfolio Intelligence remains the canonical
+owner of portfolio and snapshot identity, positions, valuation, allocation,
+descriptive risk, insights, coverage, and their evidence. The web layer only
+formats a supplied validated presentation payload; it performs no calculation,
+mutation, persistence, or provider access.
+
+No portfolio snapshot or private user data is connected in the website runtime,
+so the route reports an unavailable state with unknown freshness and absent
+provenance. It fabricates no holdings, balance, valuation, performance, or
+financial advice and exposes no wallet, signing, transaction, transfer, trading,
+or portfolio-editing control.
