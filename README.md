@@ -181,8 +181,10 @@ credentials or unresolved vulnerability details in a public issue.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, validation, architecture, and
-pull-request expectations. Participation is governed by the
-[Code of Conduct](CODE_OF_CONDUCT.md).
+pull-request expectations. Use the [bug report](https://github.com/clix5cash/CryptoDesk-AI/issues/new?template=bug_report.yml)
+or [feature request](https://github.com/clix5cash/CryptoDesk-AI/issues/new?template=feature_request.yml)
+forms for public discussion, and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Report unresolved vulnerabilities privately through [SECURITY.md](SECURITY.md).
 
 ## License
 

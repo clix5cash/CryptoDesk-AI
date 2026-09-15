@@ -11,6 +11,9 @@ Use Node.js 22 or later and pnpm 11.17.0.
 pnpm install
 ```
 
+For the shortest verified path, follow the [Developer Quick Start](README.md#developer-quick-start)
+and [public examples](examples/README.md).
+
 ## Making changes
 
 - Keep each change focused and explain the behavior or problem it addresses.
@@ -69,3 +72,8 @@ A pull request should:
 
 Reviewers may request a smaller patch when a change crosses package ownership or
 authority boundaries.
+
+Use the repository issue forms for [bug reports](https://github.com/clix5cash/CryptoDesk-AI/issues/new?template=bug_report.yml)
+and [feature requests](https://github.com/clix5cash/CryptoDesk-AI/issues/new?template=feature_request.yml).
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) and use the private
+process in [SECURITY.md](SECURITY.md) for unresolved vulnerabilities.

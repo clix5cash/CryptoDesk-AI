@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest a focused improvement for discussion.
+title: '[Feature]: '
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A request is not a roadmap commitment. Do not include credentials,
+        wallet/private-key material, private endpoints, or personal data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem would this solve, and for whom?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest proposed behavior without assuming approval.
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Scope and boundaries
+      description: Note affected packages, authority/safety boundaries, and unsupported assumptions.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checks
+      options:
+        - label: I have removed secrets, wallet/private-key material, private endpoints, and personal data.
+          required: true
+        - label: This request does not assume autonomous trading, recommendations, custody, or verified live Ritual execution.
+          required: true
