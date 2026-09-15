@@ -70,7 +70,11 @@ importers:
         specifier: ^5.10.1
         version: 5.10.1
 
-  packages/market-intelligence: {}
+  packages/market-intelligence:
+    dependencies:
+      '@cryptodesk-ai/federation':
+        specifier: workspace:*
+        version: link:../federation
 
   packages/morning-meeting:
     dependencies:

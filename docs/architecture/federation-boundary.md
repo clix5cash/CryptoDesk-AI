@@ -76,6 +76,36 @@ from newer normalized observations. It introduces no event bus, WebSocket, SSE,
 polling, queue, worker, daemon, scheduler, cache, persistence, retry, or hidden
 fallback.
 
+## Market federation
+
+Market federation follows the existing ownership direction:
+
+```text
+concrete provider response
+  -> Integrations normalization boundary
+  -> normalized MarketSnapshot
+  -> provider-neutral federation qualification
+  -> Market-owned compatibility and value comparison
+```
+
+`@cryptodesk-ai/market-intelligence` composes the generic envelope and retains
+Market authority over instrument identity and exact snapshot comparison. Two
+snapshots are comparable only when market, base asset, quote asset, timeframe,
+and capture timestamp match. Compatible normalized values may agree or differ;
+incompatible instruments remain separate and are `not_applicable` for direct
+comparison. No tolerance is hidden in this policy.
+
+Every observation retains its provider identity and normalization provenance,
+including unavailable and stale observations. Stable output ordering is for
+determinism only and conveys no provider preference. Eligibility creates no
+selection: Market federation returns no winner, average, canonical price,
+fallback, provider ranking, or consensus.
+
+CoinGecko remains one concrete adapter in Integrations. Raw CoinGecko payloads
+are normalized before federation and never enter the generic federation
+contract. Multi-provider behavior is verified with deterministic normalized
+test observations; Sprint 14B adds no live provider or credential requirement.
+
 ## Sprint ownership
 
 - Sprint 14B owns Market-specific federation and any explicit domain selection
