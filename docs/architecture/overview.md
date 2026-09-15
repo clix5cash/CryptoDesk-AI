@@ -87,7 +87,7 @@ This diagram shows responsibilities and information flow, not every TypeScript
 import edge. The exact dependency graph appears in
 [Dependency direction](#9-dependency-direction).
 
-The ten workspace packages have these roles:
+The twelve workspace packages have these roles:
 
 | Package                              | Implemented responsibility                                                                      |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------- |
@@ -99,8 +99,10 @@ The ten workspace packages have these roles:
 | `@cryptodesk-ai/openai-runtime`      | Explicitly configured concrete OpenAI Responses adapter.                                        |
 | `@cryptodesk-ai/morning-meeting`     | Canonical report generation and optional AI presentation composition.                           |
 | `@cryptodesk-ai/data`                | Reserved package with no public data or persistence API yet.                                    |
+| `@cryptodesk-ai/federation`          | Provider-neutral observation federation without selection or canonical authority.               |
 | `@cryptodesk-ai/runtime-safety`      | Provider-neutral candidate, authorization, bounded execution, and controlled-runtime contracts. |
 | `@cryptodesk-ai/ritual-gateway`      | Ritual-specific connectivity, transaction, inference, and result-verification boundaries.       |
+| `@cryptodesk-ai/web`                 | Static-first public website and read-only intelligence presentation application.                |
 
 ## 5. Trust model
 
@@ -235,13 +237,18 @@ arrow below means “imports from”:
 @cryptodesk-ai/portfolio           → no workspace dependency
 @cryptodesk-ai/market-intelligence → no workspace dependency
 @cryptodesk-ai/data                → no workspace dependency
+@cryptodesk-ai/federation          → no workspace dependency
 @cryptodesk-ai/runtime-safety      → no dependency
+@cryptodesk-ai/web                 → no workspace dependency
 ```
 
 The graph is acyclic. Packages expose only their root entry point. In
 particular, AI, Portfolio, Morning Meeting, OpenAI Runtime, and Runtime Safety do
 not import Ritual Gateway, and Runtime Safety remains dependency-free and
 Ritual-free.
+
+The provider-neutral federation contract and its non-authority guarantees are
+described in the [Intelligence federation boundary](federation-boundary.md).
 
 ## 10. Failure philosophy
 

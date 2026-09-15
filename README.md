@@ -20,7 +20,7 @@ application live in `apps/web`; they do not invoke domain runtimes or own state.
 - The public source release `v0.1.0-mvp` and production website are available.
 - The Sprint 13 read-only MVP intelligence application is under final
   integration review.
-- The current repository baseline is 441 passing tests.
+- The current repository baseline is 452 passing tests.
 - External Ritual verification remains **INCONCLUSIVE**. Injected and local
   tests are not evidence of externally verified live Ritual inference or action.
 
@@ -85,6 +85,7 @@ explicit request
 | `packages/openai-runtime`      | `@cryptodesk-ai/openai-runtime`      | Explicitly configured OpenAI Responses runtime adapter.                                 |
 | `packages/morning-meeting`     | `@cryptodesk-ai/morning-meeting`     | Canonical Morning Meeting reports and application composition.                          |
 | `packages/data`                | `@cryptodesk-ai/data`                | Reserved data-access package; no public API is defined yet.                             |
+| `packages/federation`          | `@cryptodesk-ai/federation`          | Provider-neutral observation, provenance, freshness, eligibility, and disagreement.     |
 | `packages/runtime-safety`      | `@cryptodesk-ai/runtime-safety`      | Bounded candidate, authorization, execution, and controlled-runtime contracts.          |
 | `services/ritual-gateway`      | `@cryptodesk-ai/ritual-gateway`      | Ritual-specific connectivity and injected transaction/inference lifecycle boundaries.   |
 | `apps/web`                     | `@cryptodesk-ai/web`                 | Static-first public website and read-only intelligence presentation application.        |
@@ -133,6 +134,7 @@ inference.
 ## Architecture documentation
 
 - [Public architecture overview](docs/architecture/overview.md)
+- [Intelligence federation boundary](docs/architecture/federation-boundary.md)
 - [Architecture decision record](docs/architecture/ADR-001-modular-ai-first-architecture.md)
 - [MVP component and dependency map](docs/architecture/sprint-9-mvp-component-map.md)
 - [MVP integration contract](docs/architecture/sprint-9-mvp-integration-contract.md)
