@@ -165,6 +165,7 @@ inference.
 
 - [Public architecture overview](docs/architecture/overview.md)
 - [Technical Paper — Public Edition](docs/technical-paper-public-edition.md)
+- [Public Launch Package (drafts)](docs/launch/README.md)
 - [Intelligence federation boundary](docs/architecture/federation-boundary.md)
 - [Architecture decision record](docs/architecture/ADR-001-modular-ai-first-architecture.md)
 - [MVP component and dependency map](docs/architecture/sprint-9-mvp-component-map.md)
