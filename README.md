@@ -75,20 +75,21 @@ explicit request
 
 ## Repository structure
 
-| Path                           | Package                              | Responsibility                                                                          |
-| ------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------- |
-| `packages/portfolio`           | `@cryptodesk-ai/portfolio`           | Canonical portfolio identity, valuation, allocation, risk, insights, and presentation.  |
-| `packages/market-intelligence` | `@cryptodesk-ai/market-intelligence` | Deterministic market snapshots, indicators, and signals.                                |
-| `packages/news-intelligence`   | `@cryptodesk-ai/news-intelligence`   | Provider-neutral news normalization, classification, grouping, impact, and composition. |
-| `packages/integrations`        | `@cryptodesk-ai/integrations`        | Concrete CoinGecko and RSS/Atom adapters.                                               |
-| `packages/ai`                  | `@cryptodesk-ai/ai`                  | Provider-neutral model execution and grounded interpretation contracts.                 |
-| `packages/openai-runtime`      | `@cryptodesk-ai/openai-runtime`      | Explicitly configured OpenAI Responses runtime adapter.                                 |
-| `packages/morning-meeting`     | `@cryptodesk-ai/morning-meeting`     | Canonical Morning Meeting reports and application composition.                          |
-| `packages/data`                | `@cryptodesk-ai/data`                | Reserved data-access package; no public API is defined yet.                             |
-| `packages/federation`          | `@cryptodesk-ai/federation`          | Provider-neutral observation, provenance, freshness, eligibility, and disagreement.     |
-| `packages/runtime-safety`      | `@cryptodesk-ai/runtime-safety`      | Bounded candidate, authorization, execution, and controlled-runtime contracts.          |
-| `services/ritual-gateway`      | `@cryptodesk-ai/ritual-gateway`      | Ritual-specific connectivity and injected transaction/inference lifecycle boundaries.   |
-| `apps/web`                     | `@cryptodesk-ai/web`                 | Static-first public website and read-only intelligence presentation application.        |
+| Path                                | Package                                   | Responsibility                                                                          |
+| ----------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| `packages/portfolio`                | `@cryptodesk-ai/portfolio`                | Canonical portfolio identity, valuation, allocation, risk, insights, and presentation.  |
+| `packages/market-intelligence`      | `@cryptodesk-ai/market-intelligence`      | Deterministic market snapshots, indicators, and signals.                                |
+| `packages/news-intelligence`        | `@cryptodesk-ai/news-intelligence`        | Provider-neutral news normalization, classification, grouping, impact, and composition. |
+| `packages/integrations`             | `@cryptodesk-ai/integrations`             | Concrete CoinGecko and RSS/Atom adapters.                                               |
+| `packages/ai`                       | `@cryptodesk-ai/ai`                       | Provider-neutral model execution and grounded interpretation contracts.                 |
+| `packages/openai-runtime`           | `@cryptodesk-ai/openai-runtime`           | Explicitly configured OpenAI Responses runtime adapter.                                 |
+| `packages/morning-meeting`          | `@cryptodesk-ai/morning-meeting`          | Canonical Morning Meeting reports and application composition.                          |
+| `packages/data`                     | `@cryptodesk-ai/data`                     | Reserved data-access package; no public API is defined yet.                             |
+| `packages/federation`               | `@cryptodesk-ai/federation`               | Provider-neutral observation, provenance, freshness, eligibility, and disagreement.     |
+| `packages/intelligence-composition` | `@cryptodesk-ai/intelligence-composition` | Deterministic cross-domain composition without canonicalization or decisions.           |
+| `packages/runtime-safety`           | `@cryptodesk-ai/runtime-safety`           | Bounded candidate, authorization, execution, and controlled-runtime contracts.          |
+| `services/ritual-gateway`           | `@cryptodesk-ai/ritual-gateway`           | Ritual-specific connectivity and injected transaction/inference lifecycle boundaries.   |
+| `apps/web`                          | `@cryptodesk-ai/web`                      | Static-first public website and read-only intelligence presentation application.        |
 
 Only package-root exports are supported. Internal deep imports are not part of
 the package contract.

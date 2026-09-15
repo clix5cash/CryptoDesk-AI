@@ -178,6 +178,43 @@ provider requirement. Portfolio-adjacent context is not expanded into a global
 context store, and cross-domain Market, News, and Morning Meeting federation
 remains deferred to Sprint 14E.
 
+## Cross-domain intelligence composition
+
+`@cryptodesk-ai/intelligence-composition` is a narrow read-only consumer of the
+three domain-owned federation results:
+
+```text
+MarketFederationResult ─┐
+NewsFederationResult ───┼─> detached cross-domain composition snapshot
+PortfolioFederationResult ┘
+```
+
+The composition retains each result under an explicit `market`, `news`, or
+`portfolio` domain tag. It does not flatten observations or replace provider,
+source, normalization, timestamp, freshness, availability, eligibility,
+comparison, or relationship evidence. Expected but absent domains are listed as
+missing; available domains remain usable, and no absent evidence is fabricated.
+
+Authority remains local. Market records retain deterministic Market ownership,
+News records retain normalized and deterministic News ownership, and Portfolio
+federation records remain non-canonical observations under canonical Portfolio
+authority. The composition itself is not canonical state and cannot become a
+Morning Meeting report. Morning Meeting remains the canonical owner of its own
+report and application composition contracts.
+
+Freshness and disagreement also remain domain-local. Market disagreement, News
+uncertainty, and Portfolio disagreement pass through unchanged. The composition
+defines no global freshness, domain or provider winner, selection, consensus,
+confidence score, majority rule, causal relationship, recommendation, or
+decision. Its fixed Market-then-News-then-Portfolio ordering is only a stable
+serialization rule and conveys no authority.
+
+The package accepts already-produced public domain results, validates their
+domain and provenance boundary, then returns a detached immutable snapshot. It
+adds no live provider, AI inference, Morning Meeting generation, application
+wiring, persistence, event transport, autonomous research, or action loop.
+Autonomous research and decision support remain deferred to Sprint 15.
+
 ## Sprint ownership
 
 - Sprint 14B owns Market-specific federation and any explicit domain selection

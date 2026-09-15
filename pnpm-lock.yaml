@@ -70,6 +70,21 @@ importers:
         specifier: ^5.10.1
         version: 5.10.1
 
+  packages/intelligence-composition:
+    dependencies:
+      '@cryptodesk-ai/federation':
+        specifier: workspace:*
+        version: link:../federation
+      '@cryptodesk-ai/market-intelligence':
+        specifier: workspace:*
+        version: link:../market-intelligence
+      '@cryptodesk-ai/news-intelligence':
+        specifier: workspace:*
+        version: link:../news-intelligence
+      '@cryptodesk-ai/portfolio':
+        specifier: workspace:*
+        version: link:../portfolio
+
   packages/market-intelligence:
     dependencies:
       '@cryptodesk-ai/federation':

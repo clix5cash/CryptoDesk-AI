@@ -87,22 +87,23 @@ This diagram shows responsibilities and information flow, not every TypeScript
 import edge. The exact dependency graph appears in
 [Dependency direction](#9-dependency-direction).
 
-The twelve workspace packages have these roles:
+The thirteen workspace packages have these roles:
 
-| Package                              | Implemented responsibility                                                                      |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| `@cryptodesk-ai/market-intelligence` | Market snapshot contracts plus deterministic indicators and signals.                            |
-| `@cryptodesk-ai/news-intelligence`   | News normalization, classification, grouping, impact, and market-intelligence composition.      |
-| `@cryptodesk-ai/integrations`        | Injected CoinGecko and RSS/Atom provider adapters.                                              |
-| `@cryptodesk-ai/portfolio`           | Canonical portfolio identity, valuation, allocation, risk, insights, and presentation.          |
-| `@cryptodesk-ai/ai`                  | Provider-neutral execution, candidate parsing, grounding, and interpretation contracts.         |
-| `@cryptodesk-ai/openai-runtime`      | Explicitly configured concrete OpenAI Responses adapter.                                        |
-| `@cryptodesk-ai/morning-meeting`     | Canonical report generation and optional AI presentation composition.                           |
-| `@cryptodesk-ai/data`                | Reserved package with no public data or persistence API yet.                                    |
-| `@cryptodesk-ai/federation`          | Provider-neutral observation federation without selection or canonical authority.               |
-| `@cryptodesk-ai/runtime-safety`      | Provider-neutral candidate, authorization, bounded execution, and controlled-runtime contracts. |
-| `@cryptodesk-ai/ritual-gateway`      | Ritual-specific connectivity, transaction, inference, and result-verification boundaries.       |
-| `@cryptodesk-ai/web`                 | Static-first public website and read-only intelligence presentation application.                |
+| Package                                   | Implemented responsibility                                                                      |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `@cryptodesk-ai/market-intelligence`      | Market snapshot contracts plus deterministic indicators and signals.                            |
+| `@cryptodesk-ai/news-intelligence`        | News normalization, classification, grouping, impact, and market-intelligence composition.      |
+| `@cryptodesk-ai/integrations`             | Injected CoinGecko and RSS/Atom provider adapters.                                              |
+| `@cryptodesk-ai/portfolio`                | Canonical portfolio identity, valuation, allocation, risk, insights, and presentation.          |
+| `@cryptodesk-ai/ai`                       | Provider-neutral execution, candidate parsing, grounding, and interpretation contracts.         |
+| `@cryptodesk-ai/openai-runtime`           | Explicitly configured concrete OpenAI Responses adapter.                                        |
+| `@cryptodesk-ai/morning-meeting`          | Canonical report generation and optional AI presentation composition.                           |
+| `@cryptodesk-ai/data`                     | Reserved package with no public data or persistence API yet.                                    |
+| `@cryptodesk-ai/federation`               | Provider-neutral observation federation without selection or canonical authority.               |
+| `@cryptodesk-ai/intelligence-composition` | Deterministic cross-domain federation-result composition without canonicalization or decisions. |
+| `@cryptodesk-ai/runtime-safety`           | Provider-neutral candidate, authorization, bounded execution, and controlled-runtime contracts. |
+| `@cryptodesk-ai/ritual-gateway`           | Ritual-specific connectivity, transaction, inference, and result-verification boundaries.       |
+| `@cryptodesk-ai/web`                      | Static-first public website and read-only intelligence presentation application.                |
 
 ## 5. Trust model
 
@@ -228,14 +229,18 @@ arrow below means “imports from”:
 @cryptodesk-ai/news-intelligence   → @cryptodesk-ai/market-intelligence
 @cryptodesk-ai/integrations        → @cryptodesk-ai/market-intelligence
 @cryptodesk-ai/integrations        → @cryptodesk-ai/news-intelligence
+@cryptodesk-ai/intelligence-composition → @cryptodesk-ai/federation
+@cryptodesk-ai/intelligence-composition → @cryptodesk-ai/market-intelligence
+@cryptodesk-ai/intelligence-composition → @cryptodesk-ai/news-intelligence
+@cryptodesk-ai/intelligence-composition → @cryptodesk-ai/portfolio
 @cryptodesk-ai/morning-meeting     → @cryptodesk-ai/ai
 @cryptodesk-ai/morning-meeting     → @cryptodesk-ai/market-intelligence
 @cryptodesk-ai/morning-meeting     → @cryptodesk-ai/news-intelligence
 @cryptodesk-ai/openai-runtime      → @cryptodesk-ai/ai
 @cryptodesk-ai/ritual-gateway      → @cryptodesk-ai/ai
 
-@cryptodesk-ai/portfolio           → no workspace dependency
-@cryptodesk-ai/market-intelligence → no workspace dependency
+@cryptodesk-ai/portfolio           → @cryptodesk-ai/federation
+@cryptodesk-ai/market-intelligence → @cryptodesk-ai/federation
 @cryptodesk-ai/data                → no workspace dependency
 @cryptodesk-ai/federation          → no workspace dependency
 @cryptodesk-ai/runtime-safety      → no dependency
