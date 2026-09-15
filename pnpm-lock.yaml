@@ -90,6 +90,9 @@ importers:
 
   packages/news-intelligence:
     dependencies:
+      '@cryptodesk-ai/federation':
+        specifier: workspace:*
+        version: link:../federation
       '@cryptodesk-ai/market-intelligence':
         specifier: workspace:*
         version: link:../market-intelligence

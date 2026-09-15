@@ -106,6 +106,39 @@ are normalized before federation and never enter the generic federation
 contract. Multi-provider behavior is verified with deterministic normalized
 test observations; Sprint 14B adds no live provider or credential requirement.
 
+## News federation
+
+News federation preserves the existing flow and identity boundaries:
+
+```text
+RSS / Atom response
+  -> Integrations transport, parsing, and normalization
+  -> normalized NewsArticle
+  -> News-owned identity and relationship validation
+  -> provider-neutral federation qualification
+  -> qualified News observations
+```
+
+Provider, source, and article identities remain distinct. Each observation
+retains its provider and normalization boundary while its normalized article
+retains source and article identity. Publication time remains source chronology;
+observation time drives freshness; envelope generation time records federation
+assembly. None is inferred from another.
+
+All original observations remain present, including stale and unavailable
+providers. Existing deterministic article identity may mark duplicate
+representations, but does not destructively collapse federation provenance.
+Existing `NewsEventGroup` evidence may establish `same_event`; that relationship
+does not mean factual agreement. Every other relationship remains `unknown`.
+Headline similarity, text difference, classification, and impact never produce
+generic agreement or disagreement.
+
+News federation performs no truth arbitration, source ranking, credibility
+scoring, consensus, selected article, selected provider, fallback, or AI-based
+relationship inference. RSS and Atom remain concrete Integrations adapters, and
+multi-provider behavior uses deterministic normalized test observations rather
+than a new live provider or credential.
+
 ## Sprint ownership
 
 - Sprint 14B owns Market-specific federation and any explicit domain selection
