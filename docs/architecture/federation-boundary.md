@@ -139,6 +139,45 @@ relationship inference. RSS and Atom remain concrete Integrations adapters, and
 multi-provider behavior uses deterministic normalized test observations rather
 than a new live provider or credential.
 
+## Portfolio and context federation
+
+Portfolio federation preserves the authority direction:
+
+```text
+source-specific observation boundary
+  -> normalized PortfolioSnapshot
+  -> provider-neutral federation qualification
+  -> qualified Portfolio observations
+  -> explicit Portfolio-owned consumption
+```
+
+A federated observation is not canonical Portfolio state. Portfolio retains
+canonical ownership of portfolio, account, asset, position, quantity, snapshot,
+valuation, allocation, risk, insight, evidence, and presentation contracts.
+Federation does not construct, mutate, merge, reconcile, or promote that state.
+
+Comparability is Portfolio-owned and requires an exact portfolio, capture,
+source, and account scope. Source, account, snapshot, asset, and position
+identities remain distinct. In particular, the same asset held by different
+accounts is neither a duplicate nor a conflict. Comparable normalized snapshots
+may report exact agreement or disagreement, but differing quantities remain as
+their original observations: they are never averaged, summed, selected, or
+promoted to a canonical balance.
+
+Capture time, position observation time, provider observation time, and envelope
+generation time remain distinct. Explicit caller-supplied policy determines
+freshness and eligibility; stale and unavailable sources remain observable.
+Eligibility conveys no trust, selection, or canonical authority. Stable output
+ordering exists only for deterministic results.
+
+Only normalized Portfolio records enter federation. Raw wallet, exchange, RPC,
+transport, signing, credential, and provider payloads remain outside the generic
+boundary. Portfolio federation adds no wallet connection, custody, signing,
+transaction, valuation, cross-account aggregation, retry, fallback, or live
+provider requirement. Portfolio-adjacent context is not expanded into a global
+context store, and cross-domain Market, News, and Morning Meeting federation
+remains deferred to Sprint 14E.
+
 ## Sprint ownership
 
 - Sprint 14B owns Market-specific federation and any explicit domain selection

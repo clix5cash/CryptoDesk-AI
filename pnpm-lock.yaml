@@ -103,7 +103,11 @@ importers:
         specifier: workspace:*
         version: link:../ai
 
-  packages/portfolio: {}
+  packages/portfolio:
+    dependencies:
+      '@cryptodesk-ai/federation':
+        specifier: workspace:*
+        version: link:../federation
 
   packages/runtime-safety: {}
 
