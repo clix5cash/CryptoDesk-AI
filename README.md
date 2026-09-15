@@ -16,11 +16,11 @@ application live in `apps/web`; they do not invoke domain runtimes or own state.
 
 ## Current status
 
-- Phase I engineering is complete through Sprint 10.
+- Phase I engineering is complete through Sprint 14.
 - The public source release `v0.1.0-mvp` and production website are available.
-- The Sprint 13 read-only MVP intelligence application is under final
-  integration review.
-- The current repository baseline is 452 passing tests.
+- The Sprint 13 read-only MVP intelligence application and Sprint 14 provider
+  federation boundaries are complete.
+- The current repository baseline is 510 passing tests.
 - External Ritual verification remains **INCONCLUSIVE**. Injected and local
   tests are not evidence of externally verified live Ritual inference or action.
 
@@ -107,6 +107,29 @@ pnpm install
 
 The standard build and test workflow does not require live credentials or
 network access beyond installing dependencies.
+
+## Developer quick start
+
+On a supported machine (Node.js 22+ and pnpm 11.17.0), the shortest local
+path is:
+
+```sh
+git clone https://github.com/clix5cash/CryptoDesk-AI.git
+cd CryptoDesk-AI
+pnpm install
+pnpm build --force
+pnpm test
+pnpm demo
+```
+
+This is designed to fit approximately ten minutes on a normal development
+machine; actual time depends on the machine and dependency-cache state. The
+demo prints a deterministic, synthetic provider-neutral Federation envelope,
+including retained observations, explicit provider identities, and a stable
+comparison result. It does not fetch live market or news data, represent a
+user portfolio, invoke AI or Ritual, connect a wallet, require credentials or
+environment variables, or demonstrate production connectivity. External
+Ritual verification remains **INCONCLUSIVE**.
 
 ## Development
 
