@@ -9,6 +9,11 @@
   "scripts": {
     "build": "turbo run build",
     "demo": "pnpm --filter @cryptodesk-ai/federation exec node quick-start-demo.mjs",
+    "example:ai": "pnpm --filter @cryptodesk-ai/ai exec node example.mjs",
+    "example:morning-meeting": "pnpm --filter @cryptodesk-ai/morning-meeting exec node example.mjs",
+    "example:ritual": "pnpm --filter @cryptodesk-ai/ritual-gateway exec node example.mjs",
+    "example:runtime-safety": "pnpm --filter @cryptodesk-ai/runtime-safety exec node example.mjs",
+    "examples": "pnpm example:ai && pnpm example:morning-meeting && pnpm example:ritual && pnpm example:runtime-safety",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

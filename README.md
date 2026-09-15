@@ -145,6 +145,12 @@ Formatting can be checked with `pnpm format:check`. The web application can be
 run locally with `pnpm --filter @cryptodesk-ai/web dev`; no environment variable
 is required for its current presentation-only routes.
 
+After building, run the [public examples](examples/README.md) individually
+with `pnpm example:ai`, `pnpm example:morning-meeting`, `pnpm example:ritual`,
+or `pnpm example:runtime-safety`, or run all four with `pnpm examples`. Each
+example is explicitly invoked and local/synthetic; none requires credentials,
+wallet access, environment variables, or live Ritual access.
+
 ## Testing
 
 ```sh
