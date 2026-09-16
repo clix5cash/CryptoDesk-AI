@@ -9,6 +9,7 @@
   "scripts": {
     "build": "turbo run build",
     "demo": "pnpm --filter @cryptodesk-ai/federation exec node quick-start-demo.mjs",
+    "perf:baseline": "pnpm build --force && pnpm --filter @cryptodesk-ai/market-intelligence exec node performance-baseline.mjs",
     "example:ai": "pnpm --filter @cryptodesk-ai/ai exec node example.mjs",
     "example:morning-meeting": "pnpm --filter @cryptodesk-ai/morning-meeting exec node example.mjs",
     "example:ritual": "pnpm --filter @cryptodesk-ai/ritual-gateway exec node example.mjs",
