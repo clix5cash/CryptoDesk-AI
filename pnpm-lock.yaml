@@ -112,6 +112,8 @@ importers:
         specifier: workspace:*
         version: link:../market-intelligence
 
+  packages/observability: {}
+
   packages/openai-runtime:
     dependencies:
       '@cryptodesk-ai/ai':

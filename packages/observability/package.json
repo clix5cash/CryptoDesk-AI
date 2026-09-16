@@ -1,0 +1,23 @@
+{
+  "name": "@cryptodesk-ai/observability",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "lint": "eslint src --max-warnings=0",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  }
+}

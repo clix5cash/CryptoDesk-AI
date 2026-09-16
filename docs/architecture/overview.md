@@ -57,6 +57,9 @@ autonomy:
 There is no self-starting agent, work discovery, autonomous loop, scheduler, or
 trading authority.
 
+The private `@cryptodesk-ai/observability` package provides provider-neutral,
+safe telemetry contracts only; see [the observability boundary](observability-boundary.md).
+
 ## 4. System layers
 
 ```text
