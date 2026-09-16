@@ -54,6 +54,8 @@ importers:
         specifier: workspace:*
         version: link:../portfolio
 
+  packages/community-feedback: {}
+
   packages/data: {}
 
   packages/federation: {}

@@ -75,5 +75,8 @@ authority boundaries.
 
 Use the repository issue forms for [bug reports](https://github.com/clix5cash/CryptoDesk-AI/issues/new?template=bug_report.yml)
 and [feature requests](https://github.com/clix5cash/CryptoDesk-AI/issues/new?template=feature_request.yml).
+For advisory UX or architecture feedback, use a GitHub Discussion and label
+the category explicitly; feedback is not a roadmap commitment. Security
+vulnerabilities must follow [SECURITY.md](SECURITY.md).
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) and use the private
 process in [SECURITY.md](SECURITY.md) for unresolved vulnerabilities.

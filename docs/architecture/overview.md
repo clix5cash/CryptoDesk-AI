@@ -60,6 +60,10 @@ trading authority.
 The private `@cryptodesk-ai/observability` package provides provider-neutral,
 safe telemetry contracts only; see [the observability boundary](observability-boundary.md).
 
+The private `@cryptodesk-ai/community-feedback` package validates advisory
+community input into four explicit categories and stops at maintainer review;
+see [the community feedback boundary](community-feedback-boundary.md).
+
 ## 4. System layers
 
 ```text
