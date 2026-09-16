@@ -28,7 +28,7 @@ manage wallets, or run self-starting loops.
 
 ## Current implementation architecture
 
-The repository currently contains 13 private workspace packages. Their public
+The repository currently contains 15 private workspace packages. Their public
 responsibilities are:
 
 | Package                                   | Responsibility                                                                                              |
@@ -46,6 +46,8 @@ responsibilities are:
 | `@cryptodesk-ai/intelligence-composition` | Deterministic cross-domain composition without canonicalization or decisions.                               |
 | `@cryptodesk-ai/data`                     | Reserved data-access package; no persistence API.                                                           |
 | `@cryptodesk-ai/web`                      | Static-first public website and read-only application presentation.                                         |
+| `@cryptodesk-ai/observability`            | Dependency-free, bounded telemetry contracts; no backend or transport.                                      |
+| `@cryptodesk-ai/community-feedback`       | Bounded advisory feedback records and explicit classification; no triage authority.                         |
 
 Only package-root exports are supported; internal deep imports are not public
 contracts. The dependency graph is acyclic.
@@ -173,11 +175,12 @@ credentials or environment secrets.
 
 Current verification evidence includes:
 
-- 13 workspace packages; dependency graph acyclic.
-- Repository tests: 510/510.
+- 15 workspace packages; dependency graph acyclic.
+- Repository tests: 519/519.
 - Federation: 11/11; Market: 15/15; News: 60/60; Portfolio: 92/92.
 - Intelligence Composition: 17/17; Morning Meeting: 94/94.
 - Integrations: 24/24; Runtime Safety: 20/20; Ritual Gateway: 64/64.
+- Observability: 3/3; Community Feedback: 6/6.
 - Runtime Safety dependencies: 0; Ritual references: 0.
 - Production website: HTTPS HTTP 200.
 - `v0.1.0-mvp` resolves to `3187746aea5afa5f51acfe3d0f0f763cbf6b46a5`.
@@ -188,8 +191,8 @@ Founding Edition measurements.
 
 ## Roadmap boundaries
 
-Sprint 15E owns the Public Launch Package and Sprint 15F owns the Phase II
-Release Audit. Sprint 16 owns post-launch observability, performance, security
-hardening, and related production work. Those are approved future areas, not
-implemented capabilities of this edition. No v0.2.0 or Phase II closure is
+Sprint 16A–16D are represented by the observability, performance, security,
+and Community Feedback contracts and audits recorded in the repository. Sprint
+16E release v0.2.0 is prepared as an untagged release candidate; Sprint 16F
+Phase II Closure remains pending review. No publication or deployment is
 claimed here.

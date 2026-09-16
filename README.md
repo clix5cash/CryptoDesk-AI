@@ -18,9 +18,14 @@ application live in `apps/web`; they do not invoke domain runtimes or own state.
 
 - Phase I engineering is complete through Sprint 14.
 - The public source release `v0.1.0-mvp` and production website are available.
+- The untagged [v0.2.0 release candidate notes](docs/releases/v0.2.0.md)
+  summarize validated post-MVP improvements; publication awaits Tech Lead review.
 - The Sprint 13 read-only MVP intelligence application and Sprint 14 provider
   federation boundaries are complete.
-- The current repository baseline is 510 passing tests.
+- The current repository baseline is 519 passing tests across 15 private
+  workspace packages.
+- Sprint 16A–16D add observability contracts, an offline performance baseline,
+  a security audit, and a deterministic Community Feedback boundary.
 - External Ritual verification remains **INCONCLUSIVE**. Injected and local
   tests are not evidence of externally verified live Ritual inference or action.
 
