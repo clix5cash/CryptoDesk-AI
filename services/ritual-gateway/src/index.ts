@@ -77,3 +77,21 @@ export {
   type RitualInferenceResultVerificationRequest,
   type RitualInferenceResultVerifier,
 } from './ritual-inference-result-verification.js';
+export {
+  createRitualNetworkConfiguration,
+  createRitualReferenceRegistry,
+  createRitualRpcRequest,
+  validateRitualRpcResponse,
+  verifyRitualNetwork,
+  createRitualExecutionEvidence,
+  type RitualNetworkConfiguration,
+  type RitualReferenceCategory,
+  type RitualContractReference,
+  type RitualReferenceRegistry,
+  type RitualRpcMethod,
+  type RitualRpcRequest,
+  type RitualRpcResponse,
+  type RitualNetworkVerificationStatus,
+  type RitualNetworkVerificationResult,
+  type RitualExecutionEvidence,
+} from './ritual-network-boundary.js';
