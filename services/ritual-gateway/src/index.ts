@@ -103,3 +103,11 @@ export {
   type RitualReadOnlyVerificationReport,
   type RitualReadOnlyVerificationAdapter,
 } from './ritual-read-only-verification.js';
+export {
+  createRitualInferenceSimulation,
+  type RitualInferenceRequest,
+  type RitualPreparedInferenceRequest,
+  type RitualInferenceExecutionTransport,
+  type RitualInferenceSimulationResult,
+  type RitualInferenceSimulation,
+} from './ritual-inference-simulation.js';

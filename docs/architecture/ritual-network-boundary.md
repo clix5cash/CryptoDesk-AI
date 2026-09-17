@@ -37,3 +37,11 @@ is no default transport, discovery, retry, fallback, polling, or background
 execution. Reports distinguish network verification from reference evidence;
 verified network evidence does not verify inference or create canonical state.
 A future live HTTP transport is intentionally not implemented in R2.
+
+R3 adds an explicit inference-intent contract and target resolution through
+the registry, producing a prepared request that is distinct from a
+transaction. An injected offline execution port may be invoked at most once;
+the deterministic simulation normalizes one bounded result and returns
+`mode: simulated` evidence. Successful output enters AI as
+`untrusted_model_execution`. No wallet, signer, broadcaster, executor payment,
+live model call, retry, polling, or autonomous behavior is included.

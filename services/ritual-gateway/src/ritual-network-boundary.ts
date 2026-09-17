@@ -206,6 +206,7 @@ export interface RitualExecutionEvidence {
   readonly receiptStatus?: 'success' | 'failure' | 'unknown';
   readonly observedAt?: string;
   readonly explorerUrl?: string;
+  readonly mode?: 'simulated' | 'live';
 }
 export function createRitualExecutionEvidence(
   value: RitualExecutionEvidence,
@@ -225,6 +226,7 @@ export function createRitualExecutionEvidence(
         'receiptStatus',
         'observedAt',
         'explorerUrl',
+        'mode',
       ],
     ) ||
     !isBoundedString(value.networkId, 1, 80) ||
@@ -241,7 +243,8 @@ export function createRitualExecutionEvidence(
     (value.receiptStatus !== undefined &&
       !['success', 'failure', 'unknown'].includes(value.receiptStatus)) ||
     !optionalString(value.observedAt, (v) => isBoundedString(v, 1, 80)) ||
-    !optionalString(value.explorerUrl, (v) => isUrl(v, 'https:'))
+    !optionalString(value.explorerUrl, (v) => isUrl(v, 'https:')) ||
+    (value.mode !== undefined && value.mode !== 'simulated' && value.mode !== 'live')
   )
     throw new TypeError('Ritual execution evidence is invalid.');
   return freeze({ ...value });
