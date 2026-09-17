@@ -95,3 +95,11 @@ export {
   type RitualNetworkVerificationResult,
   type RitualExecutionEvidence,
 } from './ritual-network-boundary.js';
+export {
+  createRitualReadOnlyVerificationAdapter,
+  type ReadOnlyRitualRpcTransport,
+  type RitualReferenceProbeStatus,
+  type RitualReferenceProbeResult,
+  type RitualReadOnlyVerificationReport,
+  type RitualReadOnlyVerificationAdapter,
+} from './ritual-read-only-verification.js';

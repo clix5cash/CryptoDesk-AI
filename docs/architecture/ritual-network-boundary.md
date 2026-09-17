@@ -28,3 +28,12 @@ model output beyond:
 `untrusted_model_execution → untrusted_candidate_interpretation → non_authoritative_interpretation`
 
 External Ritual inference verification remains INCONCLUSIVE.
+
+R2 adds an offline read-only verification adapter. It accepts an explicitly
+injected transport and performs at most one ordered network probe
+(`eth_chainId`, `eth_blockNumber`, `eth_getBlockByNumber`). Optional
+`eth_getCode` probes run only for caller-selected registry identifiers. There
+is no default transport, discovery, retry, fallback, polling, or background
+execution. Reports distinguish network verification from reference evidence;
+verified network evidence does not verify inference or create canonical state.
+A future live HTTP transport is intentionally not implemented in R2.
