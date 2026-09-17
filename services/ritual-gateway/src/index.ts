@@ -111,3 +111,11 @@ export {
   type RitualInferenceSimulationResult,
   type RitualInferenceSimulation,
 } from './ritual-inference-simulation.js';
+export {
+  createRitualIntegrationHarness,
+  type RitualActivationPolicy,
+  type RitualActivationStatus,
+  type RitualActivationReport,
+  type RitualIntegrationHarnessResult,
+  type RitualIntegrationHarness,
+} from './ritual-integration-harness.js';

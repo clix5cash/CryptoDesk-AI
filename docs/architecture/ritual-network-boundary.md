@@ -45,3 +45,14 @@ the deterministic simulation normalizes one bounded result and returns
 `mode: simulated` evidence. Successful output enters AI as
 `untrusted_model_execution`. No wallet, signer, broadcaster, executor payment,
 live model call, retry, polling, or autonomous behavior is included.
+
+R4 composes these contracts in an offline integration harness. An explicit
+activation policy requires verified network evidence and caller-selected
+reference checks before the inference seam can run. Any mismatch,
+inconclusive probe, missing reference, or failed code check returns a bounded
+`blocked` report and invokes inference zero times. A passing fixture produces
+`read_only_verified` status and permits one injected simulated attempt only;
+this is not write authorization, wallet readiness, or live inference
+verification. Future Mainnet onboarding must independently review official
+configuration, run read-only verification, and obtain separate Owner
+authorization before any write operation.
