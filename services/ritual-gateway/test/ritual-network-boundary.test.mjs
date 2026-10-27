@@ -127,3 +127,27 @@ test('execution evidence is detached and has no authority fields', () => {
     TypeError,
   );
 });
+
+test('bounded JSON validation rejects deep, cyclic, oversized and accessor payloads', () => {
+  const request = createRitualRpcRequest({ id: 'bounded', method: 'eth_chainId', params: [] });
+  const cycle = {};
+  cycle.self = cycle;
+  let deep = 'leaf';
+  for (let i = 0; i < 20; i++) deep = { child: deep };
+  let accessorCalls = 0;
+  const accessor = {
+    get secret() {
+      accessorCalls++;
+      return 'private-fixture';
+    },
+  };
+  const wide = Object.fromEntries(
+    Array.from({ length: 64 }, (_, i) => [String(i), 'x'.repeat(16384)]),
+  );
+  for (const result of [cycle, deep, accessor, wide, 'x'.repeat(16385), Array(65).fill(0)])
+    assert.throws(
+      () => validateRitualRpcResponse({ jsonrpc: '2.0', id: request.id, result }, request),
+      TypeError,
+    );
+  assert.equal(accessorCalls, 0);
+});

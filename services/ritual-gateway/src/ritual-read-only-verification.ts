@@ -1,5 +1,7 @@
 import {
   createRitualRpcRequest,
+  createRitualNetworkConfiguration,
+  createRitualReferenceRegistry,
   type RitualContractReference,
   type RitualNetworkConfiguration,
   type RitualNetworkVerificationResult,
@@ -13,6 +15,9 @@ export type ReadOnlyRitualRpcTransport = (request: RitualRpcRequest) => Promise<
 
 export type RitualReferenceProbeStatus = 'code_present' | 'code_absent' | 'inconclusive';
 export interface RitualReferenceProbeResult {
+  readonly networkId: string;
+  readonly chainId: number;
+  readonly blockNumber: number;
   readonly identifier: string;
   readonly category: RitualContractReference['category'];
   readonly address: string;
@@ -42,7 +47,11 @@ export function createRitualReadOnlyVerificationAdapter(
     throw new TypeError('Ritual read-only transport is invalid.');
   if (registry.networkId !== configuration.networkId)
     throw new TypeError('Ritual registry network does not match configuration.');
-  const selectedConfiguration = createDetachedConfiguration(configuration);
+  const selectedConfiguration = createRitualNetworkConfiguration(configuration);
+  const selectedRegistry = createRitualReferenceRegistry({
+    networkId: registry.networkId,
+    references: registry.references,
+  });
   return {
     async verify(options = {}) {
       const identifiers = validateIdentifiers(options.referenceIdentifiers ?? []);
@@ -50,10 +59,16 @@ export function createRitualReadOnlyVerificationAdapter(
       if (network.report.status !== 'verified')
         return freeze({
           network: network.report,
-          references: [],
+          references: freeze([]),
           ...(network.reason === undefined ? {} : { reason: network.reason }),
         });
-      const references = await probeReferences(registry, identifiers, transport);
+      const references = await probeReferences(
+        selectedRegistry,
+        identifiers,
+        transport,
+        selectedConfiguration.chainId,
+        network.report.blockNumber!,
+      );
       return freeze({ network: network.report, references: freeze(references) });
     },
   };
@@ -95,11 +110,11 @@ async function probeNetwork(
     createRitualRpcRequest({
       id: 'ritual-network-latest-block',
       method: 'eth_getBlockByNumber',
-      params: ['latest', false],
+      params: [block.value.result, false],
     }),
   );
   if (!latest.ok) return { report: inconclusive(configuration), reason: latest.reason };
-  const blockEvidence = parseLatestBlock(latest.value.result);
+  const blockEvidence = parseLatestBlock(latest.value.result, blockNumber);
   if (blockEvidence === undefined)
     return { report: inconclusive(configuration), reason: 'response_invalid' };
   return {
@@ -114,12 +129,17 @@ async function probeReferences(
   registry: RitualReferenceRegistry,
   identifiers: readonly string[],
   transport: ReadOnlyRitualRpcTransport,
+  chainId: number,
+  blockNumber: number,
 ): Promise<RitualReferenceProbeResult[]> {
   const results: RitualReferenceProbeResult[] = [];
   for (const identifier of identifiers) {
-    const reference = registry.lookup(identifier);
+    const selected = registry.lookup(identifier);
+    const provenance = { networkId: registry.networkId, chainId, blockNumber };
+    const reference = selected === undefined ? undefined : { ...selected, ...provenance };
     if (reference === undefined) {
       results.push({
+        ...provenance,
         identifier,
         category: 'system_contract',
         address: '',
@@ -133,7 +153,7 @@ async function probeReferences(
       createRitualRpcRequest({
         id: `ritual-code-${identifier}`,
         method: 'eth_getCode',
-        params: [reference.address, 'latest'],
+        params: [reference.address, `0x${blockNumber.toString(16)}`],
       }),
     );
     if (!response.ok) {
@@ -149,7 +169,7 @@ async function probeReferences(
       results.push({ ...reference, status: 'code_present', codeLength: (code.length - 2) / 2 });
     }
   }
-  return results;
+  return results.map((result) => freeze(result));
 }
 
 async function call(
@@ -165,18 +185,24 @@ async function call(
     }
   | { readonly ok: false; readonly reason: 'transport_failure' | 'response_invalid' }
 > {
+  let raw: unknown;
   try {
-    const raw = await transport(request);
+    raw = await transport(request);
+  } catch {
+    return { ok: false, reason: 'transport_failure' };
+  }
+  try {
     const value = validateRitualRpcResponse(raw, request);
     if ('error' in value) return { ok: false, reason: 'response_invalid' };
     return { ok: true, value };
   } catch {
-    return { ok: false, reason: 'transport_failure' };
+    return { ok: false, reason: 'response_invalid' };
   }
 }
 
 function parseLatestBlock(
   value: unknown,
+  requestedBlockNumber: number,
 ): { readonly latestBlockHash: string; readonly latestBlockTimestamp: number } | undefined {
   if (
     value === null ||
@@ -186,7 +212,7 @@ function parseLatestBlock(
     return undefined;
   const record = value as Record<string, unknown>;
   if (
-    Object.keys(record).some((key) => !['hash', 'timestamp'].includes(key)) ||
+    quantity(record.number) !== requestedBlockNumber ||
     typeof record.hash !== 'string' ||
     !/^0x[0-9a-fA-F]{64}$/.test(record.hash)
   )
@@ -216,14 +242,11 @@ function inconclusive(configuration: RitualNetworkConfiguration): RitualNetworkV
     reason: 'insufficient_evidence',
   };
 }
-function createDetachedConfiguration(
-  value: RitualNetworkConfiguration,
-): RitualNetworkConfiguration {
-  return Object.freeze({ ...value });
-}
 function validateIdentifiers(value: readonly string[]): readonly string[] {
   if (
     !Array.isArray(value) ||
+    value.length > 64 ||
+    new Set(value).size !== value.length ||
     value.some(
       (identifier) => typeof identifier !== 'string' || !/^[a-z][a-z0-9_]{1,63}$/.test(identifier),
     )

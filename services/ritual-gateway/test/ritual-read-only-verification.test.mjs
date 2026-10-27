@@ -24,6 +24,7 @@ const registry = createRitualReferenceRegistry({
   ],
 });
 const block = {
+  number: '0x10',
   hash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   timestamp: '0x65',
 };
@@ -130,4 +131,175 @@ test('verified network does not imply inference or canonical authority and repor
   assert.equal(report.references.length, 0);
   assert.equal(Object.isFrozen(report), true);
   assert.equal(JSON.stringify(report).includes('canonical'), false);
+});
+
+function capturedTransport(calls, overrides = {}) {
+  return async (rpc) => {
+    calls.push(rpc);
+    const value = overrides[rpc.method];
+    if (value instanceof Error) throw value;
+    return result(
+      rpc.id,
+      value ??
+        {
+          eth_chainId: '0x7bb',
+          eth_blockNumber: '0x10',
+          eth_getBlockByNumber: {
+            ...block,
+            gasUsed: '0x1',
+            transactions: ['0x' + 'b'.repeat(64)],
+            withdrawals: [],
+            extraData: '0x',
+          },
+          eth_getCode: '0x6000',
+        }[rpc.method],
+    );
+  };
+}
+
+test('full block fields and code evidence share the fixed observed block and immutable provenance', async () => {
+  const calls = [];
+  const report = await createRitualReadOnlyVerificationAdapter(
+    network,
+    registry,
+    capturedTransport(calls),
+  ).verify({ referenceIdentifiers: ['llm'] });
+  assert.equal(report.network.status, 'verified');
+  assert.deepEqual(
+    calls.map(({ method, params }) => [method, params]),
+    [
+      ['eth_chainId', []],
+      ['eth_blockNumber', []],
+      ['eth_getBlockByNumber', ['0x10', false]],
+      ['eth_getCode', [registry.lookup('llm').address, '0x10']],
+    ],
+  );
+  assert.deepEqual(report.references[0], {
+    ...registry.lookup('llm'),
+    networkId: network.networkId,
+    chainId: 1979,
+    blockNumber: 16,
+    status: 'code_present',
+    codeLength: 2,
+  });
+  assert.equal(Object.isFrozen(report.references[0]), true);
+  assert.equal(Object.isFrozen(report.references), true);
+});
+
+for (const [name, value] of Object.entries({
+  mismatch: { ...block, number: '0x11' },
+  missingNumber: { hash: block.hash, timestamp: block.timestamp },
+  badNumber: { ...block, number: '0x010' },
+  missingHash: { number: '0x10', timestamp: '0x1' },
+  badHash: { ...block, hash: '0x1234' },
+  missingTimestamp: { number: '0x10', hash: block.hash },
+  badTimestamp: { ...block, timestamp: '0x01' },
+  unsafeTimestamp: { ...block, timestamp: '0x20000000000000' },
+  excessiveExtra: { ...block, extraData: 'x'.repeat(16385) },
+}))
+  test(`rejects ${name} block evidence and stops before references`, async () => {
+    const calls = [];
+    const report = await createRitualReadOnlyVerificationAdapter(
+      network,
+      registry,
+      capturedTransport(calls, { eth_getBlockByNumber: value }),
+    ).verify({ referenceIdentifiers: ['llm'] });
+    assert.equal(report.network.status, 'inconclusive');
+    assert.equal(report.reason, 'response_invalid');
+    assert.equal(calls.length, 3);
+    assert.deepEqual(report.references, []);
+  });
+
+for (const [name, code, status] of [
+  ['absent', '0x', 'code_absent'],
+  ['present', '0x6000', 'code_present'],
+  ['malformed', '0x1', 'inconclusive'],
+  ['transport failure', new Error('sensitive-fixture'), 'inconclusive'],
+])
+  test(`fixed reference ${name} without retry`, async () => {
+    const calls = [];
+    const report = await createRitualReadOnlyVerificationAdapter(
+      network,
+      registry,
+      capturedTransport(calls, { eth_getCode: code }),
+    ).verify({ referenceIdentifiers: ['llm'] });
+    assert.equal(report.references[0].status, status);
+    assert.equal(report.references[0].blockNumber, 16);
+    assert.equal(calls.length, 4);
+    assert.equal(JSON.stringify(report).includes('sensitive-fixture'), false);
+  });
+
+test('selection bounds and duplicates fail before transport', async () => {
+  const calls = [];
+  const adapter = createRitualReadOnlyVerificationAdapter(
+    network,
+    registry,
+    capturedTransport(calls),
+  );
+  await assert.rejects(() => adapter.verify({ referenceIdentifiers: ['llm', 'llm'] }), TypeError);
+  await assert.rejects(
+    () => adapter.verify({ referenceIdentifiers: Array.from({ length: 65 }, (_, i) => `ref${i}`) }),
+    TypeError,
+  );
+  assert.equal(calls.length, 0);
+});
+
+for (const method of ['eth_blockNumber', 'eth_getBlockByNumber'])
+  test(`stops on ${method} transport failure`, async () => {
+    const calls = [];
+    const report = await createRitualReadOnlyVerificationAdapter(
+      network,
+      registry,
+      capturedTransport(calls, { [method]: new Error('private-fixture') }),
+    ).verify({ referenceIdentifiers: ['llm'] });
+    assert.equal(report.reason, 'transport_failure');
+    assert.equal(calls.length, method === 'eth_blockNumber' ? 2 : 3);
+  });
+
+test('rejects bad envelope without weakening ID or extra-field checks', async () => {
+  for (const envelope of [
+    { jsonrpc: '2.0', id: 'wrong', result: '0x7bb' },
+    { jsonrpc: '2.0', id: 'ritual-network-chain-id', result: '0x7bb', extra: true },
+  ]) {
+    let calls = 0;
+    const report = await createRitualReadOnlyVerificationAdapter(network, registry, async () => {
+      calls++;
+      return envelope;
+    }).verify();
+    assert.equal(report.reason, 'response_invalid');
+    assert.equal(calls, 1);
+  }
+});
+
+test('explicit Mainnet configuration verifies observed 784 and preserves selected order', async () => {
+  const mainnet = createRitualNetworkConfiguration({
+    ...network,
+    networkId: 'ritual-mainnet-fixture',
+    chainId: 784,
+  });
+  const refs = createRitualReferenceRegistry({
+    networkId: mainnet.networkId,
+    references: [
+      registry.lookup('llm'),
+      { identifier: 'wallet', category: 'system_contract', address: '0x' + '1'.repeat(40) },
+    ],
+  });
+  const calls = [];
+  const report = await createRitualReadOnlyVerificationAdapter(
+    mainnet,
+    refs,
+    capturedTransport(calls, { eth_chainId: '0x310' }),
+  ).verify({ referenceIdentifiers: ['wallet', 'llm'] });
+  assert.equal(report.network.observedChainId, 784);
+  assert.deepEqual(
+    report.references.map(({ identifier }) => identifier),
+    ['wallet', 'llm'],
+  );
+  assert.deepEqual(
+    calls.slice(3).map(({ params }) => params),
+    [
+      [refs.lookup('wallet').address, '0x10'],
+      [refs.lookup('llm').address, '0x10'],
+    ],
+  );
 });

@@ -113,6 +113,7 @@ export {
 } from './ritual-inference-simulation.js';
 export {
   createRitualIntegrationHarness,
+  assessRitualActivation,
   type RitualActivationPolicy,
   type RitualActivationStatus,
   type RitualActivationReport,

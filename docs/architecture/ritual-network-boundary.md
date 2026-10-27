@@ -56,3 +56,38 @@ this is not write authorization, wallet readiness, or live inference
 verification. Future Mainnet onboarding must independently review official
 configuration, run read-only verification, and obtain separate Owner
 authorization before any write operation.
+
+## M1.4 compatibility remediation
+
+R2 now observes one fixed block: `eth_chainId`, `eth_blockNumber`, then
+`eth_getBlockByNumber` with that returned canonical block quantity. Every
+explicitly selected `eth_getCode` uses the same block. A mismatch or malformed
+block stops reference probing. Full bounded block objects are accepted;
+`number`, `hash`, and `timestamp` are required and validated, and `number` must
+match the requested block. Unrelated valid JSON fields are tolerated within
+the existing per-string, array, and object limits, with additional traversal
+depth, node, and aggregate character bounds. Envelope validation remains strict.
+
+Reference results now include `networkId`, `chainId`, and numeric `blockNumber`,
+including absent-code and inconclusive results. Missing logical references have
+an empty address and `reference_missing`; no address is invented. Outputs and
+reference entries are immutable. Caller order is preserved; duplicate or more
+than 64 selected identifiers are rejected before probing. The transport remains
+explicitly injected and owns its timeout policy; there is no default live
+transport, retry, fallback, or polling.
+
+`assessRitualActivation(configuration, registry, evidence, policy)` is a pure R4
+entry point. It validates bounded R2 evidence against explicit configuration,
+registry, and policy, rejects duplicate or contradictory provenance, and returns
+only a `blocked` or `read_only_verified` assessment. It has no transport or
+execution capability and never continues into simulation. The existing harness
+reuses this assessment before its explicitly injected offline simulation.
+
+Configured does not mean verified. Nonempty bytecode establishes presence at
+the observed block, not contract identity, source correctness, ABI compatibility,
+ownership, security, or successful inference. Empty code alone does not disprove
+a native precompile or service; policy must explicitly choose whether code is
+required. `read_only_verified` is not write authorization or wallet readiness.
+Simulated output is not live inference and remains `untrusted_model_execution`.
+The assessment validates evidence consistency, not independent authenticity or
+freshness. Historical R0–R5 closure remains unchanged.

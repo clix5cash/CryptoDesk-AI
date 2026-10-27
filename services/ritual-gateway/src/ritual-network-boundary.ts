@@ -307,15 +307,36 @@ function optionalString(value: unknown, predicate: (value: string) => boolean): 
   return value === undefined || (typeof value === 'string' && predicate(value));
 }
 function isJsonValue(value: unknown): boolean {
-  if (value === null || typeof value === 'boolean' || typeof value === 'number')
-    return typeof value !== 'number' || Number.isFinite(value);
-  if (typeof value === 'string') return value.length <= 16_384;
-  if (Array.isArray(value)) return value.length <= 64 && value.every(isJsonValue);
-  return (
-    isPlainRecord(value) &&
-    Object.keys(value).length <= 64 &&
-    Object.values(value).every(isJsonValue)
-  );
+  let remaining = 8192;
+  let characters = 1_048_576;
+  function visit(item: unknown, depth: number): boolean {
+    if (--remaining < 0 || depth > 16) return false;
+    if (item === null || typeof item === 'boolean') return true;
+    if (typeof item === 'number') return Number.isFinite(item);
+    if (typeof item === 'string') {
+      characters -= item.length;
+      return item.length <= 16_384 && characters >= 0;
+    }
+    if (Array.isArray(item))
+      return item.length <= 64 && item.every((entry) => visit(entry, depth + 1));
+    if (!isPlainRecord(item)) return false;
+    const keys = Object.keys(item);
+    return (
+      keys.length <= 64 &&
+      keys.every((key) => {
+        characters -= key.length;
+        const descriptor = Object.getOwnPropertyDescriptor(item, key);
+        return (
+          key.length <= 16_384 &&
+          characters >= 0 &&
+          descriptor !== undefined &&
+          'value' in descriptor &&
+          visit(descriptor.value, depth + 1)
+        );
+      })
+    );
+  }
+  return visit(value, 0);
 }
 function detachJson<T>(value: T): T {
   return structuredClone(value);
