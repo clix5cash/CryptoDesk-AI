@@ -1,0 +1,8 @@
+{
+  "asOf": "2026-11-11T00:00:00Z",
+  "assets": [
+    { "symbol": "BTC", "priceUsd": 80000, "openInterestUsd": 12000000000, "fundingRate": 0.0001 },
+    { "symbol": "ETH", "priceUsd": 2700, "openInterestUsd": 4500000000, "fundingRate": -0.0001 },
+    { "symbol": "SOL", "priceUsd": 110, "openInterestUsd": null, "fundingRate": null }
+  ]
+}
